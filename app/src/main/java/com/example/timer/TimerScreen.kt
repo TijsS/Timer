@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Text
@@ -14,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.timer.components.TimeDisplay
 
@@ -33,13 +35,9 @@ fun TimerScreen(timerViewModel: TimerViewModel = viewModel()) {
                 .weight(2f)
         )
 
-//        CurrentTime(
-//            time = timerUiState.timeRemaining
-//        )
-
         TimeControlArea(
             addSecondsToTimer = { timerViewModel.addSecondsToTimer(it) },
-            timerState = timerUiState.timerState,
+            timerState = { timerUiState.timerState },
             startCountDown = { timerViewModel.startCountDown() },
             cancelCountDown = { timerViewModel.cancelCountDown() },
             resetCountDown = { timerViewModel.resetCountDown() },
@@ -57,13 +55,17 @@ fun CurrentTime(time: Int, modifier: Modifier = Modifier) {
 @Composable
 fun TimeControlArea(
     addSecondsToTimer: (Int) -> Unit,
-    timerState: TimerState,
+    timerState: () -> TimerState,
     startCountDown: () -> Unit,
     cancelCountDown: () -> Unit,
     resetCountDown: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column (modifier = modifier) {
+    Column (
+        verticalArrangement = Arrangement.SpaceEvenly,
+        modifier = modifier
+            .padding(top = 8.dp)
+    ) {
         Row(
             horizontalArrangement = Arrangement.SpaceEvenly,
             modifier = modifier
@@ -75,24 +77,45 @@ fun TimeControlArea(
         }
 
         Row(
-            horizontalArrangement = Arrangement.SpaceEvenly,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = modifier
                 .fillMaxWidth()
+                .padding(16.dp)
         ) {
-            timerState.let {
-                when (it) {
-                    TimerState.Paused -> StartTimerButton(startTimer = { startCountDown() })
-                    TimerState.Running -> PauseTimerButton(pauseTimer = { cancelCountDown() })
-                    TimerState.Stopped -> StartTimerButton(startTimer = { startCountDown() })
-                }
-            }
+
+            TimerActionButton(
+                timerState = timerState,
+                startCountDown = startCountDown,
+                cancelCountDown = cancelCountDown,
+                modifier = Modifier
+                    .weight(2f)
+            )
 
             Button(
                 onClick = { resetCountDown() },
                 modifier = modifier
+                    .weight(1f)
             ) {
                 Text(text = stringResource(R.string.reset_timer))
             }
+        }
+    }
+}
+
+@Composable
+fun TimerActionButton(
+    timerState: () -> TimerState,
+    startCountDown: () -> Unit,
+    cancelCountDown: () -> Unit,
+    modifier: Modifier
+){
+    timerState().let {
+        when (it) {
+            TimerState.Paused -> StartTimerButton(
+                startTimer = { startCountDown() }
+            )
+            TimerState.Running -> PauseTimerButton(pauseTimer = { cancelCountDown() })
+            TimerState.Stopped -> StartTimerButton(startTimer = { startCountDown() })
         }
     }
 }
