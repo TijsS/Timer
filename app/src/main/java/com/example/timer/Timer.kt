@@ -7,4 +7,5 @@ sealed class TimerState {
     object Running : TimerState()
     object Paused : TimerState()
     object Stopped : TimerState()
+    object Finished : TimerState()
 }

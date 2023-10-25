@@ -18,8 +18,14 @@ class TimerViewModel: ViewModel() {
     val timer = Timer()
 
     private var countDownTimer: CountDownTimer? = null
+    val x: Int? = null
+
+
 
     fun startCountDown() {
+
+        x.let { Log.d("TimerViewModel", "x is $it") }
+
         countDownTimer?.cancel() // Cancel any existing timers
 
         countDownTimer = object : CountDownTimer(_uiState.value.timeRemaining.toLong() * 1000, 1000) {
@@ -29,7 +35,7 @@ class TimerViewModel: ViewModel() {
             }
 
             override fun onFinish() {
-                _uiState.value = _uiState.value.copy(timerState = TimerState.Stopped)
+                _uiState.value = _uiState.value.copy(timerState = TimerState.Finished)
             }
         }.start()
 
@@ -46,7 +52,10 @@ class TimerViewModel: ViewModel() {
     }
 
     fun resetCountDown() {
-        _uiState.value = _uiState.value.copy(timeRemaining = 0)
+        _uiState.value = _uiState.value.copy(
+            timeRemaining = 0,
+            timerState = TimerState.Stopped
+        )
         countDownTimer?.cancel()
     }
 }

@@ -51,37 +51,30 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
     val smallTargetDp = 130.dp.value
     val reallySmallTargetDp = 0.dp.value
 
+    val animationDurationZero = 0
+    val animationDurationMedium = 500
+    val animationDurationLong = 800
+
     val secondDp by remember { mutableStateOf(Animatable(reallySmallTargetDp)) }
     val minuteDp by remember { mutableStateOf(Animatable(reallySmallTargetDp)) }
     val hourDp by remember { mutableStateOf(Animatable(reallySmallTargetDp)) }
 
-    val secondRotation by remember { mutableStateOf(Animatable(0f)) }
-
-
-    val minuteRotation by remember { mutableStateOf(Animatable(0f)) }
-    val hourRotation by remember { mutableStateOf(Animatable(0f)) }
+    var secondRotation by remember { mutableStateOf(0f) }
+    var minuteRotation by remember { mutableStateOf(0f) }
+    var hourRotation by remember { mutableStateOf(0f) }
 
     LaunchedEffect(timeRemaining) {
-        launch {
-            secondRotation.animateTo(
-                timeRemaining * 6f,
-                animationSpec = tween(
-                    delayMillis = 0,
-                    durationMillis = 0
-                )
-            )
-        }
-    }
+        launch { secondRotation = timeRemaining * 6f }
+        launch { minuteRotation = (timeRemaining / 60) % 60 * 6f }
+        launch { hourRotation = (timeRemaining/3600) % 60 * 6f}
 
-    when {
-        timeRemaining > 3600 -> {
-            LaunchedEffect(timeRemaining) {
+        when {
+            timeRemaining > 3600 -> {
                 launch {
                     secondDp.animateTo(
                         smallTargetDp,
                         animationSpec = tween(
-                            durationMillis = 500,
-                            easing = FastOutSlowInEasing
+                            durationMillis = animationDurationMedium,
                         )
                     )
                 }
@@ -90,8 +83,7 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
                     minuteDp.animateTo(
                         smallTargetDp,
                         animationSpec = tween(
-                            durationMillis = 500,
-                            easing = FastOutSlowInEasing
+                            durationMillis = animationDurationMedium,
                         )
                     )
                 }
@@ -100,27 +92,23 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
                     hourDp.animateTo(
                         largeTargetDp,
                         animationSpec = tween(
-                            durationMillis = 500,
-                            easing = FastOutSlowInEasing
+                            durationMillis = animationDurationMedium,
                         )
                     )
                 }
+
+                hourVisibility = true
+                minuteVisibility = true
+                secondVisibility = true
+
             }
 
-            hourVisibility = true
-            minuteVisibility = true
-            secondVisibility = true
-
-        }
-
-        timeRemaining > 60 -> {
-            LaunchedEffect(timeRemaining) {
+            timeRemaining > 60 -> {
                 launch {
                     secondDp.animateTo(
                         smallTargetDp,
                         animationSpec = tween(
-                            durationMillis = 500,
-                            easing = FastOutSlowInEasing
+                            durationMillis = animationDurationMedium,
                         )
                     )
                 }
@@ -129,8 +117,7 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
                     minuteDp.animateTo(
                         mediumTargetDp,
                         animationSpec = tween(
-                            durationMillis = 500,
-                            easing = FastOutSlowInEasing
+                            durationMillis = animationDurationMedium,
                         )
                     )
                 }
@@ -139,8 +126,7 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
                     hourDp.animateTo(
                         reallySmallTargetDp,
                         animationSpec = tween(
-                            durationMillis = 500,
-                            easing = FastOutSlowInEasing
+                            durationMillis = animationDurationMedium,
                         )
                     )
                 }
@@ -149,15 +135,13 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
                 minuteVisibility = true
                 secondVisibility = true
             }
-        }
-        else -> {
-            LaunchedEffect(timeRemaining) {
+
+            else -> {
                 launch {
                     minuteDp.animateTo(
                         reallySmallTargetDp,
                         animationSpec = tween(
-                            durationMillis = 500,
-                            easing = FastOutSlowInEasing
+                            durationMillis = animationDurationMedium,
                         )
                     )
                 }
@@ -166,8 +150,7 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
                     hourDp.animateTo(
                         reallySmallTargetDp,
                         animationSpec = tween(
-                            durationMillis = 500,
-                            easing = FastOutSlowInEasing
+                            durationMillis = animationDurationMedium,
                         )
                     )
                 }
@@ -176,16 +159,15 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
                     secondDp.animateTo(
                         largeTargetDp,
                         animationSpec = tween(
-                            durationMillis = 500,
-                            easing = FastOutSlowInEasing
+                            durationMillis = animationDurationMedium,
                         )
                     )
                 }
-            }
 
-            hourVisibility = false
-            minuteVisibility = false
-            secondVisibility = true
+                hourVisibility = false
+                minuteVisibility = false
+                secondVisibility = true
+            }
         }
     }
 
@@ -198,7 +180,7 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
         if(minuteDp.value.dp > 0.dp) {
             Clock(
                 timeRemaining = (timeRemaining / 3600) % 60,
-                rotate = 0f,
+                rotate = hourRotation,
                 clockSize = hourDp.value.dp,
                 modifier = Modifier
             )
@@ -209,18 +191,18 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
             modifier = Modifier
                 .fillMaxWidth()
         ) {
-//            if(minuteDp.value.dp > 0.dp) {
-//                Clock(
-//                    timeRemaining = (timeRemaining / 60) % 60,
-//                    rotate = 0f,
-//                    clockSize = minuteDp.value.dp,
-//                    modifier = Modifier
-//                )
-//            }
+            if(minuteDp.value.dp > 0.dp) {
+                Clock(
+                    timeRemaining = (timeRemaining / 60) % 60,
+                    rotate = minuteRotation,
+                    clockSize = minuteDp.value.dp,
+                    modifier = Modifier
+                )
+            }
 
             Clock(
                 timeRemaining = timeRemaining % 60,
-                rotate = secondRotation.value,
+                rotate = secondRotation,
                 clockSize = secondDp.value.dp,
                 modifier = Modifier
             )
@@ -281,14 +263,14 @@ fun Clock(
                         //if (it in (60 - timeRemaining)..60) opacityLeft else opacityRight))
                         //if(it in (60-timeRemaining)..(65-timeRemaining)) 1f else if (it in (55-timeRemaining)..60) 0.5f else 0.1f))
                     )
-                    drawText(
-                        textMeasurer = textMeasurer,
-                        text = "${timeRemaining}  ${opacityRight}  ${it in (60-timeRemaining)..60}",
-                        topLeft = Offset(
-                            x = center.x - 52f,
-                            y = center.y,
-                        ),
-                    )
+//                    drawText(
+//                        textMeasurer = textMeasurer,
+//                        text = "${timeRemaining}  ${opacityRight}  ${it in (60-timeRemaining)..60}",
+//                        topLeft = Offset(
+//                            x = center.x - 52f,
+//                            y = center.y,
+//                        ),
+//                    )
                 }
 
                 drawCircle(
