@@ -4,8 +4,9 @@ import androidx.annotation.RawRes
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.gestures.ModifierLocalScrollableContainerProvider.value
-import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,16 +18,17 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.rive.runtime.kotlin.RiveAnimationView
@@ -38,18 +40,32 @@ fun TimerScreen(timerViewModel: TimerViewModel = viewModel()) {
     val timerUiState by timerViewModel.uiState.collectAsState()
 
     var animation: RiveAnimationView? = null
-    var currentDistance by remember { mutableStateOf(0f) }
+    var currentDistance by remember { mutableFloatStateOf(0f) }
 
+    val currentDistanceAnimated by animateFloatAsState(
+        targetValue = currentDistance,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessHigh,
+        ),
+        finishedListener = { value ->
+            if (value > 9f) {
+                timerViewModel.resetCountDown()
 
-    fun onPull(pullDelta: Float): Float = when {
-        else -> {
-            val newOffset = (currentDistance + pullDelta).coerceAtLeast(0f)
-            val dragConsumed = newOffset - currentDistance
+                // Only reset the animation when not visible
+                animation?.reset()
+                animation?.stop()
+            }
+        }, label = ""
+    )
 
-            currentDistance = newOffset
-            animation?.setNumberState("StateMachine", "dismissSwipe", dismissSwipe)
-            dragConsumed
-        }
+    LaunchedEffect(timerUiState.timerState == TimerState.Finished) {
+        animation?.play("Timeline 1")
+    }
+
+    LaunchedEffect(currentDistance) {
+        animation?.setNumberState("StateMachine", "dismissSwipe", currentDistanceAnimated)
+
     }
 
 
@@ -58,28 +74,27 @@ fun TimerScreen(timerViewModel: TimerViewModel = viewModel()) {
         verticalArrangement = Arrangement.Center,
         modifier = Modifier
             .fillMaxSize()
-            .pointerInput(Unit) {
-                detectTransformGestures { _, dragAmount, x, y ->
-                    // Calculate the distance traveled on the Y-axis
-                    val deltaY = dragAmount.y
-                    val distance = deltaY
 
-                    // Map the distance to the value range [0, 100]
-                    value += distance
-
-                    // Ensure the value stays within the 0-100 range
-                    value = value.coerceIn(0f, 100f)
-                }
-            }
     ) {
 
-        if (timerUiState.timerState == TimerState.Finished){
-            RiveAnimationComposable(
-                animation = R.raw.alarm,
-                stateMachineName = "StateMachine",
-                fit = Fit.COVER,
-            ) { view ->
-                animation = view
+        if (timerUiState.timerState == TimerState.Finished ){
+            Box(modifier = Modifier
+                .draggable(
+                    orientation = Orientation.Vertical,
+                    state = rememberDraggableState { delta ->
+                        currentDistance += delta/10
+                    }
+                )
+            ) {
+                ComposableRiveAnimationView(
+                    animation = R.raw.alarm,
+                    stateMachineName = "StateMachine",
+                    fit = Fit.COVER,
+                ) { view ->
+                    animation = view
+                }
+                Text(text = currentDistance.toString(), fontSize = 90.sp)
+
             }
         }
         else {
@@ -104,14 +119,16 @@ fun TimerScreen(timerViewModel: TimerViewModel = viewModel()) {
 }
 
 @Composable
-fun RiveAnimationComposable(
+fun ComposableRiveAnimationView(
+    modifier: Modifier = Modifier,
     @RawRes animation: Int,
+    stateMachineName: String? = null,
     alignment: app.rive.runtime.kotlin.core.Alignment = app.rive.runtime.kotlin.core.Alignment.CENTER,
     fit: Fit = Fit.CONTAIN,
-    stateMachineName: String,
     onInit: (RiveAnimationView) -> Unit
 ) {
     AndroidView(
+        modifier = modifier,
         factory = { context ->
             RiveAnimationView(context).also {
                 it.setRiveResource(
@@ -119,12 +136,11 @@ fun RiveAnimationComposable(
                     stateMachineName = stateMachineName,
                     alignment = alignment,
                     fit = fit,
-                )
+
+                    )
             }
         },
-        update = { view -> onInit(view) },
-        modifier = Modifier
-            .fillMaxWidth()
+        update = { view -> onInit(view) }
     )
 }
 
