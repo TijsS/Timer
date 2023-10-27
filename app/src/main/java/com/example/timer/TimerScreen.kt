@@ -1,5 +1,6 @@
 package com.example.timer
 
+import android.annotation.SuppressLint
 import androidx.annotation.RawRes
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -35,6 +36,7 @@ import app.rive.runtime.kotlin.RiveAnimationView
 import app.rive.runtime.kotlin.core.Fit
 import com.example.timer.components.TimeDisplay
 
+@SuppressLint("RememberReturnType")
 @Composable
 fun TimerScreen(timerViewModel: TimerViewModel = viewModel()) {
     val timerUiState by timerViewModel.uiState.collectAsState()
@@ -49,7 +51,7 @@ fun TimerScreen(timerViewModel: TimerViewModel = viewModel()) {
             stiffness = Spring.StiffnessHigh,
         ),
         finishedListener = { value ->
-            if (value > 9f) {
+            if (value > 100f) {
                 timerViewModel.resetCountDown()
 
                 // Only reset the animation when not visible
@@ -59,14 +61,14 @@ fun TimerScreen(timerViewModel: TimerViewModel = viewModel()) {
         }, label = ""
     )
 
-    LaunchedEffect(timerUiState.timerState == TimerState.Finished) {
-        animation?.play("Timeline 1")
-    }
 
-    LaunchedEffect(currentDistance) {
-        animation?.setNumberState("StateMachine", "dismissSwipe", currentDistanceAnimated)
+//    if( timerUiState.timerState == TimerState.Finished ) {
+//        animation?.play("Timeline 1")
 
-    }
+        LaunchedEffect(currentDistance) {
+            animation?.setNumberState("StateMachine", "dismissSwipe", currentDistanceAnimated)
+        }
+//    }
 
 
     Column(
@@ -93,7 +95,8 @@ fun TimerScreen(timerViewModel: TimerViewModel = viewModel()) {
                 ) { view ->
                     animation = view
                 }
-                Text(text = currentDistance.toString(), fontSize = 90.sp)
+//                Text(text = currentDistance.toString(), fontSize = 90.sp)
+                Text(text = if( timerUiState.timerState == TimerState.Finished) "finished" else "other" , fontSize = 90.sp)
 
             }
         }
