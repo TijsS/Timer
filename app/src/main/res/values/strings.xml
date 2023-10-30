@@ -4,4 +4,7 @@
     <string name="add_seconds">+ %1$s</string>
     <string name="pause_timer">Pause</string>
     <string name="reset_timer">Reset</string>
+    <string name="notification_content_title">Times up!</string>
+    <string name="channel_name">timerChannel</string>
+    <string name="CHANNEL_ID">TimerChannel</string>
 </resources>

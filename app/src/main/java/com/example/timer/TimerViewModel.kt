@@ -1,31 +1,34 @@
 package com.example.timer
 
+import android.os.Build
 import android.os.CountDownTimer
-import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import java.time.Duration
 import java.util.Timer
-import java.util.TimerTask
 
 
+@RequiresApi(Build.VERSION_CODES.S)
 class TimerViewModel: ViewModel() {
 
     private val _uiState = MutableStateFlow(TimerUiState())
     val uiState: StateFlow<TimerUiState> = _uiState.asStateFlow()
 
+    private val _eventFlow = MutableSharedFlow<UiEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
+
     val timer = Timer()
 
     private var countDownTimer: CountDownTimer? = null
-    val x: Int? = null
-
-
 
     fun startCountDown() {
-
-        x.let { Log.d("TimerViewModel", "x is $it") }
-
         countDownTimer?.cancel() // Cancel any existing timers
 
         countDownTimer = object : CountDownTimer(_uiState.value.timeRemaining.toLong() * 1000, 1000) {
@@ -35,6 +38,13 @@ class TimerViewModel: ViewModel() {
             }
 
             override fun onFinish() {
+                //implement vibrate
+                viewModelScope.launch {
+                    _eventFlow.emit(
+                        UiEvent.ActivateVibration(100)
+                    )
+                }
+
                 _uiState.value = _uiState.value.copy(timerState = TimerState.Finished)
             }
         }.start()
@@ -47,15 +57,32 @@ class TimerViewModel: ViewModel() {
         _uiState.value = _uiState.value.copy(timerState = TimerState.Stopped)
     }
 
+    fun setDismissPercentage(percentage: Float) {
+        _uiState.value = _uiState.value.copy(dismissPercentage = if( percentage < 0f ) 0f else if( percentage > 100 ) 100f else percentage)
+
+    }
+
     fun addSecondsToTimer(seconds: Int) {
         _uiState.value = _uiState.value.copy(timeRemaining = _uiState.value.timeRemaining + seconds)
     }
 
     fun resetCountDown() {
+        viewModelScope.launch {
+            _eventFlow.emit(
+                UiEvent.StopVibration
+            )
+        }
+
         _uiState.value = _uiState.value.copy(
             timeRemaining = 0,
+            dismissPercentage = 0f,
             timerState = TimerState.Stopped
         )
         countDownTimer?.cancel()
+    }
+
+    sealed class UiEvent {
+        data class ActivateVibration(val duration: Long): UiEvent()
+        object StopVibration: UiEvent()
     }
 }

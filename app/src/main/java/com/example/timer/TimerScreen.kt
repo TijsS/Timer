@@ -1,7 +1,10 @@
 package com.example.timer
 
 import android.annotation.SuppressLint
+import android.os.Build
+import android.util.Log
 import androidx.annotation.RawRes
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -15,6 +18,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Text
@@ -22,9 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -35,23 +36,29 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import app.rive.runtime.kotlin.RiveAnimationView
 import app.rive.runtime.kotlin.core.Fit
 import com.example.timer.components.TimeDisplay
+import kotlinx.coroutines.flow.collectLatest
 
-@SuppressLint("RememberReturnType")
+@RequiresApi(Build.VERSION_CODES.S)
+@SuppressLint("RememberReturnType", "SuspiciousIndentation")
 @Composable
-fun TimerScreen(timerViewModel: TimerViewModel = viewModel()) {
+fun TimerScreen(
+    vibrate: (Long) -> Unit,
+    stopVibrate: () -> Unit,
+    timerViewModel: TimerViewModel = viewModel(),
+) {
     val timerUiState by timerViewModel.uiState.collectAsState()
 
     var animation: RiveAnimationView? = null
-    var currentDistance by remember { mutableFloatStateOf(0f) }
+//    var currentDistance by remember { mutableFloatStateOf(0f) }
 
     val currentDistanceAnimated by animateFloatAsState(
-        targetValue = currentDistance,
+        targetValue = timerUiState.dismissPercentage,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioNoBouncy,
             stiffness = Spring.StiffnessHigh,
         ),
         finishedListener = { value ->
-            if (value > 100f) {
+            if (value >= 100f) {
                 timerViewModel.resetCountDown()
 
                 // Only reset the animation when not visible
@@ -61,14 +68,35 @@ fun TimerScreen(timerViewModel: TimerViewModel = viewModel()) {
         }, label = ""
     )
 
-
-//    if( timerUiState.timerState == TimerState.Finished ) {
-//        animation?.play("Timeline 1")
-
-        LaunchedEffect(currentDistance) {
-            animation?.setNumberState("StateMachine", "dismissSwipe", currentDistanceAnimated)
+    LaunchedEffect(key1 = true) {
+        timerViewModel.eventFlow.collectLatest { event ->
+            when(event) {
+                is TimerViewModel.UiEvent.ActivateVibration -> {
+                    vibrate(event.duration)
+                }
+                is TimerViewModel.UiEvent.StopVibration -> {
+                    stopVibrate()
+                }
+            }
         }
-//    }
+    }
+
+    LaunchedEffect(timerUiState.dismissPercentage > 0) {
+        if (timerUiState.dismissPercentage > 0f) {
+            animation?.stop()
+        }
+    }
+
+    LaunchedEffect(currentDistanceAnimated) {
+        animation?.setNumberState("StateMachine", "dismissSwipe", currentDistanceAnimated)
+    }
+
+    LaunchedEffect(currentDistanceAnimated == 0f ) {
+        if (currentDistanceAnimated == 0f) {
+            animation?.reset()
+            animation?.play()
+        }
+    }
 
 
     Column(
@@ -80,24 +108,30 @@ fun TimerScreen(timerViewModel: TimerViewModel = viewModel()) {
     ) {
 
         if (timerUiState.timerState == TimerState.Finished ){
-            Box(modifier = Modifier
-                .draggable(
-                    orientation = Orientation.Vertical,
-                    state = rememberDraggableState { delta ->
-                        currentDistance += delta/10
-                    }
-                )
+            Box(
+                contentAlignment = Alignment.Center ,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .draggable(
+                        orientation = Orientation.Vertical,
+                        state = rememberDraggableState { delta ->
+                            timerViewModel.setDismissPercentage(timerUiState.dismissPercentage + delta / 5)
+                        },
+                        onDragStopped = {
+                            timerViewModel.setDismissPercentage(0f)
+                        }
+                    ),
+
             ) {
                 ComposableRiveAnimationView(
                     animation = R.raw.alarm,
                     stateMachineName = "StateMachine",
                     fit = Fit.COVER,
+                    modifier = Modifier
+                        .size(500.dp)
                 ) { view ->
                     animation = view
                 }
-//                Text(text = currentDistance.toString(), fontSize = 90.sp)
-                Text(text = if( timerUiState.timerState == TimerState.Finished) "finished" else "other" , fontSize = 90.sp)
-
             }
         }
         else {
@@ -137,10 +171,10 @@ fun ComposableRiveAnimationView(
                 it.setRiveResource(
                     resId = animation,
                     stateMachineName = stateMachineName,
+                    animationName = "Timeline 1",
                     alignment = alignment,
                     fit = fit,
-
-                    )
+                )
             }
         },
         update = { view -> onInit(view) }

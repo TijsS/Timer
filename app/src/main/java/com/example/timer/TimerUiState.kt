@@ -2,5 +2,6 @@ package com.example.timer
 
 data class TimerUiState (
     val timeRemaining: Int = 0,
-    val timerState: TimerState = TimerState.Paused
+    val timerState: TimerState = TimerState.Paused,
+    val dismissPercentage: Float = 0f
     )
