@@ -1,8 +1,8 @@
 package com.example.timer
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RawRes
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.Spring
@@ -28,9 +28,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.rive.runtime.kotlin.RiveAnimationView
@@ -42,9 +42,13 @@ import kotlinx.coroutines.flow.collectLatest
 @SuppressLint("RememberReturnType", "SuspiciousIndentation")
 @Composable
 fun TimerScreen(
-    vibrate: (Long) -> Unit,
+    vibrate: ( ) -> Unit,
     stopVibrate: () -> Unit,
+    notify: ( String, String, String ) -> Unit,
+    updateNotification: ( String, String, String ) -> Unit,
+    dismissNotification: () -> Unit,
     timerViewModel: TimerViewModel = viewModel(),
+    context: Context = LocalContext.current
 ) {
     val timerUiState by timerViewModel.uiState.collectAsState()
 
@@ -71,13 +75,25 @@ fun TimerScreen(
     LaunchedEffect(key1 = true) {
         timerViewModel.eventFlow.collectLatest { event ->
             when(event) {
-                is TimerViewModel.UiEvent.ActivateVibration -> {
-                    vibrate(event.duration)
+                is TimerViewModel.UiEvent.TimerFinished -> {
+                    vibrate()
+                    notify( "12", context.getString(R.string.timer_finished), context.getString(R.string.time_up)
+                    )
                 }
-                is TimerViewModel.UiEvent.StopVibration -> {
+                is TimerViewModel.UiEvent.AlarmStopped -> {
                     stopVibrate()
+                    dismissNotification()
+                }
+                is TimerViewModel.UiEvent.StartTimer -> {
+                    notify( "12", "Timer", timerUiState.timeRemaining.intTimeToString() )
                 }
             }
+        }
+    }
+
+    LaunchedEffect(timerUiState.timeRemaining){
+        if (timerUiState.timerState == TimerState.Running) {
+            notify("12", "Timer", timerUiState.timeRemaining.intTimeToString())
         }
     }
 

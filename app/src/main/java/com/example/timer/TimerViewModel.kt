@@ -11,11 +11,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.time.Duration
 import java.util.Timer
 
 
-@RequiresApi(Build.VERSION_CODES.S)
 class TimerViewModel: ViewModel() {
 
     private val _uiState = MutableStateFlow(TimerUiState())
@@ -31,6 +29,12 @@ class TimerViewModel: ViewModel() {
     fun startCountDown() {
         countDownTimer?.cancel() // Cancel any existing timers
 
+        viewModelScope.launch {
+            _eventFlow.emit(
+                UiEvent.StartTimer
+            )
+        }
+
         countDownTimer = object : CountDownTimer(_uiState.value.timeRemaining.toLong() * 1000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 _uiState.value =
@@ -41,7 +45,7 @@ class TimerViewModel: ViewModel() {
                 //implement vibrate
                 viewModelScope.launch {
                     _eventFlow.emit(
-                        UiEvent.ActivateVibration(100)
+                        UiEvent.TimerFinished
                     )
                 }
 
@@ -64,12 +68,16 @@ class TimerViewModel: ViewModel() {
 
     fun addSecondsToTimer(seconds: Int) {
         _uiState.value = _uiState.value.copy(timeRemaining = _uiState.value.timeRemaining + seconds)
+
+        if (_uiState.value.timerState == TimerState.Running) {
+            startCountDown()
+        }
     }
 
     fun resetCountDown() {
         viewModelScope.launch {
             _eventFlow.emit(
-                UiEvent.StopVibration
+                UiEvent.AlarmStopped
             )
         }
 
@@ -82,7 +90,8 @@ class TimerViewModel: ViewModel() {
     }
 
     sealed class UiEvent {
-        data class ActivateVibration(val duration: Long): UiEvent()
-        object StopVibration: UiEvent()
+        object TimerFinished: UiEvent()
+        object StartTimer : UiEvent()
+        object AlarmStopped: UiEvent()
     }
 }
