@@ -1,8 +1,8 @@
 package com.example.timer
 
-import android.os.Build
+import android.content.Context
+import android.content.Intent
 import android.os.CountDownTimer
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.util.Timer
+import kotlin.coroutines.coroutineContext
 
 
 class TimerViewModel: ViewModel() {
@@ -22,9 +22,9 @@ class TimerViewModel: ViewModel() {
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
-    val timer = Timer()
-
     private var countDownTimer: CountDownTimer? = null
+
+
 
     fun startCountDown() {
         countDownTimer?.cancel() // Cancel any existing timers
@@ -67,6 +67,7 @@ class TimerViewModel: ViewModel() {
     }
 
     fun addSecondsToTimer(seconds: Int) {
+
         _uiState.value = _uiState.value.copy(timeRemaining = _uiState.value.timeRemaining + seconds)
 
         if (_uiState.value.timerState == TimerState.Running) {

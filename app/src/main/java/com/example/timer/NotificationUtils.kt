@@ -14,18 +14,16 @@ import androidx.core.app.NotificationCompat
 lateinit var notificationChannel: NotificationChannel
 lateinit var notificationManager: NotificationManager
 
+
 //TODO iets is mis met die body
 fun Context.showNotification(channelId: String = "12", title: String = "", body: String = "") {
-    notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     val intent = Intent(this, MainActivity::class.java)
     val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_MUTABLE)
 
     notificationChannel =
-        NotificationChannel(channelId, body, NotificationManager.IMPORTANCE_HIGH).apply {
-            lightColor = Color.BLUE
-            enableVibration(true)
-        }
+        NotificationChannel("12", "Timer Notifications", NotificationManager.IMPORTANCE_HIGH)
 
+    notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     notificationManager.createNotificationChannel(notificationChannel)
 
     val builder: NotificationCompat.Builder = NotificationCompat.Builder(this, channelId)

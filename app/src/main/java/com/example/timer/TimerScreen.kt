@@ -2,6 +2,7 @@ package com.example.timer
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.annotation.RawRes
 import androidx.annotation.RequiresApi
@@ -48,12 +49,12 @@ fun TimerScreen(
     updateNotification: ( String, String, String ) -> Unit,
     dismissNotification: () -> Unit,
     timerViewModel: TimerViewModel = viewModel(),
-    context: Context = LocalContext.current
+    context: Context = LocalContext.current,
 ) {
     val timerUiState by timerViewModel.uiState.collectAsState()
 
     var animation: RiveAnimationView? = null
-//    var currentDistance by remember { mutableFloatStateOf(0f) }
+    val applicationContext = context.applicationContext
 
     val currentDistanceAnimated by animateFloatAsState(
         targetValue = timerUiState.dismissPercentage,
@@ -77,15 +78,19 @@ fun TimerScreen(
             when(event) {
                 is TimerViewModel.UiEvent.TimerFinished -> {
                     vibrate()
-                    notify( "12", context.getString(R.string.timer_finished), context.getString(R.string.time_up)
-                    )
+//                    notify( "12", context.getString(R.string.timer_finished), context.getString(R.string.time_up) )
                 }
                 is TimerViewModel.UiEvent.AlarmStopped -> {
                     stopVibrate()
                     dismissNotification()
                 }
                 is TimerViewModel.UiEvent.StartTimer -> {
-                    notify( "12", "Timer", timerUiState.timeRemaining.intTimeToString() )
+//                    notify( "12", "Timer", timerUiState.timeRemaining.intTimeToString() )
+                    Intent(applicationContext, TimerService::class.java).also { intent ->
+                        intent.action = TimerService.Action.Start.toString()
+                        intent.putExtra("seconds", timerUiState.timeRemaining)
+                        applicationContext.startService(intent)
+                    }
                 }
             }
         }
@@ -93,7 +98,7 @@ fun TimerScreen(
 
     LaunchedEffect(timerUiState.timeRemaining){
         if (timerUiState.timerState == TimerState.Running) {
-            notify("12", "Timer", timerUiState.timeRemaining.intTimeToString())
+//            notify("12", "Timer", timerUiState.timeRemaining.intTimeToString())
         }
     }
 

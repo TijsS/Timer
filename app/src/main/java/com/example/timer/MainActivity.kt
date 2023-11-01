@@ -1,20 +1,23 @@
 package com.example.timer
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
-import android.os.Build
+import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.os.CombinedVibration.createParallel
 import android.os.VibrationEffect
 import android.os.VibratorManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.timer.ui.theme.TimerTheme
+
 
 class MainActivity : ComponentActivity() {
 
@@ -26,6 +29,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
+        startService(Intent(this, TimerService::class.java))
 
         setContent {
             TimerTheme {
@@ -43,6 +49,11 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        stopService(Intent(this, TimerService::class.java))
+        super.onDestroy()
     }
 
     private fun vibrate() {
