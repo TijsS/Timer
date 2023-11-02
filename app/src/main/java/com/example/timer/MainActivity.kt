@@ -2,8 +2,10 @@ package com.example.timer
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
 import android.os.Bundle
 import android.os.CombinedVibration.createParallel
@@ -16,6 +18,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.app.ServiceCompat
 import com.example.timer.ui.theme.TimerTheme
 
 
@@ -26,12 +29,11 @@ class MainActivity : ComponentActivity() {
         getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
     }
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
 
-        startService(Intent(this, TimerService::class.java))
+//        startService(Intent(this, TimerService::class.java))
 
         setContent {
             TimerTheme {
