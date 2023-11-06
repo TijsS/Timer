@@ -3,6 +3,7 @@ package com.example.timer
 import android.content.Context
 import android.content.Intent
 import android.os.CountDownTimer
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -35,10 +36,10 @@ class TimerViewModel: ViewModel() {
             )
         }
 
-        countDownTimer = object : CountDownTimer(_uiState.value.timeRemaining.toLong() * 1000, 1000) {
+        countDownTimer = object : CountDownTimer(ClockTimer.timeRemaining.intValue.toLong() * 1000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
-                _uiState.value =
-                    _uiState.value.copy(timeRemaining = _uiState.value.timeRemaining - 1)
+                ClockTimer.timeRemaining.intValue -= 1
+
             }
 
             override fun onFinish() {
@@ -49,16 +50,16 @@ class TimerViewModel: ViewModel() {
                     )
                 }
 
-                _uiState.value = _uiState.value.copy(timerState = TimerState.Finished)
+                ClockTimer.timerState.value = TimerState.Finished
             }
         }.start()
 
-        _uiState.value = _uiState.value.copy(timerState = TimerState.Running)
+        ClockTimer.timerState.value = TimerState.Running
     }
 
     fun cancelCountDown() {
         countDownTimer?.cancel()
-        _uiState.value = _uiState.value.copy(timerState = TimerState.Stopped)
+        ClockTimer.timerState.value = TimerState.Stopped
     }
 
     fun setDismissPercentage(percentage: Float) {
@@ -68,9 +69,9 @@ class TimerViewModel: ViewModel() {
 
     fun addSecondsToTimer(seconds: Int) {
 
-        _uiState.value = _uiState.value.copy(timeRemaining = _uiState.value.timeRemaining + seconds)
+        ClockTimer.timeRemaining.value += seconds
 
-        if (_uiState.value.timerState == TimerState.Running) {
+        if (ClockTimer.timerState.value == TimerState.Running) {
             startCountDown()
         }
     }
@@ -82,11 +83,10 @@ class TimerViewModel: ViewModel() {
             )
         }
 
-        _uiState.value = _uiState.value.copy(
-            timeRemaining = 0,
-            dismissPercentage = 0f,
-            timerState = TimerState.Stopped
-        )
+        ClockTimer.apply{
+            timeRemaining.intValue = 0
+            timerState.value = TimerState.Stopped
+        }
         countDownTimer?.cancel()
     }
 

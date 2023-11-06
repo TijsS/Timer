@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RawRes
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.Spring
@@ -27,6 +28,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -47,12 +51,15 @@ fun TimerScreen(
     vibrate: ( ) -> Unit,
     stopVibrate: () -> Unit,
     notify: ( String, String, String ) -> Unit,
-    updateNotification: ( String, String, String ) -> Unit,
+    updateNotification: ( Int, String ) -> Unit,
     dismissNotification: () -> Unit,
     timerViewModel: TimerViewModel = viewModel(),
     context: Context = LocalContext.current,
 ) {
     val timerUiState by timerViewModel.uiState.collectAsState()
+
+    val timeRemaining by remember { ClockTimer.timeRemaining }
+    val timerState by remember { ClockTimer.timerState }
 
     var animation: RiveAnimationView? = null
     val applicationContext = context.applicationContext
@@ -89,7 +96,7 @@ fun TimerScreen(
 //                    notify( "12", "Timer", timerUiState.timeRemaining.intTimeToString() )
                     Intent(applicationContext, TimerService::class.java).also { intent ->
                         intent.action = TimerService.Action.Start.toString()
-                        intent.putExtra("seconds", timerUiState.timeRemaining)
+                        intent.putExtra("seconds", timeRemaining)
                         applicationContext.startService(intent)
                     }
                 }
@@ -97,9 +104,11 @@ fun TimerScreen(
         }
     }
 
-    LaunchedEffect(timerUiState.timeRemaining){
-        if (timerUiState.timerState == TimerState.Running) {
-//            notify("12", "Timer", timerUiState.timeRemaining.intTimeToString())
+
+    LaunchedEffect(timeRemaining){
+        if (timerState == TimerState.Running) {
+            Log.d("xxx", "TimerScreen: $timeRemaining  ${timeRemaining.intTimeToString()}")
+             updateNotification(2, timeRemaining.intTimeToString())
         }
     }
 
@@ -128,8 +137,7 @@ fun TimerScreen(
             .fillMaxSize()
 
     ) {
-
-        if (timerUiState.timerState == TimerState.Finished ){
+        if (timerState == TimerState.Finished ){
             Box(
                 contentAlignment = Alignment.Center ,
                 modifier = Modifier
@@ -158,15 +166,15 @@ fun TimerScreen(
         }
         else {
             TimeDisplay(
-                timeRemaining = timerUiState.timeRemaining,
+                timeRemaining = timeRemaining,
                 modifier = Modifier
                     .weight(2f)
             )
 
             TimeControlArea(
                 addSecondsToTimer = { timerViewModel.addSecondsToTimer(it) },
-                timerState = { timerUiState.timerState },
-                timerGreaterThenZero = { timerUiState.timeRemaining > 0 },
+                timerState = { timerState },
+                timerGreaterThenZero = { timeRemaining > 0 },
                 startCountDown = { timerViewModel.startCountDown() },
                 cancelCountDown = { timerViewModel.cancelCountDown() },
                 resetCountDown = { timerViewModel.resetCountDown() },
