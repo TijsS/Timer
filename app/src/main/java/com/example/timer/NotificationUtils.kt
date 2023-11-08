@@ -24,42 +24,10 @@ const val CHANNEL_ID = "13"
 const val NOTIFICATION_ID = "2"
 const val CHANNEL_NAME = "Timer Notifications"
 
-
-//TODO iets is mis met die body
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
-fun Context.showNotification(channelId: String = CHANNEL_ID, title: String = "", body: String = "") {
-    val intent = Intent(this, TimerViewModel::class.java)
-    val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_MUTABLE)
-
-
-    val actionIntent = PendingIntent.getBroadcast(
-        this,
-        2,
-        Intent(this, TimerNotificationReceiver::class.java),
-        PendingIntent.FLAG_IMMUTABLE
-    )
-
-    val builder: NotificationCompat.Builder = NotificationCompat.Builder(this, channelId)
-        .setSmallIcon(R.drawable.baseline_alarm_24)
-        .setContentTitle(title)
-        .setContentText(body)
-//        .setAutoCancel(false)
-//        .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE))
-        .setContentIntent(pendingIntent)
-        .setPriority(NotificationCompat.PRIORITY_HIGH)
-        .addAction(
-            androidx.core.R.drawable.ic_call_answer,
-            "Stop",
-            actionIntent
-        )
-//        .setCategory(NotificationCompat.CATEGORY_ALARM)
-//        .setOnlyAlertOnce(true)
-
-    notificationManager.notify(CHANNEL_ID.toInt(), builder.build())
-}
-
 fun createNotification(context : Context): NotificationCompat.Builder {
     val activityIntent = Intent(context, MainActivity::class.java)
+    activityIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+    
     val activityPendingIntent = PendingIntent.getActivity(
         context,
         2,
@@ -79,6 +47,7 @@ fun createNotification(context : Context): NotificationCompat.Builder {
         .setContentText("Service is running ${ClockTimer.timeRemaining.intValue}")
         .setSmallIcon(R.drawable.baseline_alarm_24)
         .setContentIntent(activityPendingIntent)
+        .setOnlyAlertOnce(true)
         .addAction(
             R.drawable.baseline_stop_24,
             "Stop",
@@ -93,30 +62,16 @@ fun Context.dismissNotification(channelId: String) {
 
 // function for updating the contentText of the notification
 fun Context.updateNotificationContentText(id: Int, newBody: String) {
-    Log.d("xxx", "updateNotificationContentText: ${newBody}")
 
     val existingNotification = notificationManager.activeNotifications.find {
         it.id == id
     }
 
     if (existingNotification != null) {
+
         // Modify the contentText of the existing notification
-//        val builder = NotificationCompat.Builder(this, id.toString())
-//            .setSmallIcon(R.drawable.baseline_alarm_24)
-//            .setContentTitle(existingNotification.notification.extras.getString(NotificationCompat.EXTRA_TITLE))
-//            .setContentText(newBody) // Update the contentText
-//            .setAutoCancel(false)
-//            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-//            .setCategory(NotificationCompat.CATEGORY_ALARM)
-//            .setOnlyAlertOnce(true)
          val builder = createNotification(this)
             .setContentText(newBody)
-
-//
-//        // Use the same PendingIntent
-//        val intent = Intent(this, MainActivity::class.java)
-//        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_MUTABLE)
-//        builder.setContentIntent(pendingIntent)
 
         // Update the notification with the new content
         notificationManager.notify(id, builder.build())

@@ -50,7 +50,6 @@ import kotlinx.coroutines.flow.collectLatest
 fun TimerScreen(
     vibrate: ( ) -> Unit,
     stopVibrate: () -> Unit,
-    notify: ( String, String, String ) -> Unit,
     updateNotification: ( Int, String ) -> Unit,
     dismissNotification: () -> Unit,
     timerViewModel: TimerViewModel = viewModel(),
@@ -80,6 +79,7 @@ fun TimerScreen(
             }
         }, label = ""
     )
+
 
     LaunchedEffect(key1 = true) {
         timerViewModel.eventFlow.collectLatest { event ->

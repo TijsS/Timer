@@ -1,5 +1,6 @@
 package com.example.timer
 
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -28,8 +29,8 @@ fun Int.intTimeToString(): String {
     var string = ""
 
     if (hours > 0) {
-        string += String.format("%02d:", hours)
+        string += "$hours:"
     }
 
-    return string.format("%02d:%02d", minutes, seconds)
+    return string + String.format("%02d:%02d", minutes, seconds)
 }

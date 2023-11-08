@@ -25,8 +25,6 @@ class TimerViewModel: ViewModel() {
 
     private var countDownTimer: CountDownTimer? = null
 
-
-
     fun startCountDown() {
         countDownTimer?.cancel() // Cancel any existing timers
 

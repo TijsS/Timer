@@ -20,7 +20,6 @@ class TimerService(): Service(){
 
     private fun start(seconds: Int) {
 //        this.showNotification("12", "Timer", seconds.intTimeToString())
-        Log.d("TAG", "start: $seconds")
 
         startForeground( NOTIFICATION_ID.toInt(), createNotification(this).build() )
     }

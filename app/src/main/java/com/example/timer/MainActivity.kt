@@ -71,7 +71,6 @@ class MainActivity : ComponentActivity() {
                     TimerScreen(
                         vibrate = { vibrate() },
                         stopVibrate = { stopVibrate() },
-                        notify = { id: String, title: String, body: String -> this.showNotification( ) },
                         updateNotification = { id: Int, body: String -> this.updateNotificationContentText( id, body ) },
                         dismissNotification = { this.dismissNotification(CHANNEL_ID) }
                     )
@@ -107,6 +106,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun GreetingPreview() {
     TimerTheme {
-        TimerScreen( { }, { }, { _, _, _ -> }, { _, _ -> }, { } )
+        TimerScreen( { }, { }, { _, _ -> }, { } )
     }
 }
