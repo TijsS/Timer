@@ -1,9 +1,5 @@
 package com.example.timer
 
-import android.content.Context
-import android.content.Intent
-import android.os.CountDownTimer
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -12,7 +8,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlin.coroutines.coroutineContext
 
 
 class TimerViewModel: ViewModel() {
@@ -23,41 +18,31 @@ class TimerViewModel: ViewModel() {
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
-    private var countDownTimer: CountDownTimer? = null
 
     fun startCountDown() {
-        countDownTimer?.cancel() // Cancel any existing timers
-
         viewModelScope.launch {
             _eventFlow.emit(
                 UiEvent.StartTimer
             )
         }
-
-        countDownTimer = object : CountDownTimer(ClockTimer.timeRemaining.intValue.toLong() * 1000, 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                ClockTimer.timeRemaining.intValue -= 1
-
-            }
-
-            override fun onFinish() {
-                //implement vibrate
-                viewModelScope.launch {
-                    _eventFlow.emit(
-                        UiEvent.TimerFinished
-                    )
-                }
-
-                ClockTimer.timerState.value = TimerState.Finished
-            }
-        }.start()
-
-        ClockTimer.timerState.value = TimerState.Running
     }
 
-    fun cancelCountDown() {
-        countDownTimer?.cancel()
-        ClockTimer.timerState.value = TimerState.Stopped
+    fun pauseCountDown() {
+        viewModelScope.launch {
+            _eventFlow.emit(
+                UiEvent.PauseTimer
+            )
+        }
+
+        ClockTimer.timerState.value = TimerState.Paused
+    }
+
+    fun stopCountDown() {
+        viewModelScope.launch {
+            _eventFlow.emit(
+                UiEvent.StopTimer
+            )
+        }
     }
 
     fun setDismissPercentage(percentage: Float) {
@@ -67,30 +52,18 @@ class TimerViewModel: ViewModel() {
 
     fun addSecondsToTimer(seconds: Int) {
 
-        ClockTimer.timeRemaining.value += seconds
+        ClockTimer.timeRemaining.intValue += seconds
 
         if (ClockTimer.timerState.value == TimerState.Running) {
             startCountDown()
         }
     }
 
-    fun resetCountDown() {
-        viewModelScope.launch {
-            _eventFlow.emit(
-                UiEvent.AlarmStopped
-            )
-        }
-
-        ClockTimer.apply{
-            timeRemaining.intValue = 0
-            timerState.value = TimerState.Stopped
-        }
-        countDownTimer?.cancel()
-    }
 
     sealed class UiEvent {
-        object TimerFinished: UiEvent()
+        object StopTimer: UiEvent()
         object StartTimer : UiEvent()
-        object AlarmStopped: UiEvent()
+        object PauseTimer: UiEvent()
+        object ResetTimer: UiEvent()
     }
 }

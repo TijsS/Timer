@@ -18,8 +18,24 @@ import java.util.Timer
 //TODO will probs need to make it a bind service
 class TimerService(): Service(){
 
-    private fun start(seconds: Int) {
-//        this.showNotification("12", "Timer", seconds.intTimeToString())
+    private var countDownTimer: CountDownTimer? = null
+
+    private fun start() {
+        countDownTimer?.cancel() // Cancel any existing timers
+
+        countDownTimer = object : CountDownTimer(ClockTimer.timeRemaining.intValue.toLong() * 1000, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                ClockTimer.timeRemaining.intValue -= 1
+                applicationContext.updateNotificationContentText( 2, ClockTimer.timeRemaining.intValue.intTimeToString() )
+            }
+
+            override fun onFinish() {
+                ClockTimer.timerState.value = TimerState.Finished
+//                stopSelf()
+            }
+        }.start()
+
+        ClockTimer.timerState.value = TimerState.Running
 
         startForeground( NOTIFICATION_ID.toInt(), createNotification(this).build() )
     }
@@ -28,32 +44,35 @@ class TimerService(): Service(){
         return null
     }
 
-    private fun addSecondsToTimer() {
-
-    }
-
-
     private fun reset(){
-//        this.showNotification("12", "Timer", timer.timeRemaining.toString())
+        countDownTimer?.cancel()
+
+        ClockTimer.apply{
+            timeRemaining.intValue = 0
+            timerState.value = TimerState.Stopped
+        }
     }
 
-    private fun stop(){
-        this.dismissNotification("12")
-        stopSelf()
+    private fun pause(){
+        countDownTimer?.cancel()
+        ClockTimer.timerState.value = TimerState.Paused
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when(intent?.action) {
-            Action.Start.toString() -> start( intent.getIntExtra("seconds", 0))
-            Action.Stop.toString() -> stop()
+            Action.Start.toString() -> start()
+            Action.Pause.toString() -> pause()
             Action.Reset.toString() -> reset()
-            Action.AddSecondsToTimer.toString() -> addSecondsToTimer()
+            Action.Stop.toString() -> {
+                reset()
+                stopSelf()
+            }
         }
 
         return super.onStartCommand(intent, flags, startId)
     }
 
     enum class Action {
-        Start, Stop, Reset, Update, AddSecondsToTimer
+        Start, Pause, Reset, Stop
     }
 }

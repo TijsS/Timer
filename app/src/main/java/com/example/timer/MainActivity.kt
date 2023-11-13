@@ -59,9 +59,6 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-
-//        startService(Intent(this, TimerService::class.java))
-
         setContent {
             TimerTheme {
                 // A surface container using the 'background' color from the theme

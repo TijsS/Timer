@@ -17,7 +17,6 @@ sealed class TimerState {
 object ClockTimer {
     var timerState: MutableState<TimerState> = mutableStateOf(TimerState.Stopped)
     var timeRemaining = mutableIntStateOf(0)
-    var dismissPercentage: Float = 0f
 }
 
 fun Int.intTimeToString(): String {

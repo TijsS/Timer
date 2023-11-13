@@ -3,10 +3,7 @@ package com.example.timer
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.os.Build
-import android.util.Log
 import androidx.annotation.RawRes
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -28,8 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,14 +32,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.rive.runtime.kotlin.RiveAnimationView
 import app.rive.runtime.kotlin.core.Fit
 import com.example.timer.components.TimeDisplay
 import kotlinx.coroutines.flow.collectLatest
 
-@RequiresApi(Build.VERSION_CODES.S)
 @SuppressLint("RememberReturnType", "SuspiciousIndentation")
 @Composable
 fun TimerScreen(
@@ -71,7 +64,7 @@ fun TimerScreen(
         ),
         finishedListener = { value ->
             if (value >= 100f) {
-                timerViewModel.resetCountDown()
+                timerViewModel.stopCountDown()
 
                 // Only reset the animation when not visible
                 animation?.reset()
@@ -84,31 +77,38 @@ fun TimerScreen(
     LaunchedEffect(key1 = true) {
         timerViewModel.eventFlow.collectLatest { event ->
             when(event) {
-                is TimerViewModel.UiEvent.TimerFinished -> {
-                    vibrate()
-//                    notify( "12", context.getString(R.string.timer_finished), context.getString(R.string.time_up) )
-                }
-                is TimerViewModel.UiEvent.AlarmStopped -> {
-                    stopVibrate()
-                    dismissNotification()
-                }
-                is TimerViewModel.UiEvent.StartTimer -> {
-//                    notify( "12", "Timer", timerUiState.timeRemaining.intTimeToString() )
+                is TimerViewModel.UiEvent.StopTimer -> {
                     Intent(applicationContext, TimerService::class.java).also { intent ->
-                        intent.action = TimerService.Action.Start.toString()
-                        intent.putExtra("seconds", timeRemaining)
+                        intent.action = TimerService.Action.Stop.toString()
                         applicationContext.startService(intent)
                     }
                 }
+
+                is TimerViewModel.UiEvent.ResetTimer -> {
+                    stopVibrate()
+                    dismissNotification()
+                    Intent(applicationContext, TimerService::class.java).also { intent ->
+                        intent.action = TimerService.Action.Reset.toString()
+                        applicationContext.startService(intent)
+                    }
+                }
+
+                is TimerViewModel.UiEvent.PauseTimer -> {
+                    Intent(applicationContext, TimerService::class.java).also { intent ->
+                        intent.action = TimerService.Action.Pause.toString()
+                        applicationContext.startService(intent)
+                    }
+                }
+
+                is TimerViewModel.UiEvent.StartTimer -> {
+                    Intent(applicationContext, TimerService::class.java).also { intent ->
+                        intent.action = TimerService.Action.Start.toString()
+                        applicationContext.startService(intent)
+                    }
+                }
+
+                else -> {}
             }
-        }
-    }
-
-
-    LaunchedEffect(timeRemaining){
-        if (timerState == TimerState.Running) {
-            Log.d("xxx", "TimerScreen: $timeRemaining  ${timeRemaining.intTimeToString()}")
-             updateNotification(2, timeRemaining.intTimeToString())
         }
     }
 
@@ -176,8 +176,8 @@ fun TimerScreen(
                 timerState = { timerState },
                 timerGreaterThenZero = { timeRemaining > 0 },
                 startCountDown = { timerViewModel.startCountDown() },
-                cancelCountDown = { timerViewModel.cancelCountDown() },
-                resetCountDown = { timerViewModel.resetCountDown() },
+                pauseCountdown = { timerViewModel.pauseCountDown() },
+                resetCountDown = { timerViewModel.stopCountDown() },
                 modifier = Modifier
                     .weight(1f)
             )
@@ -212,16 +212,11 @@ fun ComposableRiveAnimationView(
 }
 
 @Composable
-fun CurrentTime(time: Int, modifier: Modifier = Modifier) {
-    Text(text = time.toString())
-}
-
-@Composable
 fun TimeControlArea(
     addSecondsToTimer: (Int) -> Unit,
     timerState: () -> TimerState,
     startCountDown: () -> Unit,
-    cancelCountDown: () -> Unit,
+    pauseCountdown: () -> Unit,
     resetCountDown: () -> Unit,
     modifier: Modifier = Modifier,
     timerGreaterThenZero: () -> Boolean
@@ -252,7 +247,7 @@ fun TimeControlArea(
                 timerState = timerState,
                 timerGreaterThenZero = timerGreaterThenZero,
                 startCountDown = startCountDown,
-                cancelCountDown = cancelCountDown,
+                pauseCountDown = pauseCountdown,
                 modifier = Modifier
                     .weight(2f)
             )
@@ -273,7 +268,7 @@ fun TimerActionButton(
     timerState: () -> TimerState,
     timerGreaterThenZero: () -> Boolean,
     startCountDown: () -> Unit,
-    cancelCountDown: () -> Unit,
+    pauseCountDown: () -> Unit,
     modifier: Modifier,
 ){
     timerState().let {
@@ -283,8 +278,9 @@ fun TimerActionButton(
                 timerGreaterThenZero = timerGreaterThenZero,
                 modifier = modifier
             )
+
             TimerState.Running -> PauseTimerButton(
-                pauseTimer = { cancelCountDown() },
+                pauseTimer = { pauseCountDown() },
                 modifier = modifier
             )
 
