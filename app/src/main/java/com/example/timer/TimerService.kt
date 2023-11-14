@@ -6,8 +6,15 @@ import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+import android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
+import android.content.Intent.FLAG_FROM_BACKGROUND
+import android.os.CombinedVibration
 import android.os.CountDownTimer
 import android.os.IBinder
+import android.os.VibrationEffect
+import android.os.VibratorManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.viewModelScope
@@ -16,7 +23,11 @@ import java.util.Timer
 
 
 //TODO will probs need to make it a bind service
-class TimerService(): Service(){
+class TimerService: Service(){
+
+    private val vibratorManager: VibratorManager by lazy {
+        getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+    }
 
     private var countDownTimer: CountDownTimer? = null
 
@@ -31,7 +42,17 @@ class TimerService(): Service(){
 
             override fun onFinish() {
                 ClockTimer.timerState.value = TimerState.Finished
-//                stopSelf()
+
+                vibrate()
+
+                val activityIntent = Intent(applicationContext, MainActivity::class.java)
+                activityIntent.flags = FLAG_ACTIVITY_NEW_TASK
+                try {
+                    startActivity(activityIntent)
+                } catch (e: Exception) {
+                    Log.e("xxx", "Failed to start activity from service")
+                    Log.d("xxx", "onFinish: ${e.message}")
+                }
             }
         }.start()
 
@@ -51,11 +72,25 @@ class TimerService(): Service(){
             timeRemaining.intValue = 0
             timerState.value = TimerState.Stopped
         }
+
     }
 
     private fun pause(){
         countDownTimer?.cancel()
         ClockTimer.timerState.value = TimerState.Paused
+        applicationContext.updateNotificationContentText( 2, ClockTimer.timeRemaining.intValue.intTimeToString() )
+    }
+
+    private fun vibrate() {
+        vibratorManager.vibrate(
+            CombinedVibration.createParallel(
+                VibrationEffect.createWaveform(
+                    longArrayOf(0, 200, 600, 500),
+                    intArrayOf(0, 255, 55, 0),
+                    1
+                )
+            )
+        )
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

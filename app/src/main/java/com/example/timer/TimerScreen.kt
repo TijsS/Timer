@@ -41,10 +41,8 @@ import kotlinx.coroutines.flow.collectLatest
 @SuppressLint("RememberReturnType", "SuspiciousIndentation")
 @Composable
 fun TimerScreen(
-    vibrate: ( ) -> Unit,
     stopVibrate: () -> Unit,
     updateNotification: ( Int, String ) -> Unit,
-    dismissNotification: () -> Unit,
     timerViewModel: TimerViewModel = viewModel(),
     context: Context = LocalContext.current,
 ) {
@@ -86,7 +84,6 @@ fun TimerScreen(
 
                 is TimerViewModel.UiEvent.ResetTimer -> {
                     stopVibrate()
-                    dismissNotification()
                     Intent(applicationContext, TimerService::class.java).also { intent ->
                         intent.action = TimerService.Action.Reset.toString()
                         applicationContext.startService(intent)

@@ -66,10 +66,8 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     TimerScreen(
-                        vibrate = { vibrate() },
                         stopVibrate = { stopVibrate() },
                         updateNotification = { id: Int, body: String -> this.updateNotificationContentText( id, body ) },
-                        dismissNotification = { this.dismissNotification(CHANNEL_ID) }
                     )
                 }
             }
@@ -79,18 +77,6 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         stopService(Intent(this, TimerService::class.java))
         super.onDestroy()
-    }
-
-    private fun vibrate() {
-        vibratorManager.vibrate(
-            createParallel(
-                VibrationEffect.createWaveform(
-                    longArrayOf(0, 200, 600, 500),
-                    intArrayOf(0, 255, 55, 0),
-                    1
-                )
-            )
-        )
     }
 
     private fun stopVibrate() {
@@ -103,6 +89,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun GreetingPreview() {
     TimerTheme {
-        TimerScreen( { }, { }, { _, _ -> }, { } )
+        TimerScreen( { }, { _, _ -> } )
     }
 }
