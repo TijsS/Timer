@@ -1,25 +1,16 @@
 package com.example.timer
 
-import android.app.Notification.EXTRA_NOTIFICATION_ID
-import android.app.PendingIntent
 import android.app.Service
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-import android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-import android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
-import android.content.Intent.FLAG_FROM_BACKGROUND
 import android.os.CombinedVibration
 import android.os.CountDownTimer
 import android.os.IBinder
 import android.os.VibrationEffect
 import android.os.VibratorManager
-import android.util.Log
-import androidx.core.app.NotificationCompat
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
-import java.util.Timer
+import android.window.SplashScreen
+import androidx.annotation.RequiresApi
 
 
 //TODO will probs need to make it a bind service
@@ -40,19 +31,14 @@ class TimerService: Service(){
                 applicationContext.updateNotificationContentText( 2, ClockTimer.timeRemaining.intValue.intTimeToString() )
             }
 
+            @RequiresApi(34)
             override fun onFinish() {
                 ClockTimer.timerState.value = TimerState.Finished
 
                 vibrate()
 
-                val activityIntent = Intent(applicationContext, MainActivity::class.java)
-                activityIntent.flags = FLAG_ACTIVITY_NEW_TASK
-                try {
-                    startActivity(activityIntent)
-                } catch (e: Exception) {
-                    Log.e("xxx", "Failed to start activity from service")
-                    Log.d("xxx", "onFinish: ${e.message}")
-                }
+                applicationContext.updateNotificationAlarmFinished( 2 )
+
             }
         }.start()
 
@@ -67,12 +53,13 @@ class TimerService: Service(){
 
     private fun reset(){
         countDownTimer?.cancel()
+        vibratorManager.cancel()
+        stopSelf()
 
         ClockTimer.apply{
             timeRemaining.intValue = 0
             timerState.value = TimerState.Stopped
         }
-
     }
 
     private fun pause(){

@@ -3,11 +3,19 @@ package com.example.timer
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Rect
+import android.util.DisplayMetrics
 import android.util.Log
+import android.util.TypedValue
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.core.graphics.drawable.IconCompat
+
 
 lateinit var notificationChannel: NotificationChannel
 lateinit var notificationManager: NotificationManager
@@ -48,10 +56,9 @@ fun createNotification(context : Context): NotificationCompat.Builder {
 
     return NotificationCompat.Builder(context, CHANNEL_ID)
         .setContentTitle("Timer")
-        .setContentText("")
         .setSmallIcon(R.drawable.baseline_alarm_24)
         .setContentIntent(activityPendingIntent)
-        .setOnlyAlertOnce(true)
+        .setSilent(true)
         .addAction(
             R.drawable.baseline_pause_24,
             "Pause",
@@ -65,11 +72,9 @@ fun createNotification(context : Context): NotificationCompat.Builder {
 }
 
 fun Context.dismissNotification(channelId: String) {
-    notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     notificationManager.cancel(channelId.toInt())
 }
 
-// function for updating the contentText of the notification
 fun Context.updateNotificationContentText(id: Int, newBody: String) {
 
     val pauseIntent = Intent(this, TimerNotificationReceiver::class.java)
@@ -106,9 +111,11 @@ fun Context.updateNotificationContentText(id: Int, newBody: String) {
         it.id == id
     }
 
+
     if (existingNotification != null) {
         // Modify the contentText of the existing notification
          val builder = createNotification(this)
+             .setSmallIcon(R.drawable.baseline_alarm_24)
              .setContentText(newBody)
              .clearActions()
 
@@ -134,4 +141,52 @@ fun Context.updateNotificationContentText(id: Int, newBody: String) {
         // Update the notification with the new content
         notificationManager.notify(id, builder.build())
     }
+}
+
+@RequiresApi(34)
+fun Context.updateNotificationAlarmFinished(
+    id: Int,
+) {
+    val existingNotification = notificationManager.activeNotifications.find {
+        it.id == id
+    }
+
+    if (existingNotification != null) {
+        dismissNotification(id.toString())
+    }
+
+    val activityIntent = Intent(this, MainActivity::class.java)
+
+    val activityPendingIntent = PendingIntent.getActivity(
+        this,
+        2,
+        activityIntent,
+        PendingIntent.FLAG_IMMUTABLE
+    )
+
+    val resetIntent = Intent(this, TimerNotificationReceiver::class.java)
+    resetIntent.action = TimerNotificationReceiver.Action.Reset.toString()
+
+    val resetPendingIntent = PendingIntent.getBroadcast(
+        this,
+        2,
+        resetIntent,
+        PendingIntent.FLAG_IMMUTABLE
+    )
+
+    val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+        .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+        .setContentTitle("Timer")
+        .setContentText("Times up!")
+        .setPriority(NotificationCompat.PRIORITY_HIGH)
+        .setSound(null)
+        .setFullScreenIntent(activityPendingIntent, true)
+        .clearActions()
+        .addAction(
+            R.drawable.baseline_autorenew_24,
+            "Stop",
+            resetPendingIntent
+        )
+
+    notificationManager.notify(NOTIFICATION_ID.toInt(), builder.build())
 }

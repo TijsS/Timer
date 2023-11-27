@@ -1,27 +1,17 @@
 package com.example.timer
 
 import android.Manifest.permission.POST_NOTIFICATIONS
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.BroadcastReceiver
-import android.content.Context
+import android.Manifest.permission.RECORD_AUDIO
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.os.CombinedVibration.createParallel
-import android.os.VibrationEffect
-import android.os.VibratorManager
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,31 +22,36 @@ import com.example.timer.ui.theme.TimerTheme
 
 
 class MainActivity : ComponentActivity() {
+    private val timerApp = TimerApp() // Create an instance of TimerApp
 
-    // Get Vibrator service
-    private val vibratorManager: VibratorManager by lazy {
-        getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-    }
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private val permissions = arrayOf(
+        RECORD_AUDIO,
+        POST_NOTIFICATIONS
+    )
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        //TODO improve notification request user experience
-        val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
-        when {
-            ContextCompat.checkSelfPermission(
+        val permissionsToRequest = ArrayList<String>()
+        for (permission in permissions) {
+            if (ContextCompat.checkSelfPermission(this, permission)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                permissionsToRequest.add(permission)
+            }
+        }
+
+        if (permissionsToRequest.isNotEmpty()) {
+            // Request permissions
+            ActivityCompat.requestPermissions(
                 this,
-                POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED -> {
-            }
-            ActivityCompat.shouldShowRequestPermissionRationale(
-                this, POST_NOTIFICATIONS) -> {
-                requestPermissionLauncher.launch(POST_NOTIFICATIONS)
-            }
-            else -> {
-                requestPermissionLauncher.launch(POST_NOTIFICATIONS)
-            }
+                permissionsToRequest.toTypedArray(),
+                0
+            )
+        } else {
+            // All permissions already granted
         }
 
         setContent {
@@ -66,21 +61,25 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     TimerScreen(
-                        stopVibrate = { stopVibrate() },
-                        updateNotification = { id: Int, body: String -> this.updateNotificationContentText( id, body ) },
+                        startListening = { startListening() }
                     )
                 }
             }
         }
+        turnScreenOnAndKeyguardOff()
     }
+
+    private fun startListening() {
+        timerApp.startListening( this )
+    }
+
+
 
     override fun onDestroy() {
+
+        turnScreenOffAndKeyguardOn()
         stopService(Intent(this, TimerService::class.java))
         super.onDestroy()
-    }
-
-    private fun stopVibrate() {
-        vibratorManager.cancel()
     }
 }
 
@@ -89,6 +88,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun GreetingPreview() {
     TimerTheme {
-        TimerScreen( { }, { _, _ -> } )
+        TimerScreen({ })
     }
 }
