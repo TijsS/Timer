@@ -15,4 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Timer"
 include(":app")
- 
+include(":weartimer")
