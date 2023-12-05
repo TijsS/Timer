@@ -54,6 +54,7 @@
                     android:scheme="wear" />
             </intent-filter>
         </service>
+
         <receiver android:name=".TimerNotificationReceiver" />
 
         <provider

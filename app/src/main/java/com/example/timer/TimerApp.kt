@@ -6,11 +6,13 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
+import android.os.Build
 import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
+import androidx.annotation.RequiresApi
 import java.util.Locale
 
 class TimerApp: Application(), RecognitionListener {
@@ -110,6 +112,7 @@ class TimerApp: Application(), RecognitionListener {
         Log.e("voicexx", "Error:  $errorMsg")
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     override fun onResults(results: Bundle?) {
         Log.i("voicexx","onResults ${results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)}}")
 

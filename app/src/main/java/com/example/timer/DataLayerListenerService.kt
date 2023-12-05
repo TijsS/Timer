@@ -33,8 +33,11 @@ class DataLayerListenerService : WearableListenerService() {
     }
 
     companion object {
-        private const val TAG = "DataLayerService"
+        private const val TAG = "xxx"
         const val START_TIMER = "/startTimer"
-        const val START_TIMER_KEY = "startTimer"
+        const val TIMER_DURATION_KEY = "timerDuration"
+        const val START_TIMER_TIME_KEY = "startTime"
+        const val PAUSE_TIMER = "/pauseTimer"
+        const val RESET_TIMER = "/resetTimer"
     }
 }

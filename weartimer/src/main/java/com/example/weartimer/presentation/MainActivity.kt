@@ -6,6 +6,10 @@
 
 package com.example.weartimer.presentation
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.media.AudioAttributes
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -15,6 +19,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -22,12 +28,30 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
+import com.example.weartimer.CHANNEL_ID
+import com.example.weartimer.CHANNEL_NAME
+import com.example.weartimer.ClockTimer
 import com.example.weartimer.R
+import com.example.weartimer.intTimeToString
+import com.example.weartimer.notificationChannel
+import com.example.weartimer.notificationManager
 import com.example.weartimer.presentation.theme.TimerTheme
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        notificationChannel =
+            NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH)
+
+        notificationChannel.apply {
+            enableLights(true)
+            setSound(null, AudioAttributes.Builder().build())
+        }
+
+        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(notificationChannel)
+
         setContent {
             WearApp("Android")
         }
@@ -36,6 +60,8 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun WearApp(greetingName: String) {
+    val timeRemaining by remember { ClockTimer.timeRemaining }
+
     TimerTheme {
         /* If you have enough items in your list, use [ScalingLazyColumn] which is an optimized
          * version of LazyColumn for wear devices with some added features. For more information,
@@ -47,7 +73,7 @@ fun WearApp(greetingName: String) {
                 .background(MaterialTheme.colors.background),
             verticalArrangement = Arrangement.Center
         ) {
-            Greeting(greetingName = greetingName)
+            Greeting(greetingName = timeRemaining.intTimeToString())
         }
     }
 }
@@ -58,7 +84,7 @@ fun Greeting(greetingName: String) {
         modifier = Modifier.fillMaxWidth(),
         textAlign = TextAlign.Center,
         color = MaterialTheme.colors.primary,
-        text = stringResource(R.string.hello_world, greetingName)
+        text = greetingName
     )
 }
 

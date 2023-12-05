@@ -10,6 +10,7 @@ import android.os.CountDownTimer
 import android.os.IBinder
 import android.os.VibrationEffect
 import android.os.VibratorManager
+import android.util.Log
 import android.window.SplashScreen
 import androidx.annotation.RequiresApi
 

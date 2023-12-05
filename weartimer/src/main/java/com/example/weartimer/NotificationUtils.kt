@@ -16,6 +16,7 @@ import android.util.TypedValue
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.graphics.drawable.IconCompat
+import com.example.weartimer.R
 import com.example.weartimer.presentation.MainActivity
 
 
@@ -78,6 +79,7 @@ fun Context.dismissNotification(channelId: String) {
     notificationManager.cancel(channelId.toInt())
 }
 
+@RequiresApi(Build.VERSION_CODES.S)
 fun Context.updateNotificationContentText(id: Int, newBody: String) {
 
     val pauseIntent = Intent(this, TimerNotificationReceiver::class.java)
