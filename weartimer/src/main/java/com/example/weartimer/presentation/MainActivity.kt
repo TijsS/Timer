@@ -6,13 +6,16 @@
 
 package com.example.weartimer.presentation
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
-import android.media.AudioAttributes
+import android.Manifest.permission.FOREGROUND_SERVICE
+import android.Manifest.permission.POST_NOTIFICATIONS
+import android.Manifest.permission.VIBRATE
+import android.Manifest.permission.WAKE_LOCK
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,35 +25,53 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
-import com.example.weartimer.CHANNEL_ID
-import com.example.weartimer.CHANNEL_NAME
 import com.example.weartimer.ClockTimer
-import com.example.weartimer.R
-import com.example.weartimer.intTimeToString
-import com.example.weartimer.notificationChannel
+import com.example.weartimer.WearTimerApp
+import com.example.weartimer.timeRemainingToClockFormat
 import com.example.weartimer.notificationManager
 import com.example.weartimer.presentation.theme.TimerTheme
 
 class MainActivity : ComponentActivity() {
+    private val timerApp = WearTimerApp() // Create an instance of TimerApp
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private val permissions = arrayOf(
+        POST_NOTIFICATIONS,
+        FOREGROUND_SERVICE,
+        VIBRATE,
+        WAKE_LOCK
+    )
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        notificationChannel =
-            NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH)
 
-        notificationChannel.apply {
-            enableLights(true)
-            setSound(null, AudioAttributes.Builder().build())
+        val permissionsToRequest = ArrayList<String>()
+        for (permission in permissions) {
+            if (ContextCompat.checkSelfPermission(this, permission)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                permissionsToRequest.add(permission)
+            }
         }
 
-        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.createNotificationChannel(notificationChannel)
+        if (permissionsToRequest.isNotEmpty()) {
+            // Request permissions
+            ActivityCompat.requestPermissions(
+                this,
+                permissionsToRequest.toTypedArray(),
+                0
+            )
+        } else {
+            // All permissions already granted
+        }
 
         setContent {
             WearApp("Android")
@@ -73,7 +94,8 @@ fun WearApp(greetingName: String) {
                 .background(MaterialTheme.colors.background),
             verticalArrangement = Arrangement.Center
         ) {
-            Greeting(greetingName = timeRemaining.intTimeToString())
+            Greeting(greetingName = timeRemaining.timeRemainingToClockFormat())
+            Text(text = "${notificationManager.areNotificationsEnabled()}")
         }
     }
 }

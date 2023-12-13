@@ -17,7 +17,7 @@ object ClockTimer {
     var timeRemaining = mutableStateOf(0)
 }
 
-fun Int.intTimeToString(): String {
+fun Int.timeRemainingToClockFormat(): String {
 
     val hours = this / 3600
     val minutes = (this % 3600) / 60
@@ -30,4 +30,18 @@ fun Int.intTimeToString(): String {
     }
 
     return string + String.format("%02d:%02d", minutes, seconds)
+}
+
+fun Int.timeRemainingToClockFormatWithoutSeconds(): String {
+
+    val hours = this / 3600
+    val minutes = (this % 3600) / 60
+
+    var string = ""
+
+    if (hours > 0) {
+        string += "$hours:"
+    }
+
+    return string + String.format("%02d", minutes)
 }

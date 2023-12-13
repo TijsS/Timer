@@ -1,5 +1,6 @@
 package com.example.timer
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -50,9 +51,23 @@ class TimerViewModel: ViewModel() {
 
     }
 
-    fun addSecondsToTimer(seconds: Int) {
+    fun setSecondInput(second: Int) {
+        _uiState.value = _uiState.value.copy(secondInput = second)
+    }
+
+    fun setMinuteInput(minute: Int) {
+        _uiState.value = _uiState.value.copy(minuteInput = minute)
+    }
+
+    fun setHourInput(hour: Int) {
+        _uiState.value = _uiState.value.copy(hourInput = hour)
+    }
+
+    fun addSecondsToTimer() {
+        val seconds = _uiState.value.secondInput + _uiState.value.minuteInput * 60 + _uiState.value.hourInput * 3600
 
         ClockTimer.timeRemaining.intValue += seconds
+        _uiState.value = _uiState.value.copy(resetInput = !_uiState.value.resetInput)
 
         if (ClockTimer.timerState.value == TimerState.Running) {
             startCountDown()

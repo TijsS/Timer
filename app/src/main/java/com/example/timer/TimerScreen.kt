@@ -3,7 +3,9 @@ package com.example.timer
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.annotation.RawRes
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -14,35 +16,45 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.rive.runtime.kotlin.RiveAnimationView
 import app.rive.runtime.kotlin.core.Fit
+import com.example.timer.components.InfiniteCircularList
 import com.example.timer.components.TimeDisplay
 import kotlinx.coroutines.flow.collectLatest
 
+@RequiresApi(Build.VERSION_CODES.S)
 @SuppressLint("RememberReturnType", "SuspiciousIndentation")
 @Composable
 fun TimerScreen(
@@ -172,15 +184,19 @@ fun TimerScreen(
             )
 
             TimeControlArea(
-                addSecondsToTimer = { timerViewModel.addSecondsToTimer(it) },
                 timerState = { timerState },
-                timerGreaterThenZero = { timeRemaining > 0 },
+                resetInput = timerUiState.resetInput,
                 startCountDown = { timerViewModel.startCountDown() },
                 pauseCountdown = { timerViewModel.pauseCountDown() },
                 resetCountDown = { timerViewModel.stopCountDown() },
                 startListening = { startListening() },
+                addTime = { timerViewModel.addSecondsToTimer() },
+                secondInput = { timerViewModel.setSecondInput(it) },
+                minuteInput = { timerViewModel.setMinuteInput(it) },
+                hourInput = { timerViewModel.setHourInput(it) },
+                timerGreaterThenZero = { timeRemaining > 0 },
                 modifier = Modifier
-                    .weight(1f)
+                    .weight(1.5f)
             )
         }
     }
@@ -214,36 +230,127 @@ fun ComposableRiveAnimationView(
 
 @Composable
 fun TimeControlArea(
-    addSecondsToTimer: (Int) -> Unit,
     timerState: () -> TimerState,
     startCountDown: () -> Unit,
     pauseCountdown: () -> Unit,
     resetCountDown: () -> Unit,
     startListening: () -> Unit,
+    addTime: () -> Unit,
+    secondInput: (Int) -> Unit,
+    minuteInput: (Int) -> Unit,
+    hourInput: (Int) -> Unit,
+    timerGreaterThenZero: () -> Boolean,
+    resetInput: Boolean,
     modifier: Modifier = Modifier,
-    timerGreaterThenZero: () -> Boolean
+
 ) {
+
     Column (
         verticalArrangement = Arrangement.SpaceEvenly,
         modifier = modifier
             .padding(top = 8.dp)
     ) {
         Row(
-            horizontalArrangement = Arrangement.SpaceEvenly,
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
             modifier = modifier
-            .fillMaxWidth()
+                .fillMaxWidth()
+
         ) {
-            AddTimeButton(addSecondsToTimer = { addSecondsToTimer(1) }, time = 1)
-            AddTimeButton(addSecondsToTimer = { addSecondsToTimer(10) }, time = 10)
-            AddTimeButton(addSecondsToTimer = { addSecondsToTimer(3600) }, time = 3600)
+            Spacer(modifier = Modifier.width(40.dp))
+
+            InfiniteCircularList(
+                width = 40.dp,
+                itemHeight = 40.dp,
+                items = (0..59).toMutableList(),
+                initialItem = 0,
+                textStyle = TextStyle(fontSize = 18.sp),
+                textColor = MaterialTheme.colorScheme.onSurface,
+                selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                resetInput = resetInput,
+                onItemSelected = { _, item ->
+                    hourInput(item)
+                }
+            )
+
+            Text(
+                text = ":",
+                style = MaterialTheme.typography.displaySmall,
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+                    .offset(y = (-4).dp)
+            )
+
+            InfiniteCircularList(
+                width = 40.dp,
+                itemHeight = 40.dp,
+                items = (0..59).toMutableList(),
+                initialItem = 0,
+                textStyle = TextStyle(fontSize = 18.sp),
+                textColor = MaterialTheme.colorScheme.onSurface,
+                selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                onItemSelected = { _, item ->
+                    minuteInput(item)
+                },
+                resetInput = resetInput
+            )
+
+            Text(
+                text = ":",
+                style = MaterialTheme.typography.displaySmall,
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+                    .offset(y = (-4).dp)
+            )
+
+            InfiniteCircularList(
+                width = 40.dp,
+                itemHeight = 40.dp,
+                items = (0..59).toMutableList(),
+                initialItem = 0,
+                textStyle = TextStyle(fontSize = 18.sp),
+                textColor = MaterialTheme.colorScheme.onSurface,
+                selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                onItemSelected = { _, item ->
+                    secondInput(item)
+                },
+                resetInput = resetInput
+            )
+
+            IconButton(
+                onClick = { addTime() },
+                modifier =
+                Modifier
+                    .padding(start = 16.dp)
+                    .width(24.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add selected time"
+                )
+            }
         }
 
+
         Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
             modifier = modifier
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
+
+            Spacer(modifier = Modifier.weight(0.5f))
+            IconButton(
+                onClick = { resetCountDown() },
+                modifier = modifier
+                    .weight(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "reset"
+                )
+            }
+            Spacer(modifier = Modifier.weight(0.5f))
 
             TimerActionButton(
                 timerState = timerState,
@@ -253,27 +360,17 @@ fun TimeControlArea(
                 modifier = Modifier
                     .weight(2f)
             )
-
-            Button(
-                onClick = { resetCountDown() },
-                modifier = modifier
-                    .weight(1f)
-            ) {
-                Text(text = stringResource(R.string.reset_timer))
-            }
         }
 
-        Button(
-            onClick = { resetCountDown() },
-            modifier = modifier
-                .weight(1f)
+        IconButton(
+            onClick = { startListening() },
+            modifier = Modifier
+                .padding(16.dp)
         ) {
-            IconButton(onClick = { startListening() }) {
-                Icon(
-                    painter = painterResource(R.drawable.baseline_mic_24),
-                    contentDescription = "Audio input"
-                )
-            }
+            Icon(
+                painter = painterResource(R.drawable.baseline_mic_24),
+                contentDescription = "Audio input"
+            )
         }
     }
 }
@@ -305,29 +402,18 @@ fun TimerActionButton(
 }
 
 @Composable
-fun AddTimeButton(
-    addSecondsToTimer: (Int) -> Unit,
-    time: Int,
-    modifier: Modifier = Modifier
-) {
-    ElevatedButton(
-        onClick = { addSecondsToTimer(time) },
-        modifier = modifier
-    ) {
-        Text(text = stringResource(R.string.add_seconds, time))
-    }
-}
-
-@Composable
 fun PauseTimerButton(
     pauseTimer: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    ElevatedButton(
+    IconButton(
         onClick = { pauseTimer() },
         modifier = modifier
     ) {
-        Text(text = stringResource(R.string.pause_timer))
+        Icon(
+            painter = painterResource(R.drawable.baseline_pause_24),
+            contentDescription = "Start timer"
+        )
     }
 }
 
@@ -337,11 +423,14 @@ fun StartTimerButton(
     timerGreaterThenZero: () -> Boolean,
     startTimer: () -> Unit,
 ) {
-    Button(
+    IconButton(
         onClick = { startTimer() },
         enabled = timerGreaterThenZero(),
         modifier = modifier
     ) {
-        Text(text = stringResource(R.string.start_timer))
+        Icon(
+            painter = painterResource(R.drawable.baseline_play_arrow_24),
+            contentDescription = "Start timer"
+        )
     }
 }

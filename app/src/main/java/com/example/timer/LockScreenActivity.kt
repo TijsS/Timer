@@ -1,16 +1,18 @@
 package com.example.timer
 
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.example.timer.ui.theme.TimerTheme
 
 class LockScreenActivity : ComponentActivity() {
-    private val timerApp = TimerApp() // Create an instance of TimerApp
+    @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -19,7 +21,12 @@ class LockScreenActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     TimerScreen(
-                        { timerApp.startListening( this ) }
+                        {
+                            Intent(applicationContext, TimerService::class.java).also { intent ->
+                                intent.action = TimerService.Action.StartListening.toString()
+                                applicationContext.startService(intent)
+                            }
+                        }
                     )
                  }
             }

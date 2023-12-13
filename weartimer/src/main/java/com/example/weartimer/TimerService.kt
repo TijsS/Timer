@@ -3,15 +3,12 @@ package com.example.weartimer
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.os.Build
 import android.os.CombinedVibration
 import android.os.CountDownTimer
 import android.os.IBinder
 import android.os.VibrationEffect
 import android.os.VibratorManager
-import android.util.Log
-import android.window.SplashScreen
 import androidx.annotation.RequiresApi
 
 
@@ -30,7 +27,7 @@ class TimerService: Service(){
         countDownTimer = object : CountDownTimer((ClockTimer.timeRemaining.value * 1000).toLong(), 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 ClockTimer.timeRemaining.value -= 1
-                applicationContext.updateNotificationContentText( 2, ClockTimer.timeRemaining.value.intTimeToString() )
+                applicationContext.updateNotificationContentText( NOTIFICATION_ID.toInt(), ClockTimer.timeRemaining.value.timeRemainingToClockFormat() )
             }
 
             @RequiresApi(34)
@@ -46,7 +43,8 @@ class TimerService: Service(){
 
         ClockTimer.timerState.value = TimerState.Running
 
-        startForeground( 12, createNotification(this).build() )
+//        notificationManager.notify( NOTIFICATION_ID.toInt(), createNotification(this) )
+        startForeground( NOTIFICATION_ID.toInt(), createNotification(this) )
     }
 
     override fun onBind(intent: Intent?): IBinder? {

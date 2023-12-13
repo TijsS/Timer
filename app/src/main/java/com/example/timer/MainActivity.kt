@@ -2,13 +2,13 @@ package com.example.timer
 
 import android.Manifest.permission.POST_NOTIFICATIONS
 import android.Manifest.permission.RECORD_AUDIO
+import android.Manifest.permission.WAKE_LOCK
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
@@ -16,23 +16,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
-import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import com.example.timer.ui.theme.TimerTheme
 
 
 class MainActivity : ComponentActivity() {
-    private val timerApp = TimerApp() // Create an instance of TimerApp
+//    private val timerApp = TimerApp() // Create an instance of TimerApp
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private val permissions = arrayOf(
         RECORD_AUDIO,
-        POST_NOTIFICATIONS
+        POST_NOTIFICATIONS,
+        WAKE_LOCK
     )
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
 
         val permissionsToRequest = ArrayList<String>()
         for (permission in permissions) {
@@ -52,6 +53,7 @@ class MainActivity : ComponentActivity() {
             )
         } else {
             // All permissions already granted
+            startListening()
         }
 
         setContent {
@@ -69,12 +71,15 @@ class MainActivity : ComponentActivity() {
         turnScreenOnAndKeyguardOff()
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun startListening() {
-        timerApp.startListening( this )
+        Intent(applicationContext, TimerService::class.java).also { intent ->
+            intent.action = TimerService.Action.StartListening.toString()
+            applicationContext.startService(intent)
+        }
     }
 
-
-
+    @RequiresApi(Build.VERSION_CODES.S)
     override fun onDestroy() {
 
         turnScreenOffAndKeyguardOn()
@@ -84,6 +89,7 @@ class MainActivity : ComponentActivity() {
 }
 
 
+@RequiresApi(Build.VERSION_CODES.S)
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {

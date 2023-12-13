@@ -1,38 +1,40 @@
 package com.example.timer
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.Service
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
-import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.media.AudioAttributes
 import android.os.Build
+import android.os.Bundle
 import android.os.CombinedVibration
 import android.os.CountDownTimer
 import android.os.IBinder
 import android.os.VibrationEffect
 import android.os.VibratorManager
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
 import android.util.Log
-import android.window.SplashScreen
 import androidx.annotation.RequiresApi
 import com.example.timer.DataLayerListenerService.Companion.PAUSE_TIMER
 import com.example.timer.DataLayerListenerService.Companion.RESET_TIMER
 import com.example.timer.DataLayerListenerService.Companion.START_TIMER
-import com.google.android.gms.tasks.Task
-import com.google.android.gms.wearable.DataClient
-import com.google.android.gms.wearable.DataItem
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
+import java.util.Locale
 
 
 @RequiresApi(Build.VERSION_CODES.S)
-class TimerService: Service(){
+class TimerService: Service(), RecognitionListener {
 
+    private lateinit var speechRecognizer: SpeechRecognizer
     private val vibratorManager: VibratorManager by lazy {
         getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
     }
@@ -41,7 +43,40 @@ class TimerService: Service(){
     private var countDownTimer: CountDownTimer? = null
     private val serviceScope = CoroutineScope(Dispatchers.Default)
 
+    private val recognizerIntent = Intent(
+        RecognizerIntent.ACTION_RECOGNIZE_SPEECH
+    )
+
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    override fun onCreate() {
+        super.onCreate()
+
+        notificationChannel =
+            NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH)
+
+        notificationChannel.apply {
+            enableLights(true)
+            setSound(null, AudioAttributes.Builder().build())
+        }
+
+        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(notificationChannel)
+
+        if (SpeechRecognizer.isRecognitionAvailable(this)) {
+            speechRecognizer = SpeechRecognizer.createOnDeviceSpeechRecognizer(this)
+            speechRecognizer.setRecognitionListener(this)
+        }
+
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.packageName)
+    }
+
     private fun notifiedStart() {
+        speechRecognizer.startListening(recognizerIntent)
+
         countDownTimer?.cancel() // Cancel any existing timers
 
         countDownTimer = object : CountDownTimer(ClockTimer.timeRemaining.intValue.toLong() * 1000, 1000) {
@@ -53,6 +88,7 @@ class TimerService: Service(){
             @RequiresApi(34)
             override fun onFinish() {
                 ClockTimer.timerState.value = TimerState.Finished
+                speechRecognizer.startListening(recognizerIntent)
 
                 vibrate()
 
@@ -165,6 +201,7 @@ class TimerService: Service(){
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when(intent?.action) {
             Action.Start.toString() -> start()
+            Action.StartListening.toString() -> startListening()
             Action.NotifiedStart.toString() -> notifiedStart()
             Action.Pause.toString() -> pause()
             Action.NotifiedPause.toString() -> notifiedPause()
@@ -180,6 +217,135 @@ class TimerService: Service(){
     }
 
     enum class Action {
-        Start, NotifiedStart, Pause, NotifiedPause, Reset, NotifiedReset, Stop
+        Start, NotifiedStart, Pause, NotifiedPause, Reset, NotifiedReset, Stop, StartListening
     }
+
+
+    fun startListening() {
+
+        speechRecognizer.startListening(recognizerIntent)
+    }
+
+    override fun onReadyForSpeech(params: Bundle?) {
+        Log.i("voicexx","onReadyForSpeech")}
+    override fun onBeginningOfSpeech() {
+        Log.i("voicexx","onBeginningOfSpeech")}
+    override fun onRmsChanged(rmsdB: Float) {}
+    override fun onBufferReceived(buffer: ByteArray?) {
+        Log.i("voicexx","onBufferReceived")}
+    override fun onEndOfSpeech() {
+        Log.i("voicexx","onEndOfSpeech")
+
+    }
+    override fun onError(error: Int) {
+        val errorMsg: String
+        when (error) {
+            SpeechRecognizer.ERROR_AUDIO -> {
+                errorMsg = "Audio recording error"
+
+            }
+            SpeechRecognizer.ERROR_CLIENT -> {
+                errorMsg = "Unknown client side error"
+//                speechRecognizer.startListening(intent)
+            }
+
+            SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> {
+                errorMsg = "Insufficient permissions"
+            }
+
+            SpeechRecognizer.ERROR_NETWORK -> {
+                errorMsg = "Network related error"
+            }
+
+            SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> {
+                errorMsg = "Network operation timed out"
+//                speechRecognizer.startListening(intent)
+            }
+
+            SpeechRecognizer.ERROR_NO_MATCH -> {
+                errorMsg = "No recognition result matched"
+//                speechRecognizer.startListening(intent)
+            }
+
+            SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> {
+                errorMsg = "RecognitionService busy"
+            }
+
+            SpeechRecognizer.ERROR_SERVER -> {
+                errorMsg = "Server sends error status"
+            }
+
+            SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> {
+                errorMsg = "No speech input"
+//                speechRecognizer.startListening(intent)
+            }
+
+            else -> errorMsg = ""
+        }
+
+        Log.e("voicexx", "Error:  $errorMsg")
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    override fun onResults(results: Bundle?) {
+        Log.i("voicexx","onResults ${results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)}")
+
+        val recognizedWords = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.get(0)?.split(" ")
+
+        Log.i("voicexx","recognizedWords $recognizedWords")
+
+        if(recognizedWords.isNullOrEmpty()) {
+            speechRecognizer.startListening(recognizerIntent)
+            return
+        }
+
+        if(recognizedWords.contains("reset") || recognizedWords.contains("restart")){
+            reset()
+        }
+
+        recognizedWords.indexOfFirst { it.contains("second") }.let { secondIndex ->
+            if (secondIndex-1 < 0 ) return@let
+
+            recognizedWords[secondIndex-1].toIntOrNull()?.let {
+                ClockTimer.timeRemaining.intValue += it
+            }
+        }
+
+        recognizedWords.indexOfFirst { it.contains("minute") }.let { minuteIndex ->
+            if (minuteIndex-1 < 0 ) return@let
+
+            recognizedWords[minuteIndex-1].toIntOrNull()?.let {
+                ClockTimer.timeRemaining.intValue += it * 60
+            }
+        }
+
+        recognizedWords.indexOfFirst { it.contains("hour") }.let { hourIndex ->
+            if (hourIndex-1 < 0 ) return@let
+
+            recognizedWords[hourIndex-1].toIntOrNull()?.let {
+                ClockTimer.timeRemaining.intValue += it * 60 * 60
+            }
+        }
+
+        if (ClockTimer.timerState.value == TimerState.Running) {
+            //start timer with updated time
+            start()
+        }
+
+        if(recognizedWords.contains("start") || recognizedWords.contains("go") || recognizedWords.contains("begin") || recognizedWords.contains("starts") || recognizedWords.contains("resume")){
+            start()
+        }
+
+
+        if(recognizedWords.contains("pause") || recognizedWords.contains("stop") || recognizedWords.contains("end")){
+            pause()
+        }
+
+        speechRecognizer.startListening(recognizerIntent)
+    }
+
+    override fun onPartialResults(partialResults: Bundle?) {
+        Log.i("voicexx","onPartialResults ${partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)}}")
+    }
+    override fun onEvent(eventType: Int, params: Bundle?) { Log.i("voicexx","onEvent")}
 }
