@@ -51,9 +51,7 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
     val smallTargetDp = 130.dp.value
     val reallySmallTargetDp = 0.dp.value
 
-    val animationDurationZero = 0
     val animationDurationMedium = 500
-    val animationDurationLong = 800
 
     val secondDp by remember { mutableStateOf(Animatable(reallySmallTargetDp)) }
     val minuteDp by remember { mutableStateOf(Animatable(reallySmallTargetDp)) }
@@ -260,17 +258,7 @@ fun Clock(
                         end = endOffsetLine,
                         strokeWidth = radius * .05f,
 
-                        //if (it in (60 - timeRemaining)..60) opacityLeft else opacityRight))
-                        //if(it in (60-timeRemaining)..(65-timeRemaining)) 1f else if (it in (55-timeRemaining)..60) 0.5f else 0.1f))
                     )
-//                    drawText(
-//                        textMeasurer = textMeasurer,
-//                        text = "${timeRemaining}  ${opacityRight}  ${it in (60-timeRemaining)..60}",
-//                        topLeft = Offset(
-//                            x = center.x - 52f,
-//                            y = center.y,
-//                        ),
-//                    )
                 }
 
                 drawCircle(
@@ -285,11 +273,6 @@ fun Clock(
         }
     }
 }
-
-//fun Int.secondsToRad(): Float {
-//    val angle = (360f / 60f * this) - 90f
-//    return (angle * (PI / 180f)).toFloat()
-//}
 
 @Preview
 @Composable

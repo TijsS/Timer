@@ -1,5 +1,6 @@
 package com.example.timer
 
+import com.example.timer.feature_timer.intTimeToString
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 

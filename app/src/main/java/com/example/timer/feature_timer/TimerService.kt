@@ -1,4 +1,4 @@
-package com.example.timer
+package com.example.timer.feature_timer
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -19,9 +19,18 @@ import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.example.timer.DataLayerListenerService.Companion.PAUSE_TIMER
-import com.example.timer.DataLayerListenerService.Companion.RESET_TIMER
-import com.example.timer.DataLayerListenerService.Companion.START_TIMER
+import com.example.timer.feature_notification.CHANNEL_ID
+import com.example.timer.feature_notification.CHANNEL_NAME
+import com.example.timer.feature_notification.NOTIFICATION_ID
+import com.example.timer.feature_notification.createNotification
+import com.example.timer.feature_wearable.DataLayerListenerService
+import com.example.timer.feature_wearable.DataLayerListenerService.Companion.PAUSE_TIMER
+import com.example.timer.feature_wearable.DataLayerListenerService.Companion.RESET_TIMER
+import com.example.timer.feature_wearable.DataLayerListenerService.Companion.START_TIMER
+import com.example.timer.feature_notification.notificationChannel
+import com.example.timer.feature_notification.notificationManager
+import com.example.timer.feature_notification.updateNotificationAlarmFinished
+import com.example.timer.feature_notification.updateNotificationContentText
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
 import kotlinx.coroutines.CoroutineScope
@@ -35,9 +44,11 @@ import java.util.Locale
 class TimerService: Service(), RecognitionListener {
 
     private lateinit var speechRecognizer: SpeechRecognizer
+
     private val vibratorManager: VibratorManager by lazy {
         getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
     }
+
     private val dataClient by lazy { Wearable.getDataClient(this) }
 
     private var countDownTimer: CountDownTimer? = null
@@ -197,6 +208,9 @@ class TimerService: Service(), RecognitionListener {
             )
         )
     }
+    private fun startListening() {
+        speechRecognizer.startListening(recognizerIntent)
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when(intent?.action) {
@@ -218,12 +232,6 @@ class TimerService: Service(), RecognitionListener {
 
     enum class Action {
         Start, NotifiedStart, Pause, NotifiedPause, Reset, NotifiedReset, Stop, StartListening
-    }
-
-
-    fun startListening() {
-
-        speechRecognizer.startListening(recognizerIntent)
     }
 
     override fun onReadyForSpeech(params: Bundle?) {

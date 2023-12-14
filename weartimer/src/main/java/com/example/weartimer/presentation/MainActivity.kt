@@ -74,13 +74,13 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            WearApp("Android")
+            WearApp()
         }
     }
 }
 
 @Composable
-fun WearApp(greetingName: String) {
+fun WearApp() {
     val timeRemaining by remember { ClockTimer.timeRemaining }
 
     TimerTheme {
@@ -113,5 +113,5 @@ fun Greeting(greetingName: String) {
 @Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
 fun DefaultPreview() {
-    WearApp("Preview Android")
+    WearApp( )
 }

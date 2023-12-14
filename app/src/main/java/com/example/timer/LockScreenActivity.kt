@@ -9,6 +9,8 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import com.example.timer.feature_timer.presentation.TimerScreen
+import com.example.timer.feature_timer.TimerService
 import com.example.timer.ui.theme.TimerTheme
 
 class LockScreenActivity : ComponentActivity() {

@@ -1,8 +1,9 @@
-package com.example.timer
+package com.example.timer.feature_timer.presentation
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.timer.feature_timer.ClockTimer
+import com.example.timer.feature_timer.TimerState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -73,7 +74,6 @@ class TimerViewModel: ViewModel() {
             startCountDown()
         }
     }
-
 
     sealed class UiEvent {
         object StopTimer: UiEvent()

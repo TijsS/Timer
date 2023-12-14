@@ -1,4 +1,4 @@
-package com.example.timer
+package com.example.timer.feature_timer.presentation
 
 
 data class TimerUiState (

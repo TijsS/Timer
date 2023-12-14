@@ -24,7 +24,7 @@ class DataLayerListenerService : WearableListenerService() {
 
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onDataChanged(dataEvents: DataEventBuffer) {
-//        super.onDataChanged(dataEvents)
+        super.onDataChanged(dataEvents)
 
         dataEvents.forEach { dataEvent ->
             val uri = dataEvent.dataItem.uri

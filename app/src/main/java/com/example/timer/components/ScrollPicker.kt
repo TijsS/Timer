@@ -1,6 +1,8 @@
 package com.example.timer.components
 
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,6 +26,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
 
@@ -40,20 +43,25 @@ fun <T> InfiniteCircularList(
     textColor: Color,
     selectedTextColor: Color,
     resetInput: Boolean,
-    onItemSelected: (index: Int, item: T) -> Unit = { _, _ -> },
+    onItemSelected: (index: Int, item: T) -> Unit = { _, _ -> }
 ) {
     val itemHalfHeight = LocalDensity.current.run { itemHeight.toPx() / 2f }
     val scrollState = rememberLazyListState(0)
     val scrollShadow = MaterialTheme.colorScheme.surface
 
-    var lastSelectedIndex by remember {
-        mutableStateOf(0)
+    var manualResetInput by remember {
+        mutableStateOf(false)
     }
+
+    var lastSelectedIndex by remember {
+        mutableIntStateOf(0)
+    }
+
     var itemsState by remember {
         mutableStateOf(items)
     }
 
-    LaunchedEffect(items) {
+    LaunchedEffect( items ) {
         var targetIndex = items.indexOf(initialItem) - 1
         targetIndex += ((Int.MAX_VALUE / 2) / items.size) * items.size
         itemsState = items
@@ -61,7 +69,7 @@ fun <T> InfiniteCircularList(
         scrollState.scrollToItem(targetIndex)
     }
 
-    LaunchedEffect(resetInput) {
+    LaunchedEffect(resetInput, manualResetInput) {
         var targetIndex = items.indexOf(initialItem) - 1
         targetIndex += ((Int.MAX_VALUE / 2) / items.size) * items.size
         lastSelectedIndex = targetIndex
@@ -74,6 +82,9 @@ fun <T> InfiniteCircularList(
         modifier = Modifier
             .width(width)
             .height(itemHeight * numberOfDisplayedItems)
+            .clickable {
+                manualResetInput = !manualResetInput
+            }
             .drawWithContent {
                 drawContent()
                 drawRect(
@@ -116,7 +127,7 @@ fun <T> InfiniteCircularList(
 
                 ) {
                     Text(
-                        text = item.toString(),
+                        text = if(item.toString().length == 1) "0$item" else "$item",
                         style = textStyle,
                         color = if (lastSelectedIndex == i) {
                             selectedTextColor

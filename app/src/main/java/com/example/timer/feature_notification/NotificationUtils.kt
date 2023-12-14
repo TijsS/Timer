@@ -1,20 +1,18 @@
-package com.example.timer
+package com.example.timer.feature_notification
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Rect
-import android.util.DisplayMetrics
-import android.util.Log
-import android.util.TypedValue
+import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
-import androidx.core.graphics.drawable.IconCompat
+import com.example.timer.MainActivity
+import com.example.timer.R
+import com.example.timer.feature_timer.ClockTimer
+import com.example.timer.feature_timer.TimerNotificationReceiver
+import com.example.timer.feature_timer.TimerState
 
 
 lateinit var notificationChannel: NotificationChannel
@@ -24,6 +22,7 @@ const val CHANNEL_ID = "13"
 const val NOTIFICATION_ID = "2"
 const val CHANNEL_NAME = "Timer Notifications"
 
+@RequiresApi(Build.VERSION_CODES.S)
 fun createNotification(context : Context): NotificationCompat.Builder {
     val activityIntent = Intent(context, MainActivity::class.java)
 
@@ -75,6 +74,7 @@ fun Context.dismissNotification(channelId: String) {
     notificationManager.cancel(channelId.toInt())
 }
 
+@RequiresApi(Build.VERSION_CODES.S)
 fun Context.updateNotificationContentText(id: Int, newBody: String) {
 
     val pauseIntent = Intent(this, TimerNotificationReceiver::class.java)

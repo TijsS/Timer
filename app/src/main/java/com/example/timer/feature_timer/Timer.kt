@@ -1,18 +1,8 @@
-package com.example.timer
+package com.example.timer.feature_timer
 
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-
-
-// states available to timer
-sealed class TimerState {
-    object Running : TimerState()
-    object Paused : TimerState()
-    object Stopped : TimerState()
-    object Finished : TimerState()
-}
 
 object ClockTimer {
     var timerState: MutableState<TimerState> = mutableStateOf(TimerState.Stopped)
@@ -32,4 +22,10 @@ fun Int.intTimeToString(): String {
     }
 
     return string + String.format("%02d:%02d", minutes, seconds)
+}
+sealed class TimerState {
+    object Running : TimerState()
+    object Paused : TimerState()
+    object Stopped : TimerState()
+    object Finished : TimerState()
 }

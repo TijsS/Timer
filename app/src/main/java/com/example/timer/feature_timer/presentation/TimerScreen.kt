@@ -1,4 +1,4 @@
-package com.example.timer
+package com.example.timer.feature_timer.presentation
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,14 +34,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,8 +46,12 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.rive.runtime.kotlin.RiveAnimationView
 import app.rive.runtime.kotlin.core.Fit
+import com.example.timer.R
 import com.example.timer.components.InfiniteCircularList
 import com.example.timer.components.TimeDisplay
+import com.example.timer.feature_timer.ClockTimer
+import com.example.timer.feature_timer.TimerService
+import com.example.timer.feature_timer.TimerState
 import kotlinx.coroutines.flow.collectLatest
 
 @RequiresApi(Build.VERSION_CODES.S)
@@ -63,13 +63,11 @@ fun TimerScreen(
     timerViewModel: TimerViewModel = viewModel()
     ) {
     val timerUiState by timerViewModel.uiState.collectAsState()
+    var alarmAnimation: RiveAnimationView? = null
+    val applicationContext = context.applicationContext
 
     val timeRemaining by remember { ClockTimer.timeRemaining }
     val timerState by remember { ClockTimer.timerState }
-
-    var animation: RiveAnimationView? = null
-    val applicationContext = context.applicationContext
-
     val currentDistanceAnimated by animateFloatAsState(
         targetValue = timerUiState.dismissPercentage,
         animationSpec = spring(
@@ -81,8 +79,8 @@ fun TimerScreen(
                 timerViewModel.stopCountDown()
 
                 // Only reset the animation when not visible
-                animation?.reset()
-                animation?.stop()
+                alarmAnimation?.reset()
+                alarmAnimation?.stop()
             }
         }, label = ""
     )
@@ -126,18 +124,18 @@ fun TimerScreen(
 
     LaunchedEffect(timerUiState.dismissPercentage > 0) {
         if (timerUiState.dismissPercentage > 0f) {
-            animation?.stop()
+            alarmAnimation?.stop()
         }
     }
 
     LaunchedEffect(currentDistanceAnimated) {
-        animation?.setNumberState("StateMachine", "dismissSwipe", currentDistanceAnimated)
+        alarmAnimation?.setNumberState("StateMachine", "dismissSwipe", currentDistanceAnimated)
     }
 
     LaunchedEffect(currentDistanceAnimated == 0f ) {
         if (currentDistanceAnimated == 0f) {
-            animation?.reset()
-            animation?.play()
+            alarmAnimation?.reset()
+            alarmAnimation?.play()
         }
     }
 
@@ -149,7 +147,7 @@ fun TimerScreen(
             .fillMaxSize()
 
     ) {
-        if (timerState == TimerState.Finished ){
+        if (timerState == TimerState.Finished){
             Box(
                 contentAlignment = Alignment.Center ,
                 modifier = Modifier
@@ -172,7 +170,7 @@ fun TimerScreen(
                     modifier = Modifier
                         .size(500.dp)
                 ) { view ->
-                    animation = view
+                    alarmAnimation = view
                 }
             }
         }
@@ -242,9 +240,7 @@ fun TimeControlArea(
     timerGreaterThenZero: () -> Boolean,
     resetInput: Boolean,
     modifier: Modifier = Modifier,
-
 ) {
-
     Column (
         verticalArrangement = Arrangement.SpaceEvenly,
         modifier = modifier
@@ -260,9 +256,9 @@ fun TimeControlArea(
             Spacer(modifier = Modifier.width(40.dp))
 
             InfiniteCircularList(
-                width = 40.dp,
+                width = 50.dp,
                 itemHeight = 40.dp,
-                items = (0..59).toMutableList(),
+                items = (0..10).toMutableList(),
                 initialItem = 0,
                 textStyle = TextStyle(fontSize = 18.sp),
                 textColor = MaterialTheme.colorScheme.onSurface,
@@ -282,7 +278,7 @@ fun TimeControlArea(
             )
 
             InfiniteCircularList(
-                width = 40.dp,
+                width = 50.dp,
                 itemHeight = 40.dp,
                 items = (0..59).toMutableList(),
                 initialItem = 0,
@@ -304,7 +300,7 @@ fun TimeControlArea(
             )
 
             InfiniteCircularList(
-                width = 40.dp,
+                width = 50.dp,
                 itemHeight = 40.dp,
                 items = (0..59).toMutableList(),
                 initialItem = 0,
@@ -331,7 +327,6 @@ fun TimeControlArea(
             }
         }
 
-
         Row(
             horizontalArrangement = Arrangement.SpaceEvenly,
             modifier = modifier
@@ -340,6 +335,7 @@ fun TimeControlArea(
         ) {
 
             Spacer(modifier = Modifier.weight(0.5f))
+
             IconButton(
                 onClick = { resetCountDown() },
                 modifier = modifier
@@ -350,6 +346,7 @@ fun TimeControlArea(
                     contentDescription = "reset"
                 )
             }
+
             Spacer(modifier = Modifier.weight(0.5f))
 
             TimerActionButton(

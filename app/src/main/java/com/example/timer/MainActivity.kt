@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.speech.SpeechRecognizer
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
@@ -17,11 +18,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.timer.feature_timer.presentation.TimerScreen
+import com.example.timer.feature_timer.TimerService
 import com.example.timer.ui.theme.TimerTheme
 
 
 class MainActivity : ComponentActivity() {
-//    private val timerApp = TimerApp() // Create an instance of TimerApp
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private val permissions = arrayOf(
@@ -53,7 +55,10 @@ class MainActivity : ComponentActivity() {
             )
         } else {
             // All permissions already granted
-            startListening()
+            // Speechrecognizer might not be available on first launch/all devices
+            if ( SpeechRecognizer.isRecognitionAvailable(this) ) {
+                startListening()
+            }
         }
 
         setContent {

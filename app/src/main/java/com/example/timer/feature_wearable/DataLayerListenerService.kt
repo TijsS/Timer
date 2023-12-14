@@ -1,4 +1,4 @@
-package com.example.timer
+package com.example.timer.feature_wearable
 
 import android.util.Log
 import com.google.android.gms.wearable.DataEventBuffer
