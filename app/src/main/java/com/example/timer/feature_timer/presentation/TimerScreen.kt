@@ -1,9 +1,12 @@
 package com.example.timer.feature_timer.presentation
 
 import android.annotation.SuppressLint
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Build
+import android.os.IBinder
 import androidx.annotation.RawRes
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.Spring
@@ -114,6 +117,17 @@ fun TimerScreen(
                     Intent(applicationContext, TimerService::class.java).also { intent ->
                         intent.action = TimerService.Action.Start.toString()
                         applicationContext.startService(intent)
+
+                        val bindIntent = Intent(context, TimerService::class.java)
+                        val serviceConnection = object : ServiceConnection {
+                            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+                            }
+
+                            override fun onServiceDisconnected(name: ComponentName?) {
+                            }
+                        }
+
+                        context.bindService(bindIntent, serviceConnection, Context.BIND_AUTO_CREATE)
                     }
                 }
 

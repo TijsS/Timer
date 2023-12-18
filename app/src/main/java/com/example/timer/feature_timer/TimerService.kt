@@ -43,6 +43,10 @@ import java.util.Locale
 @RequiresApi(Build.VERSION_CODES.S)
 class TimerService: Service(), RecognitionListener {
 
+    private var startMode: Int = 0             // indicates how to behave if the service is killed
+    private var binder: IBinder? = null        // interface for clients that bind
+    private var allowRebind: Boolean = true   // indicates whether onRebind should be used
+
     private lateinit var speechRecognizer: SpeechRecognizer
 
     private val vibratorManager: VibratorManager by lazy {
@@ -135,10 +139,6 @@ class TimerService: Service(), RecognitionListener {
         notifiedStart()
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
-        return null
-    }
-
     private fun notifiedReset() {
         countDownTimer?.cancel()
         vibratorManager.cancel()
@@ -227,7 +227,17 @@ class TimerService: Service(), RecognitionListener {
             }
         }
 
-        return super.onStartCommand(intent, flags, startId)
+        return startMode
+    }
+
+
+    override fun onBind(intent: Intent): IBinder? {
+        return binder
+    }
+    override fun onUnbind(intent: Intent): Boolean {
+        return allowRebind
+    }
+    override fun onRebind(intent: Intent) {
     }
 
     enum class Action {

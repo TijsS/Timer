@@ -70,6 +70,12 @@ dependencies {
     implementation("com.google.android.horologist:horologist-tiles:0.5.13")
     implementation("androidx.wear.watchface:watchface-complications-data-source-ktx:1.2.0")
 
+
+    // Horologist
+    implementation("com.google.android.horologist:horologist-composables:0.5.13")
+    implementation("com.google.android.horologist:horologist-compose-layout:0.5.13")
+    implementation("com.google.android.horologist:horologist-compose-material:0.5.13")
+
     implementation("androidx.wear.protolayout:protolayout-expression:1.1.0-alpha03")
 
     // Use to implement support for Wear ProtoLayout

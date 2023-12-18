@@ -3,6 +3,7 @@ package com.example.timer.feature_timer.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.timer.feature_timer.ClockTimer
+import com.example.timer.feature_timer.TimerService
 import com.example.timer.feature_timer.TimerState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +20,6 @@ class TimerViewModel: ViewModel() {
 
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
-
 
     fun startCountDown() {
         viewModelScope.launch {
