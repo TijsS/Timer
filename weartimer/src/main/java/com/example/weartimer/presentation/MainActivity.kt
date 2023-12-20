@@ -10,11 +10,14 @@ import android.Manifest.permission.FOREGROUND_SERVICE
 import android.Manifest.permission.POST_NOTIFICATIONS
 import android.Manifest.permission.VIBRATE
 import android.Manifest.permission.WAKE_LOCK
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
-import android.widget.TimePicker
+import android.os.IBinder
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
@@ -32,12 +35,11 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -49,10 +51,13 @@ import androidx.wear.compose.material.PageIndicatorState
 import androidx.wear.compose.material.Text
 import com.example.weartimer.ClockTimer
 import com.example.weartimer.R
+import com.example.weartimer.TimerService
+import com.example.weartimer.TimerState
 import com.example.weartimer.WearTimerApp
 import com.example.weartimer.timeRemainingToClockFormat
 import com.example.weartimer.presentation.theme.TimerTheme
 import com.google.android.horologist.composables.TimePicker
+import kotlinx.coroutines.launch
 import java.time.LocalTime
 
 class MainActivity : ComponentActivity() {
@@ -91,16 +96,17 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            WearApp()
+            WearApp(applicationContext)
         }
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.S)
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun WearApp() {
+fun WearApp(applicationContext: Context) {
     val timeRemaining by remember { ClockTimer.timeRemaining }
-
+    val coroutineScope = rememberCoroutineScope()
     TimerTheme {
         /* If you have enough items in your list, use [ScalingLazyColumn] which is an optimized
          * version of LazyColumn for wear devices with some added features. For more information,
@@ -142,8 +148,9 @@ fun WearApp() {
                         verticalArrangement = Arrangement.SpaceEvenly,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Greeting(greetingName = timeRemaining.timeRemainingToClockFormat())
+                        TimerTime(greetingName = timeRemaining.timeRemainingToClockFormat())
                         ActionRow(
+                            applicationContext,
                             Modifier.padding(5.dp)
                         )
                     }
@@ -156,13 +163,22 @@ fun WearApp() {
                             .background(MaterialTheme.colors.background),
                         verticalArrangement = Arrangement.Center
                     ) {
+
                         TimePicker(
                             onTimeConfirm = {
-                                Log.d("TAG", "WearApp: WearApp: onTimeConfirm: $it")
+                                val seconds = it.toSecondOfDay()
 
+                                ClockTimer.timeRemaining.value += seconds
 
+                                if (ClockTimer.timerState.value == TimerState.Running) {
+                                    startTimer(applicationContext)
+                                }
+
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(0)
+                                }
                             },
-                            time = LocalTime.now()
+                            time = LocalTime.MIN
                         )
                     }
                 }
@@ -173,7 +189,7 @@ fun WearApp() {
                             .background(MaterialTheme.colors.background),
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Greeting(greetingName = "Oops")
+                        TimerTime(greetingName = "Oops")
                     }
                 }
             }
@@ -185,8 +201,35 @@ fun WearApp() {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.S)
+fun startTimer(applicationContext: Context) {
+    Intent(applicationContext, TimerService::class.java).also { intent ->
+        intent.action = TimerService.Action.Start.toString()
+        applicationContext.startService(intent)
+//
+//        val bindIntent = Intent(applicationContext, TimerService::class.java)
+//        val serviceConnection = object : ServiceConnection {
+//            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+//            }
+//
+//            override fun onServiceDisconnected(name: ComponentName?) {
+//            }
+//        }
+//
+//        applicationContext.bindService(bindIntent, serviceConnection, Context.BIND_AUTO_CREATE)
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.S)
+fun resetTimer(applicationContext: Context) {
+    Intent(applicationContext, TimerService::class.java).also { intent ->
+        intent.action = TimerService.Action.Reset.toString()
+        applicationContext.startService(intent)
+    }
+}
+
 @Composable
-fun Greeting(greetingName: String) {
+fun TimerTime(greetingName: String) {
     Text(
         modifier = Modifier.fillMaxWidth(),
         style = MaterialTheme.typography.display3,
@@ -195,14 +238,15 @@ fun Greeting(greetingName: String) {
         text = greetingName
     )
 }
+@RequiresApi(Build.VERSION_CODES.S)
 @Composable
-fun ActionRow(modifier: Modifier) {
+fun ActionRow(applicationContext: Context, modifier: Modifier) {
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
         modifier = modifier
     ) {
         Button(
-            onClick = { /*TODO*/ },
+            onClick = { resetTimer(applicationContext) },
             modifier = modifier
                 .offset( y = (-15).dp)
         ) {
@@ -225,7 +269,7 @@ fun ActionRow(modifier: Modifier) {
         }
 
         Button(
-            onClick = { /*TODO*/ },
+            onClick = { startTimer(applicationContext) },
             modifier = modifier
                 .offset( y = (-15).dp)
 
@@ -236,11 +280,4 @@ fun ActionRow(modifier: Modifier) {
             )
         }
     }
-}
-
-
-@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
-@Composable
-fun DefaultPreview() {
-    WearApp( )
 }
