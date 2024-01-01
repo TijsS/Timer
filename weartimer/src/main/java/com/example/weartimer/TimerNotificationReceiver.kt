@@ -12,21 +12,21 @@ class TimerNotificationReceiver: BroadcastReceiver() {
 
     private fun start(context: Context) {
         Intent(context, TimerService::class.java).also { intent ->
-            intent.action = TimerService.Action.Start.toString()
+            intent.action = TimerService.Action.NotifiedStart.toString()
             context.startService(intent)
         }
     }
 
     private fun pause( context: Context ) {
         Intent(context, TimerService::class.java).also { intent ->
-            intent.action = TimerService.Action.Pause.toString()
+            intent.action = TimerService.Action.NotifiedPause.toString()
             context.startService(intent)
         }
     }
 
     private fun reset(context: Context) {
         Intent(context, TimerService::class.java).also { intent ->
-            intent.action = TimerService.Action.Reset.toString()
+            intent.action = TimerService.Action.NotifiedReset.toString()
             context.startService(intent)
         }
     }

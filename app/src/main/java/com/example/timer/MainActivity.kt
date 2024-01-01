@@ -11,12 +11,20 @@ import android.speech.SpeechRecognizer
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.timer.feature_timer.presentation.TimerScreen
@@ -35,10 +43,12 @@ class MainActivity : ComponentActivity() {
     )
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val permissionsToRequest = ArrayList<String>()
+
         for (permission in permissions) {
             if (ContextCompat.checkSelfPermission(this, permission)
                 != PackageManager.PERMISSION_GRANTED
@@ -63,14 +73,20 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
+            val windowSizeClass = calculateWindowSizeClass(this)
+
             TimerTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    TimerScreen(
-                        startListening = { startListening() }
-                    )
+                    Column {
+                        TimerScreen(
+                            startListening = { startListening() },
+                            windowSizeClass = windowSizeClass
+                        )
+                    }
+
                 }
             }
         }
@@ -95,11 +111,12 @@ class MainActivity : ComponentActivity() {
 }
 
 
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @RequiresApi(Build.VERSION_CODES.S)
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
     TimerTheme {
-        TimerScreen({ })
+        TimerScreen({ }, windowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero.copy(500.dp, 1000.dp)))
     }
 }

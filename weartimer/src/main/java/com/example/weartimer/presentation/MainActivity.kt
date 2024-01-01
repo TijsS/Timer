@@ -18,12 +18,14 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,14 +45,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.wear.compose.foundation.rememberSwipeToDismissBoxState
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.HorizontalPageIndicator
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.PageIndicatorState
+import androidx.wear.compose.material.SwipeToDismissBox
 import androidx.wear.compose.material.Text
-import com.example.weartimer.ClockTimer
 import com.example.weartimer.R
+import com.example.weartimer.ClockTimer
 import com.example.weartimer.TimerService
 import com.example.weartimer.TimerState
 import com.example.weartimer.WearTimerApp
@@ -107,6 +111,8 @@ class MainActivity : ComponentActivity() {
 fun WearApp(applicationContext: Context) {
     val timeRemaining by remember { ClockTimer.timeRemaining }
     val coroutineScope = rememberCoroutineScope()
+    val timerState by remember { ClockTimer.timerState }
+
     TimerTheme {
         /* If you have enough items in your list, use [ScalingLazyColumn] which is an optimized
          * version of LazyColumn for wear devices with some added features. For more information,
@@ -121,83 +127,110 @@ fun WearApp(applicationContext: Context) {
 //            Greeting(greetingName = timeRemaining.timeRemainingToClockFormat())
 //        }
 
-        val pagerState = rememberPagerState(pageCount = {
-            2
-        })
-
-
-        val pageIndicatorState: PageIndicatorState = remember {
-            object : PageIndicatorState {
-                override val pageOffset: Float
-                    get() = pagerState.currentPageOffsetFraction
-                override val selectedPage: Int
-                    get() = pagerState.currentPage
-                override val pageCount: Int
-                    get() = pagerState.pageCount
-            }
-        }
-
-        HorizontalPager(state = pagerState) { page ->
-
-            when (page) {
-                0 -> {
+        if (timerState == TimerState.Finished) {
+            val state = rememberSwipeToDismissBoxState()
+            SwipeToDismissBox(
+                onDismissed = {
+                    ClockTimer.timerState.value = TimerState.Stopped
+                    resetTimer(applicationContext)
+                },
+            ) { isBackground ->
+                if (isBackground) {
+                    Box(
+                        modifier = Modifier.fillMaxSize()
+                            .background(MaterialTheme.colors.secondaryVariant)
+                    )
+                } else {
                     Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(MaterialTheme.colors.background),
-                        verticalArrangement = Arrangement.SpaceEvenly,
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.primary),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
                     ) {
-                        TimerTime(greetingName = timeRemaining.timeRemainingToClockFormat())
-                        ActionRow(
-                            applicationContext,
-                            Modifier.padding(5.dp)
-                        )
-                    }
-                }
-
-                1 -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(MaterialTheme.colors.background),
-                        verticalArrangement = Arrangement.Center
-                    ) {
-
-                        TimePicker(
-                            onTimeConfirm = {
-                                val seconds = it.toSecondOfDay()
-
-                                ClockTimer.timeRemaining.value += seconds
-
-                                if (ClockTimer.timerState.value == TimerState.Running) {
-                                    startTimer(applicationContext)
-                                }
-
-                                coroutineScope.launch {
-                                    pagerState.animateScrollToPage(0)
-                                }
-                            },
-                            time = LocalTime.MIN
-                        )
-                    }
-                }
-                else -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(MaterialTheme.colors.background),
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        TimerTime(greetingName = "Oops")
+                        Text("Dismiss alarm", color = MaterialTheme.colors.onPrimary)
                     }
                 }
             }
+        } else {
+
+            val pagerState = rememberPagerState(pageCount = {
+                2
+            })
+
+            val pageIndicatorState: PageIndicatorState = remember {
+                object : PageIndicatorState {
+                    override val pageOffset: Float
+                        get() = pagerState.currentPageOffsetFraction
+                    override val selectedPage: Int
+                        get() = pagerState.currentPage
+                    override val pageCount: Int
+                        get() = pagerState.pageCount
+                }
+            }
+
+            HorizontalPager(state = pagerState) { page ->
+
+                when (page) {
+                    0 -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colors.background),
+                            verticalArrangement = Arrangement.SpaceEvenly,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            TimerTime(greetingName = timeRemaining.timeRemainingToClockFormat())
+                            ActionRow(
+                                timerState = { timerState },
+                                applicationContext,
+                                Modifier.padding(5.dp)
+                            )
+                        }
+                    }
+
+                    1 -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colors.background),
+                            verticalArrangement = Arrangement.Center
+                        ) {
+
+                            TimePicker(
+                                onTimeConfirm = {
+                                    val seconds = it.toSecondOfDay()
+
+                                    ClockTimer.timeRemaining.value += seconds
+
+                                    if (ClockTimer.timerState.value == TimerState.Running) {
+                                        startTimer(applicationContext)
+                                    }
+
+                                    coroutineScope.launch {
+                                        pagerState.animateScrollToPage(0)
+                                    }
+                                },
+                                time = LocalTime.MIN
+                            )
+                        }
+                    }
+
+                    else -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colors.background),
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            TimerTime(greetingName = "Oops")
+                        }
+                    }
+                }
+            }
+            HorizontalPageIndicator(
+                pageIndicatorState = pageIndicatorState,
+                modifier = Modifier
+            )
         }
-        HorizontalPageIndicator(
-            pageIndicatorState = pageIndicatorState,
-            modifier = Modifier
-        )
     }
 }
 
@@ -227,6 +260,13 @@ fun resetTimer(applicationContext: Context) {
         applicationContext.startService(intent)
     }
 }
+@RequiresApi(Build.VERSION_CODES.S)
+fun pauseTimer(applicationContext: Context) {
+    Intent(applicationContext, TimerService::class.java).also { intent ->
+        intent.action = TimerService.Action.Pause.toString()
+        applicationContext.startService(intent)
+    }
+}
 
 @Composable
 fun TimerTime(greetingName: String) {
@@ -240,7 +280,10 @@ fun TimerTime(greetingName: String) {
 }
 @RequiresApi(Build.VERSION_CODES.S)
 @Composable
-fun ActionRow(applicationContext: Context, modifier: Modifier) {
+fun ActionRow(
+    timerState: () -> TimerState,
+    applicationContext: Context,
+    modifier: Modifier) {
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
         modifier = modifier
@@ -248,7 +291,7 @@ fun ActionRow(applicationContext: Context, modifier: Modifier) {
         Button(
             onClick = { resetTimer(applicationContext) },
             modifier = modifier
-                .offset( y = (-15).dp)
+                .offset( y = (-20).dp)
         ) {
             Icon(
                 painter = painterResource(R.drawable.baseline_autorenew_24),
@@ -268,16 +311,35 @@ fun ActionRow(applicationContext: Context, modifier: Modifier) {
             )
         }
 
-        Button(
-            onClick = { startTimer(applicationContext) },
-            modifier = modifier
-                .offset( y = (-15).dp)
+        timerState().let {
+            when (it) {
+                TimerState.Paused, TimerState.Stopped -> {
+                    Button(
+                        onClick = { startTimer(applicationContext) },
+                        modifier = modifier
+                            .offset(y = (-15).dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.baseline_play_arrow_24),
+                            contentDescription = "start"
+                        )
+                    }
+                }
 
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.baseline_play_arrow_24),
-                contentDescription = "start"
-            )
+                TimerState.Running -> {
+                    Button(
+                        onClick = { pauseTimer(applicationContext) },
+                        modifier = modifier
+                            .offset(y = -20.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.baseline_pause_24),
+                            contentDescription = "pause"
+                        )
+                    }
+                }
+                else -> {}
+            }
         }
     }
 }

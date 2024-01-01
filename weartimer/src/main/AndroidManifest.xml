@@ -34,27 +34,24 @@
             android:name=".DataLayerListenerService"
             android:exported="true">
             <intent-filter>
-                <!-- listeners receive events that match the action and data filters -->
                 <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
                 <data
                     android:host="*"
-                    android:pathPrefix="/startTimer"
+                    android:pathPrefix="/startTimerWear"
                     android:scheme="wear" />
             </intent-filter>
             <intent-filter>
-                <!-- listeners receive events that match the action and data filters -->
                 <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
                 <data
                     android:host="*"
-                    android:pathPrefix="/pauseTimer"
+                    android:pathPrefix="/pauseTimerWear"
                     android:scheme="wear" />
             </intent-filter>
             <intent-filter>
-                <!-- listeners receive events that match the action and data filters -->
                 <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
                 <data
                     android:host="*"
-                    android:pathPrefix="/resetTimer"
+                    android:pathPrefix="/resetTimerWear"
                     android:scheme="wear" />
             </intent-filter>
         </service>

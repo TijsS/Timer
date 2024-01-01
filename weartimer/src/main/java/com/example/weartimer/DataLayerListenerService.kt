@@ -19,7 +19,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class DataLayerListenerService : WearableListenerService() {
-//    private val dataClient by lazy { Wearable.getDataClient(this) }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     @RequiresApi(Build.VERSION_CODES.S)
@@ -31,7 +30,7 @@ class DataLayerListenerService : WearableListenerService() {
             Log.i(TAG, "onDataChanged for: ${uri.path}")
 
             when (uri.path) {
-                START_TIMER -> {
+                START_TIMER_RECEIVE -> {
 
                     val timerDuration = DataMapItem.fromDataItem(dataEvent.dataItem).dataMap
                         .getInt(TIMER_DURATION_KEY)
@@ -49,23 +48,23 @@ class DataLayerListenerService : WearableListenerService() {
                     }
 
 
-                    Intent(this@DataLayerListenerService, TimerService::class.java).also { intent ->
-                        intent.action = TimerService.Action.Start.toString()
-                        this@DataLayerListenerService.startService(intent)
+                    Intent(this, TimerService::class.java).also { intent ->
+                        intent.action = TimerService.Action.NotifiedStart.toString()
+                        this.startService(intent)
                     }
                 }
 
-                PAUSE_TIMER -> {
-                    Intent(this@DataLayerListenerService, TimerService::class.java).also { intent ->
-                        intent.action = TimerService.Action.Pause.toString()
-                        this@DataLayerListenerService.startService(intent)
+                PAUSE_TIMER_RECEIVE -> {
+                    Intent(this, TimerService::class.java).also { intent ->
+                        intent.action = TimerService.Action.NotifiedPause.toString()
+                        this.startService(intent)
                     }
                 }
 
-                RESET_TIMER -> {
-                    Intent(this@DataLayerListenerService, TimerService::class.java).also { intent ->
-                        intent.action = TimerService.Action.Reset.toString()
-                        this@DataLayerListenerService.startService(intent)
+                RESET_TIMER_RECEIVE -> {
+                    Intent(this, TimerService::class.java).also { intent ->
+                        intent.action = TimerService.Action.NotifiedReset.toString()
+                        this.startService(intent)
                     }
                 }
             }
@@ -80,10 +79,13 @@ class DataLayerListenerService : WearableListenerService() {
 
     companion object {
         private const val TAG = "xxx"
-        const val START_TIMER = "/startTimer"
         const val TIMER_DURATION_KEY = "timerDuration"
         const val START_TIMER_TIME_KEY = "startTime"
-        const val PAUSE_TIMER = "/pauseTimer"
-        const val RESET_TIMER = "/resetTimer"
+        const val START_TIMER_RECEIVE = "/startTimerWear"
+        const val PAUSE_TIMER_RECEIVE = "/pauseTimerWear"
+        const val RESET_TIMER_RECEIVE = "/resetTimerWear"
+        const val START_TIMER_SEND = "/startTimerPhone"
+        const val PAUSE_TIMER_SEND = "/pauseTimerPhone"
+        const val RESET_TIMER_SEND = "/resetTimerPhone"
     }
 }

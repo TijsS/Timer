@@ -12,7 +12,9 @@ import android.os.VibrationEffect
 import android.os.VibratorManager
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.example.weartimer.DataLayerListenerService.Companion.START_TIMER
+import com.example.weartimer.DataLayerListenerService.Companion.PAUSE_TIMER_SEND
+import com.example.weartimer.DataLayerListenerService.Companion.RESET_TIMER_SEND
+import com.example.weartimer.DataLayerListenerService.Companion.START_TIMER_SEND
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
 import kotlinx.coroutines.CoroutineScope
@@ -37,7 +39,6 @@ class TimerService: Service(){
 
     private fun notifiedStart() {
         countDownTimer?.cancel() // Cancel any existing timers
-
         countDownTimer = object : CountDownTimer((ClockTimer.timeRemaining.value * 1000).toLong(), 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 ClockTimer.timeRemaining.value -= 1
@@ -64,7 +65,7 @@ class TimerService: Service(){
     private fun start () {
         serviceScope.launch {
             try {
-                val request = PutDataMapRequest.create(START_TIMER).apply {
+                val request = PutDataMapRequest.create(START_TIMER_SEND).apply {
                     dataMap.putInt(DataLayerListenerService.TIMER_DURATION_KEY, ClockTimer.timeRemaining.value)
                     dataMap.putInt(DataLayerListenerService.START_TIMER_TIME_KEY, System.currentTimeMillis().toInt() )
                 }
@@ -72,6 +73,7 @@ class TimerService: Service(){
                     .setUrgent()
 
                 val response = dataClient.putDataItem(request).await()
+                dataClient.putDataItem(request).await()
 
                 return@launch
 
@@ -93,20 +95,63 @@ class TimerService: Service(){
     }
 
 
-    private fun reset(){
+    private fun notifiedReset(){
         countDownTimer?.cancel()
         vibratorManager.cancel()
-        stopSelf()
 
         ClockTimer.apply{
             timeRemaining.value = 0
             timerState.value = TimerState.Stopped
         }
+        stopSelf()
     }
 
-    private fun pause(){
+    private fun reset(){
+        serviceScope.launch {
+            try {
+                //TODO convert to message api
+                val request = PutDataMapRequest.create(RESET_TIMER_SEND).apply {
+                    dataMap.putInt(DataLayerListenerService.TIMER_DURATION_KEY, ClockTimer.timeRemaining.value)
+                    dataMap.putInt(DataLayerListenerService.START_TIMER_TIME_KEY, System.currentTimeMillis().toInt() )
+                }
+                    .asPutDataRequest()
+                    .setUrgent()
+
+                val response = dataClient.putDataItem(request).await()
+                return@launch
+            } catch (exception: Exception) {
+                Log.d(ContentValues.TAG, "Saving DataItem failed: $exception")
+            }
+        }
+
+        notifiedReset()
+    }
+
+    private fun notifiedPause(){
         countDownTimer?.cancel()
         ClockTimer.timerState.value = TimerState.Paused
+    }
+
+    private fun pause() {
+        serviceScope.launch {
+            try {
+                //TODO convert to message api
+                val request = PutDataMapRequest.create(PAUSE_TIMER_SEND).apply {
+                    dataMap.putInt(DataLayerListenerService.TIMER_DURATION_KEY, ClockTimer.timeRemaining.value)
+                    dataMap.putInt(DataLayerListenerService.START_TIMER_TIME_KEY, System.currentTimeMillis().toInt() )
+                }
+                    .asPutDataRequest()
+                    .setUrgent()
+
+                val response = dataClient.putDataItem(request).await()
+
+                return@launch
+            } catch (exception: Exception) {
+                Log.d(ContentValues.TAG, "Saving DataItem failed: $exception")
+            }
+        }
+
+        notifiedPause()
     }
 
     private fun vibrate() {
@@ -123,20 +168,26 @@ class TimerService: Service(){
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when(intent?.action) {
+            Action.NotifiedStart.toString() -> { notifiedStart() }
+            Action.NotifiedReset.toString() -> {
+                notifiedReset()
+            }
+            Action.NotifiedPause.toString() -> { notifiedPause() }
             Action.Start.toString() -> start()
-            Action.NotifiedStart.toString() -> notifiedStart()
             Action.Pause.toString() -> pause()
             Action.Reset.toString() -> reset()
-            Action.Stop.toString() -> {
-                reset()
-                stopSelf()
-            }
+
         }
 
         return super.onStartCommand(intent, flags, startId)
     }
 
+    override fun onDestroy() {
+        Log.d("xxx", "destroy service ")
+        super.onDestroy()
+    }
+
     enum class Action {
-        Start, Pause, Reset, Stop, NotifiedStart
+        Start, Pause, Reset, NotifiedStart, NotifiedReset, NotifiedPause
     }
 }

@@ -1,5 +1,6 @@
 package com.example.timer.feature_timer.presentation
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.timer.feature_timer.ClockTimer
@@ -48,8 +49,7 @@ class TimerViewModel: ViewModel() {
     }
 
     fun setDismissPercentage(percentage: Float) {
-        _uiState.value = _uiState.value.copy(dismissPercentage = if( percentage < 0f ) 0f else if( percentage > 100 ) 100f else percentage)
-
+        _uiState.value = _uiState.value.copy(dismissPercentage = if( percentage < 0 ) 0f else if( percentage > 100 ) 100f else percentage)
     }
 
     fun setSecondInput(second: Int) {

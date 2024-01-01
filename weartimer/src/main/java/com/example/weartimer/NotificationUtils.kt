@@ -10,6 +10,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.wear.ongoing.OngoingActivity
+import com.example.weartimer.R
 import com.example.weartimer.presentation.MainActivity
 
 

@@ -29,10 +29,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TimePickerState
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -51,7 +56,9 @@ import app.rive.runtime.kotlin.RiveAnimationView
 import app.rive.runtime.kotlin.core.Fit
 import com.example.timer.R
 import com.example.timer.components.InfiniteCircularList
+import com.example.timer.components.KeepScreenOn
 import com.example.timer.components.TimeDisplay
+import com.example.timer.components.TimeInput
 import com.example.timer.feature_timer.ClockTimer
 import com.example.timer.feature_timer.TimerService
 import com.example.timer.feature_timer.TimerState
@@ -63,8 +70,9 @@ import kotlinx.coroutines.flow.collectLatest
 fun TimerScreen(
     startListening: () -> Unit,
     context: Context = LocalContext.current,
-    timerViewModel: TimerViewModel = viewModel()
-    ) {
+    timerViewModel: TimerViewModel = viewModel(),
+    windowSizeClass: WindowSizeClass
+) {
     val timerUiState by timerViewModel.uiState.collectAsState()
     var alarmAnimation: RiveAnimationView? = null
     val applicationContext = context.applicationContext
@@ -80,10 +88,6 @@ fun TimerScreen(
         finishedListener = { value ->
             if (value >= 100f) {
                 timerViewModel.stopCountDown()
-
-                // Only reset the animation when not visible
-                alarmAnimation?.reset()
-                alarmAnimation?.stop()
             }
         }, label = ""
     )
@@ -136,80 +140,135 @@ fun TimerScreen(
         }
     }
 
-    LaunchedEffect(timerUiState.dismissPercentage > 0) {
-        if (timerUiState.dismissPercentage > 0f) {
-            alarmAnimation?.stop()
-        }
-    }
-
     LaunchedEffect(currentDistanceAnimated) {
         alarmAnimation?.setNumberState("StateMachine", "dismissSwipe", currentDistanceAnimated)
     }
 
-    LaunchedEffect(currentDistanceAnimated == 0f ) {
-        if (currentDistanceAnimated == 0f) {
-            alarmAnimation?.reset()
-            alarmAnimation?.play()
-        }
+    when ( timerState ) {
+        TimerState.Finished, TimerState.Running -> KeepScreenOn()
+        else -> {}
     }
 
+    if( windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact){
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxSize()
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier
-            .fillMaxSize()
-
-    ) {
-        if (timerState == TimerState.Finished){
-            Box(
-                contentAlignment = Alignment.Center ,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .draggable(
-                        orientation = Orientation.Vertical,
-                        state = rememberDraggableState { delta ->
-                            timerViewModel.setDismissPercentage(timerUiState.dismissPercentage + delta / 5)
-                        },
-                        onDragStopped = {
-                            timerViewModel.setDismissPercentage(0f)
-                        }
-                    ),
-
-            ) {
-                ComposableRiveAnimationView(
-                    animation = R.raw.alarm,
-                    stateMachineName = "StateMachine",
-                    fit = Fit.COVER,
+        ) {
+            if ( timerState == TimerState.Finished ) {
+                Box(
+                    contentAlignment = Alignment.Center ,
                     modifier = Modifier
-                        .size(500.dp)
-                ) { view ->
-                    alarmAnimation = view
+                        .fillMaxSize()
+                        .draggable(
+                            orientation = Orientation.Vertical,
+                            state = rememberDraggableState { delta ->
+                                timerViewModel.setDismissPercentage(timerUiState.dismissPercentage + delta / 5)
+                            },
+                            onDragStopped = {
+                                timerViewModel.setDismissPercentage(0f)
+                            }
+                        ),
+                ) {
+                    ComposableRiveAnimationView(
+                        animation = R.raw.alarm,
+                        stateMachineName = "StateMachine",
+                        fit = Fit.COVER,
+                        modifier = Modifier
+                            .size(500.dp)
+                    ) { view ->
+                        alarmAnimation = view
+                        alarmAnimation?.fireState("StateMachine", "startRinging")
+                    }
                 }
             }
-        }
-        else {
-            TimeDisplay(
-                timeRemaining = timeRemaining,
-                modifier = Modifier
-                    .weight(2f)
-            )
+            else {
+                TimeDisplay(
+                    timeRemaining = timeRemaining,
+                    windowSizeClass = windowSizeClass,
+                    modifier = Modifier
+                        .weight(2f)
+                )
 
-            TimeControlArea(
-                timerState = { timerState },
-                resetInput = timerUiState.resetInput,
-                startCountDown = { timerViewModel.startCountDown() },
-                pauseCountdown = { timerViewModel.pauseCountDown() },
-                resetCountDown = { timerViewModel.stopCountDown() },
-                startListening = { startListening() },
-                addTime = { timerViewModel.addSecondsToTimer() },
-                secondInput = { timerViewModel.setSecondInput(it) },
-                minuteInput = { timerViewModel.setMinuteInput(it) },
-                hourInput = { timerViewModel.setHourInput(it) },
-                timerGreaterThenZero = { timeRemaining > 0 },
-                modifier = Modifier
-                    .weight(1.5f)
-            )
+                TimeControlArea(
+                    timerState = { timerState },
+                    resetInput = timerUiState.resetInput,
+                    startCountDown = { timerViewModel.startCountDown() },
+                    pauseCountdown = { timerViewModel.pauseCountDown() },
+                    resetCountDown = { timerViewModel.stopCountDown() },
+                    startListening = { startListening() },
+                    addTime = { timerViewModel.addSecondsToTimer() },
+                    secondInput = { timerViewModel.setSecondInput(it) },
+                    minuteInput = { timerViewModel.setMinuteInput(it) },
+                    hourInput = { timerViewModel.setHourInput(it) },
+                    timerGreaterThenZero = { timeRemaining > 0 },
+                    modifier = Modifier
+                        .weight(1.5f)
+                )
+            }
+        }
+    }
+    else {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxSize()
+
+        ) {
+            if ( timerState == TimerState.Finished ) {
+                Box(
+                    contentAlignment = Alignment.Center ,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .draggable(
+                            orientation = Orientation.Vertical,
+                            state = rememberDraggableState { delta ->
+                                timerViewModel.setDismissPercentage(timerUiState.dismissPercentage + delta / 5)
+                            },
+                            onDragStopped = {
+                                timerViewModel.setDismissPercentage(0f)
+                            }
+                        ),
+                ) {
+                    ComposableRiveAnimationView(
+                        animation = R.raw.alarm,
+                        stateMachineName = "StateMachine",
+                        fit = Fit.COVER,
+                        modifier = Modifier
+                            .size(500.dp)
+                    ) { view ->
+                        alarmAnimation = view
+                        alarmAnimation?.fireState("StateMachine", "startRinging")
+                    }
+                }
+            }
+            else {
+                TimeDisplay(
+                    timeRemaining = timeRemaining,
+                    modifier = Modifier
+                        .weight(2f),
+                    windowSizeClass = windowSizeClass
+                )
+
+                TimeControlArea(
+                    timerState = { timerState },
+                    resetInput = timerUiState.resetInput,
+                    startCountDown = { timerViewModel.startCountDown() },
+                    pauseCountdown = { timerViewModel.pauseCountDown() },
+                    resetCountDown = { timerViewModel.stopCountDown() },
+                    startListening = { startListening() },
+                    addTime = { timerViewModel.addSecondsToTimer() },
+                    secondInput = { timerViewModel.setSecondInput(it) },
+                    minuteInput = { timerViewModel.setMinuteInput(it) },
+                    hourInput = { timerViewModel.setHourInput(it) },
+                    timerGreaterThenZero = { timeRemaining > 0 },
+                    modifier = Modifier
+                        .weight(1.5f)
+                )
+            }
         }
     }
 }
@@ -230,16 +289,17 @@ fun ComposableRiveAnimationView(
                 it.setRiveResource(
                     resId = animation,
                     stateMachineName = stateMachineName,
-                    animationName = "Timeline 1",
+                    autoplay = true,
                     alignment = alignment,
                     fit = fit,
-                )
+                    )
             }
         },
         update = { view -> onInit(view) }
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimeControlArea(
     timerState: () -> TimerState,
@@ -256,90 +316,17 @@ fun TimeControlArea(
     modifier: Modifier = Modifier,
 ) {
     Column (
-        verticalArrangement = Arrangement.SpaceEvenly,
+        verticalArrangement = Arrangement.Bottom,
         modifier = modifier
             .padding(top = 8.dp)
     ) {
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = modifier
-                .fillMaxWidth()
-
-        ) {
-            Spacer(modifier = Modifier.width(40.dp))
-
-            InfiniteCircularList(
-                width = 50.dp,
-                itemHeight = 40.dp,
-                items = (0..10).toMutableList(),
-                initialItem = 0,
-                textStyle = TextStyle(fontSize = 18.sp),
-                textColor = MaterialTheme.colorScheme.onSurface,
-                selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                resetInput = resetInput,
-                onItemSelected = { _, item ->
-                    hourInput(item)
-                }
-            )
-
-            Text(
-                text = ":",
-                style = MaterialTheme.typography.displaySmall,
-                modifier = Modifier
-                    .padding(horizontal = 12.dp)
-                    .offset(y = (-4).dp)
-            )
-
-            InfiniteCircularList(
-                width = 50.dp,
-                itemHeight = 40.dp,
-                items = (0..59).toMutableList(),
-                initialItem = 0,
-                textStyle = TextStyle(fontSize = 18.sp),
-                textColor = MaterialTheme.colorScheme.onSurface,
-                selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                onItemSelected = { _, item ->
-                    minuteInput(item)
-                },
-                resetInput = resetInput
-            )
-
-            Text(
-                text = ":",
-                style = MaterialTheme.typography.displaySmall,
-                modifier = Modifier
-                    .padding(horizontal = 12.dp)
-                    .offset(y = (-4).dp)
-            )
-
-            InfiniteCircularList(
-                width = 50.dp,
-                itemHeight = 40.dp,
-                items = (0..59).toMutableList(),
-                initialItem = 0,
-                textStyle = TextStyle(fontSize = 18.sp),
-                textColor = MaterialTheme.colorScheme.onSurface,
-                selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                onItemSelected = { _, item ->
-                    secondInput(item)
-                },
-                resetInput = resetInput
-            )
-
-            IconButton(
-                onClick = { addTime() },
-                modifier =
-                Modifier
-                    .padding(start = 16.dp)
-                    .width(24.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add selected time"
-                )
-            }
-        }
+        TimeInput(
+            hourInput = hourInput,
+            minuteInput = minuteInput,
+            secondInput = secondInput,
+            addTime = addTime,
+            resetInput = resetInput
+        )
 
         Row(
             horizontalArrangement = Arrangement.SpaceEvenly,

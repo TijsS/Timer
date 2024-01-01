@@ -24,13 +24,13 @@ import com.example.timer.feature_notification.CHANNEL_NAME
 import com.example.timer.feature_notification.NOTIFICATION_ID
 import com.example.timer.feature_notification.createNotification
 import com.example.timer.feature_wearable.DataLayerListenerService
-import com.example.timer.feature_wearable.DataLayerListenerService.Companion.PAUSE_TIMER
-import com.example.timer.feature_wearable.DataLayerListenerService.Companion.RESET_TIMER
-import com.example.timer.feature_wearable.DataLayerListenerService.Companion.START_TIMER
 import com.example.timer.feature_notification.notificationChannel
 import com.example.timer.feature_notification.notificationManager
 import com.example.timer.feature_notification.updateNotificationAlarmFinished
 import com.example.timer.feature_notification.updateNotificationContentText
+import com.example.timer.feature_wearable.DataLayerListenerService.Companion.PAUSE_TIMER_SEND
+import com.example.timer.feature_wearable.DataLayerListenerService.Companion.RESET_TIMER_SEND
+import com.example.timer.feature_wearable.DataLayerListenerService.Companion.START_TIMER_SEND
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
 import kotlinx.coroutines.CoroutineScope
@@ -120,7 +120,7 @@ class TimerService: Service(), RecognitionListener {
     private fun start () {
         serviceScope.launch {
             try {
-                val request = PutDataMapRequest.create(START_TIMER).apply {
+                val request = PutDataMapRequest.create(START_TIMER_SEND).apply {
                     dataMap.putInt(DataLayerListenerService.TIMER_DURATION_KEY, ClockTimer.timeRemaining.intValue)
                     dataMap.putInt(DataLayerListenerService.START_TIMER_TIME_KEY, System.currentTimeMillis().toInt() )
                 }
@@ -128,6 +128,7 @@ class TimerService: Service(), RecognitionListener {
                     .setUrgent()
 
                 val response = dataClient.putDataItem(request).await()
+                Log.d("xxx", "reset: $response")
 
                 return@launch
 
@@ -142,23 +143,27 @@ class TimerService: Service(), RecognitionListener {
     private fun notifiedReset() {
         countDownTimer?.cancel()
         vibratorManager.cancel()
-        stopSelf()
 
         ClockTimer.apply{
             timeRemaining.intValue = 0
             timerState.value = TimerState.Stopped
         }
+        stopForeground(STOP_FOREGROUND_REMOVE)
     }
 
     private fun reset(){
         serviceScope.launch {
             try {
                 //TODO convert to message api
-                val request = PutDataMapRequest.create(RESET_TIMER)
+                val request = PutDataMapRequest.create(RESET_TIMER_SEND).apply {
+                    dataMap.putInt(DataLayerListenerService.TIMER_DURATION_KEY, ClockTimer.timeRemaining.intValue)
+                    dataMap.putInt(DataLayerListenerService.START_TIMER_TIME_KEY, System.currentTimeMillis().toInt() )
+                }
                     .asPutDataRequest()
                     .setUrgent()
 
                 val response = dataClient.putDataItem(request).await()
+                Log.d("xxx", "reset: $response")
 
                 return@launch
             } catch (exception: Exception) {
@@ -179,7 +184,7 @@ class TimerService: Service(), RecognitionListener {
         serviceScope.launch {
             try {
                 //TODO convert to message api
-                val request = PutDataMapRequest.create(PAUSE_TIMER).apply {
+                val request = PutDataMapRequest.create(PAUSE_TIMER_SEND).apply {
                     dataMap.putInt(DataLayerListenerService.TIMER_DURATION_KEY, ClockTimer.timeRemaining.intValue)
                     dataMap.putInt(DataLayerListenerService.START_TIMER_TIME_KEY, System.currentTimeMillis().toInt() )
                 }
@@ -187,6 +192,7 @@ class TimerService: Service(), RecognitionListener {
                     .setUrgent()
 
                 val response = dataClient.putDataItem(request).await()
+                Log.d("xxx", "reset: $response")
 
                 return@launch
             } catch (exception: Exception) {
@@ -223,7 +229,6 @@ class TimerService: Service(), RecognitionListener {
             Action.NotifiedReset.toString() -> notifiedReset()
             Action.Stop.toString() -> {
                 reset()
-                stopSelf()
             }
         }
 
