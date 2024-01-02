@@ -80,13 +80,10 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    Column {
-                        TimerScreen(
-                            startListening = { startListening() },
-                            windowSizeClass = windowSizeClass
-                        )
-                    }
-
+                    TimerScreen(
+                        startListening = { startListening() },
+                        windowSizeClass = windowSizeClass
+                    )
                 }
             }
         }
@@ -107,16 +104,5 @@ class MainActivity : ComponentActivity() {
         turnScreenOffAndKeyguardOn()
         stopService(Intent(this, TimerService::class.java))
         super.onDestroy()
-    }
-}
-
-
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
-@RequiresApi(Build.VERSION_CODES.S)
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    TimerTheme {
-        TimerScreen({ }, windowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero.copy(500.dp, 1000.dp)))
     }
 }

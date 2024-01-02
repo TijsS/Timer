@@ -84,6 +84,7 @@ dependencies {
 
     // Use to utilize components and layouts with Material design in your ProtoLayout
     implementation("androidx.wear.protolayout:protolayout-material:1.1.0-alpha03")
+    implementation("androidx.compose.foundation:foundation-android:1.5.4")
 
 
     androidTestImplementation(platform("androidx.compose:compose-bom:2022.10.00"))

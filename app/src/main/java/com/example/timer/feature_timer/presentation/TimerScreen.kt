@@ -12,11 +12,13 @@ import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -33,9 +35,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
@@ -45,9 +49,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.tooling.preview.Devices
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -62,7 +70,9 @@ import com.example.timer.components.TimeInput
 import com.example.timer.feature_timer.ClockTimer
 import com.example.timer.feature_timer.TimerService
 import com.example.timer.feature_timer.TimerState
+import com.example.timer.ui.theme.TimerTheme
 import kotlinx.coroutines.flow.collectLatest
+import org.intellij.lang.annotations.JdkConstants.FontStyle
 
 @RequiresApi(Build.VERSION_CODES.S)
 @SuppressLint("RememberReturnType", "SuspiciousIndentation")
@@ -95,7 +105,7 @@ fun TimerScreen(
 
     LaunchedEffect(key1 = true) {
         timerViewModel.eventFlow.collectLatest { event ->
-            when(event) {
+            when (event) {
                 is TimerViewModel.UiEvent.StopTimer -> {
                     Intent(applicationContext, TimerService::class.java).also { intent ->
                         intent.action = TimerService.Action.Stop.toString()
@@ -124,7 +134,10 @@ fun TimerScreen(
 
                         val bindIntent = Intent(context, TimerService::class.java)
                         val serviceConnection = object : ServiceConnection {
-                            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+                            override fun onServiceConnected(
+                                name: ComponentName?,
+                                service: IBinder?
+                            ) {
                             }
 
                             override fun onServiceDisconnected(name: ComponentName?) {
@@ -144,52 +157,53 @@ fun TimerScreen(
         alarmAnimation?.setNumberState("StateMachine", "dismissSwipe", currentDistanceAnimated)
     }
 
-    when ( timerState ) {
+    when (timerState) {
         TimerState.Finished, TimerState.Running -> KeepScreenOn()
         else -> {}
     }
 
-    if( windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact){
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
+    if (timerState == TimerState.Finished) {
+        Box(
+            contentAlignment = Alignment.Center,
             modifier = Modifier
                 .fillMaxSize()
-
-        ) {
-            if ( timerState == TimerState.Finished ) {
-                Box(
-                    contentAlignment = Alignment.Center ,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .draggable(
-                            orientation = Orientation.Vertical,
-                            state = rememberDraggableState { delta ->
-                                timerViewModel.setDismissPercentage(timerUiState.dismissPercentage + delta / 5)
-                            },
-                            onDragStopped = {
-                                timerViewModel.setDismissPercentage(0f)
-                            }
-                        ),
-                ) {
-                    ComposableRiveAnimationView(
-                        animation = R.raw.alarm,
-                        stateMachineName = "StateMachine",
-                        fit = Fit.COVER,
-                        modifier = Modifier
-                            .size(500.dp)
-                    ) { view ->
-                        alarmAnimation = view
-                        alarmAnimation?.fireState("StateMachine", "startRinging")
+                .draggable(
+                    orientation = Orientation.Vertical,
+                    state = rememberDraggableState { delta ->
+                        timerViewModel.setDismissPercentage(timerUiState.dismissPercentage + delta / 5)
+                    },
+                    onDragStopped = {
+                        timerViewModel.setDismissPercentage(0f)
                     }
+                ),
+        ) {
+            BoxWithConstraints {
+                ComposableRiveAnimationView(
+                    animation = R.raw.alarm,
+                    stateMachineName = "StateMachine",
+                    fit = Fit.COVER,
+                    modifier = Modifier
+                        .size(maxWidth * 0.7f,  maxHeight* 0.7f)
+                ) { view ->
+                    alarmAnimation = view
+                    alarmAnimation?.fireState("StateMachine", "startRinging")
                 }
             }
-            else {
+        }
+    }
+    else {
+        if (windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact) {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxSize()
+
+            ) {
                 TimeDisplay(
                     timeRemaining = timeRemaining,
-                    windowSizeClass = windowSizeClass,
                     modifier = Modifier
-                        .weight(2f)
+                        .weight(1f)
                 )
 
                 TimeControlArea(
@@ -205,52 +219,22 @@ fun TimerScreen(
                     hourInput = { timerViewModel.setHourInput(it) },
                     timerGreaterThenZero = { timeRemaining > 0 },
                     modifier = Modifier
-                        .weight(1.5f)
+                        .weight(1f)
                 )
             }
         }
-    }
-    else {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .fillMaxSize()
+        else {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxSize()
 
-        ) {
-            if ( timerState == TimerState.Finished ) {
-                Box(
-                    contentAlignment = Alignment.Center ,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .draggable(
-                            orientation = Orientation.Vertical,
-                            state = rememberDraggableState { delta ->
-                                timerViewModel.setDismissPercentage(timerUiState.dismissPercentage + delta / 5)
-                            },
-                            onDragStopped = {
-                                timerViewModel.setDismissPercentage(0f)
-                            }
-                        ),
-                ) {
-                    ComposableRiveAnimationView(
-                        animation = R.raw.alarm,
-                        stateMachineName = "StateMachine",
-                        fit = Fit.COVER,
-                        modifier = Modifier
-                            .size(500.dp)
-                    ) { view ->
-                        alarmAnimation = view
-                        alarmAnimation?.fireState("StateMachine", "startRinging")
-                    }
-                }
-            }
-            else {
+            ) {
                 TimeDisplay(
                     timeRemaining = timeRemaining,
                     modifier = Modifier
-                        .weight(2f),
-                    windowSizeClass = windowSizeClass
+                        .weight(2f)
                 )
 
                 TimeControlArea(
@@ -299,7 +283,6 @@ fun ComposableRiveAnimationView(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimeControlArea(
     timerState: () -> TimerState,
@@ -317,9 +300,11 @@ fun TimeControlArea(
 ) {
     Column (
         verticalArrangement = Arrangement.Bottom,
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .padding(top = 8.dp)
     ) {
+
         TimeInput(
             hourInput = hourInput,
             minuteInput = minuteInput,
@@ -330,16 +315,13 @@ fun TimeControlArea(
 
         Row(
             horizontalArrangement = Arrangement.SpaceEvenly,
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-
-            Spacer(modifier = Modifier.weight(0.5f))
-
             IconButton(
                 onClick = { resetCountDown() },
-                modifier = modifier
+                modifier = Modifier
                     .weight(1f)
             ) {
                 Icon(
@@ -356,7 +338,7 @@ fun TimeControlArea(
                 startCountDown = startCountDown,
                 pauseCountDown = pauseCountdown,
                 modifier = Modifier
-                    .weight(2f)
+                    .weight(1f)
             )
         }
 
@@ -430,5 +412,49 @@ fun StartTimerButton(
             painter = painterResource(R.drawable.baseline_play_arrow_24),
             contentDescription = "Start timer"
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@RequiresApi(Build.VERSION_CODES.S)
+@Preview(showBackground = true, widthDp = 412, heightDp = 892)
+@Composable
+fun TimerScreenVertical() {
+    TimerTheme {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            TimerScreen(
+                startListening = { },
+                windowSizeClass = WindowSizeClass.calculateFromSize(
+                    DpSize.Zero.copy(
+                        412.dp,
+                        892.dp
+                    )
+                )
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@RequiresApi(Build.VERSION_CODES.S)
+@Preview(showBackground = true, device = Devices.AUTOMOTIVE_1024p, widthDp = 892, heightDp = 412)
+@Composable
+fun TimerScreenHorizontal() {
+    TimerTheme {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            TimerScreen(
+                startListening = { },
+                windowSizeClass = WindowSizeClass.calculateFromSize(
+                    DpSize.Zero.copy(
+                        892.dp,
+                        412.dp
+                    )
+                ),
+            )
+        }
     }
 }

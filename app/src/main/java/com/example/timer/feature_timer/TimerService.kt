@@ -49,10 +49,7 @@ class TimerService: Service(), RecognitionListener {
 
     private lateinit var speechRecognizer: SpeechRecognizer
 
-    private val vibratorManager: VibratorManager by lazy {
-        getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-    }
-
+    private val vibratorManager by lazy { getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager }
     private val dataClient by lazy { Wearable.getDataClient(this) }
 
     private var countDownTimer: CountDownTimer? = null
@@ -90,7 +87,7 @@ class TimerService: Service(), RecognitionListener {
     }
 
     private fun notifiedStart() {
-        speechRecognizer.startListening(recognizerIntent)
+        startListeningSafe()
 
         countDownTimer?.cancel() // Cancel any existing timers
 
@@ -103,7 +100,7 @@ class TimerService: Service(), RecognitionListener {
             @RequiresApi(34)
             override fun onFinish() {
                 ClockTimer.timerState.value = TimerState.Finished
-                speechRecognizer.startListening(recognizerIntent)
+                startListeningSafe()
 
                 vibrate()
 
@@ -142,7 +139,9 @@ class TimerService: Service(), RecognitionListener {
 
     private fun notifiedReset() {
         countDownTimer?.cancel()
-        vibratorManager.cancel()
+
+        vibratorManager?.cancel()
+
 
         ClockTimer.apply{
             timeRemaining.intValue = 0
@@ -204,7 +203,7 @@ class TimerService: Service(), RecognitionListener {
     }
 
     private fun vibrate() {
-        vibratorManager.vibrate(
+        vibratorManager?.vibrate(
             CombinedVibration.createParallel(
                 VibrationEffect.createWaveform(
                     longArrayOf(0, 200, 600, 500),
@@ -214,14 +213,16 @@ class TimerService: Service(), RecognitionListener {
             )
         )
     }
-    private fun startListening() {
+
+    private fun startListeningSafe() {
+        if (!::speechRecognizer.isInitialized ) return
         speechRecognizer.startListening(recognizerIntent)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when(intent?.action) {
             Action.Start.toString() -> start()
-            Action.StartListening.toString() -> startListening()
+            Action.StartListening.toString() -> startListeningSafe()
             Action.NotifiedStart.toString() -> notifiedStart()
             Action.Pause.toString() -> pause()
             Action.NotifiedPause.toString() -> notifiedPause()
@@ -234,7 +235,6 @@ class TimerService: Service(), RecognitionListener {
 
         return startMode
     }
-
 
     override fun onBind(intent: Intent): IBinder? {
         return binder
@@ -318,7 +318,7 @@ class TimerService: Service(), RecognitionListener {
         Log.i("voicexx","recognizedWords $recognizedWords")
 
         if(recognizedWords.isNullOrEmpty()) {
-            speechRecognizer.startListening(recognizerIntent)
+            startListeningSafe()
             return
         }
 
@@ -364,7 +364,7 @@ class TimerService: Service(), RecognitionListener {
             pause()
         }
 
-        speechRecognizer.startListening(recognizerIntent)
+        startListeningSafe()
     }
 
     override fun onPartialResults(partialResults: Bundle?) {

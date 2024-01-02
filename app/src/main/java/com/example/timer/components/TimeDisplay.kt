@@ -40,7 +40,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @Composable
-fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier, windowSizeClass: WindowSizeClass) {
+fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
 
     var secondVisibility by remember { mutableStateOf(true) }
     var minuteVisibility by remember { mutableStateOf(false) }
@@ -53,7 +53,7 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier, windowSizeCla
 
     val animationDurationMedium = 500
 
-    val secondDp by remember { mutableStateOf(Animatable(reallySmallTargetDp)) }
+    val secondDp by remember { mutableStateOf(Animatable(largeTargetDp)) }
     val minuteDp by remember { mutableStateOf(Animatable(reallySmallTargetDp)) }
     val hourDp by remember { mutableStateOf(Animatable(reallySmallTargetDp)) }
 
@@ -237,7 +237,6 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier, windowSizeCla
     }
 }
 
-@OptIn(ExperimentalTextApi::class)
 @Composable
 fun Clock(
     timeRemaining: Int,
@@ -285,7 +284,6 @@ fun Clock(
                         start = startOffsetLine,
                         end = endOffsetLine,
                         strokeWidth = radius * .05f,
-
                     )
                 }
 
@@ -302,14 +300,14 @@ fun Clock(
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun ClockPreview() {
     TimerTheme {
         Clock(timeRemaining = 15, rotate = 90f)
     }
 }
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun Clock1minPreview() {
     TimerTheme {
@@ -317,29 +315,26 @@ fun Clock1minPreview() {
     }
 }
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun TimeDisplaySecondPreview() {
     TimerTheme {
-        TimeDisplay(timeRemaining = 55, windowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero.copy(500.dp, 1000.dp)))
+        TimeDisplay(timeRemaining = 55)
     }
 }
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun TimeDisplaySecondAndMinutePreview() {
     TimerTheme {
-        TimeDisplay(timeRemaining = 2400, windowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero.copy(500.dp, 1000.dp)))
+        TimeDisplay(timeRemaining = 2400)
     }
 }
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun TimeDisplaySecondAndMinuteAndHourPreview() {
     TimerTheme {
-        TimeDisplay(timeRemaining = 15200, windowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero.copy(500.dp, 1000.dp)))
+        TimeDisplay(timeRemaining = 15200)
     }
 }
