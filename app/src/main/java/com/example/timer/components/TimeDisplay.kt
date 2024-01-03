@@ -25,7 +25,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.center
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.ExperimentalTextApi
@@ -63,7 +65,7 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
 
     BoxWithConstraints {
         LaunchedEffect(timeRemaining) {
-            secondRotation = timeRemaining * 6f
+            secondRotation = timeRemaining % 60 * 6f
             minuteRotation = (timeRemaining / 60) % 60 * 6f
             hourRotation = (timeRemaining / 3600) % 60 * 6f
 
@@ -77,6 +79,7 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
                                     durationMillis = animationDurationMedium,
                                 )
                             )
+
                             launch {
                                 minuteDp.animateTo(
                                     smallTargetDp,
@@ -254,14 +257,14 @@ fun Clock(
         ) {
             val radius = size.width * .45f
 
-            rotate(rotate) {
-                drawCircle(
-                    color = primaryColor,
-                    style = Stroke(width = radius * .015f),
-                    radius = radius,
-                    center = size.center,
-                )
-                val (opacityLeft, opacityRight) = if( (rotate.toInt()/360) % 2 == 0 ) 0.1f to 1f else 1f to 0.1f
+//                drawCircle(
+//                    color = primaryColor,
+//                    style = Stroke(width = radius * .015f),
+//                    radius = radius,
+//                    center = size.center,
+//                )
+                val fiveSecondMarkerOpacity = 0.3f
+                val secondMarkerOpacity = 0.8f
 
                 //The degree difference between the each 'minute' line
                 val angleDegreeDifference = (360f / 60f)
@@ -280,12 +283,35 @@ fun Clock(
                         y = ((radius * 0.97f) - ((radius * .05f) / 2) ) * sin(angleRadDifference) + size.center.y
                     )
                     drawLine(
-                        color = primaryColor.copy(alpha = if(it in (60-timeRemaining)..60) opacityRight else opacityLeft),
+                        color = primaryColor.copy(alpha = if (it % 5 == 0) secondMarkerOpacity else fiveSecondMarkerOpacity ),
                         start = startOffsetLine,
                         end = endOffsetLine,
-                        strokeWidth = radius * .05f,
+                        strokeWidth = radius * .02f,
                     )
                 }
+            drawArc(
+                color = primaryColor.copy(alpha = 0.9f),
+                topLeft = Offset(
+                    x = size.center.x - radius * .8f,
+                    y = size.center.y - radius * .8f
+                ),
+                startAngle = 270f,
+                sweepAngle = if (-(360 - rotate) == -360f) 0f else -(360 - rotate),
+                useCenter = false,
+                style = Stroke(width = radius * .06f),
+                size = Size(
+                    width = radius * 1.6f,
+                    height = radius * 1.6f
+                ),
+
+                )
+            rotate(rotate) {
+                drawCircle(
+                    color = primaryColor.copy(alpha = 0.2f),
+                    style = Stroke(width = radius * .06f),
+                    radius = radius * .8f,
+                    center = size.center,
+                )
 
                 drawCircle(
                     color = primaryColor,
@@ -293,7 +319,7 @@ fun Clock(
                         x = size.center.x,
                         y = (radius * .80f) * -1 + size.center.y
                     ),
-                    radius = radius * .05f
+                    radius = radius * .06f
                 )
             }
         }
