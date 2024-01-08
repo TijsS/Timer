@@ -1,20 +1,23 @@
 package com.example.timer.feature_timer.presentation
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.timer.feature_timer.ClockTimer
-import com.example.timer.feature_timer.TimerService
 import com.example.timer.feature_timer.TimerState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 
-class TimerViewModel: ViewModel() {
+@HiltViewModel
+class TimerViewModel @Inject constructor(
+    private val userPreferencesRepository: UserPreferencesRepository
+): ViewModel() {
 
     private val _uiState = MutableStateFlow(TimerUiState())
     val uiState: StateFlow<TimerUiState> = _uiState.asStateFlow()

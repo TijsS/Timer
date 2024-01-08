@@ -4,6 +4,13 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 
+
+
+data class Timer(
+    val name: String,
+    val duration: Long,
+)
+
 object ClockTimer {
     var timerState: MutableState<TimerState> = mutableStateOf(TimerState.Stopped)
     var timeRemaining = mutableIntStateOf(0)

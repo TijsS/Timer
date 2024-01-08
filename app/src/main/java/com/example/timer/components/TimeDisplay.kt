@@ -289,6 +289,7 @@ fun Clock(
                         strokeWidth = radius * .02f,
                     )
                 }
+
             drawArc(
                 color = primaryColor.copy(alpha = 0.9f),
                 topLeft = Offset(
