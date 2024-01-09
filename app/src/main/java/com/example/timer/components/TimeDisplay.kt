@@ -1,5 +1,6 @@
 package com.example.timer.components
 
+import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -11,14 +12,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -27,13 +23,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.center
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.example.timer.ui.theme.TimerTheme
 import kotlinx.coroutines.launch
@@ -59,15 +52,73 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
     val minuteDp by remember { mutableStateOf(Animatable(reallySmallTargetDp)) }
     val hourDp by remember { mutableStateOf(Animatable(reallySmallTargetDp)) }
 
-    var secondRotation by remember { mutableFloatStateOf(0f) }
-    var minuteRotation by remember { mutableFloatStateOf(0f) }
-    var hourRotation by remember { mutableFloatStateOf(0f) }
+    var secondRotation by remember { mutableStateOf(Animatable(0f)) }
+    var minuteRotation by remember { mutableStateOf(Animatable(0f)) }
+    var hourRotation by remember { mutableStateOf(Animatable(0f)) }
 
     BoxWithConstraints {
         LaunchedEffect(timeRemaining) {
-            secondRotation = timeRemaining % 60 * 6f
-            minuteRotation = (timeRemaining / 60) % 60 * 6f
-            hourRotation = (timeRemaining / 3600) % 60 * 6f
+            Log.d("xxx", "TimeDisplay: ${timeRemaining % 60 * 6f}")
+            launch {
+                secondRotation.animateTo(
+                    targetValue = timeRemaining % 60 * 6f,
+                    animationSpec = tween(
+                        durationMillis = 500
+                    )
+                )
+
+                //Pretend the arc is a circle
+                if ( timeRemaining % 60 * 6f == 0f ) {
+                    secondRotation.animateTo(
+                        targetValue = 360f,
+                        animationSpec = tween(
+                            durationMillis = 0
+                        )
+                    )
+                }
+            }
+
+            launch {
+                Log.d("xxxx", "TimeDisplay: before")
+                val minutesRemaining = (timeRemaining / 60) % 60 * 6f
+                if (minuteRotation.value == minutesRemaining) return@launch
+                Log.d("xxxx", "TimeDisplay: after ${minuteRotation.value}    ${minutesRemaining} ")
+                minuteRotation.animateTo(
+                    targetValue = minutesRemaining,
+                    animationSpec = tween(
+                        durationMillis = if (timeRemaining == 0) 0 else 500
+                    )
+                )
+
+                //Pretend the arc is a circle
+                if (minutesRemaining == 0f) {
+                    minuteRotation.animateTo(
+                            targetValue = 360f,
+                        animationSpec = tween(
+                            durationMillis = 0
+                        )
+                    )
+                }
+            }
+
+            launch {
+                hourRotation.animateTo(
+                    targetValue = (timeRemaining / 3600) % 60 * 6f,
+                    animationSpec = tween(
+                        durationMillis = if (timeRemaining == 0) 0 else 500
+                    )
+                )
+
+                //Pretend the arc is a circle
+                if ( (timeRemaining / 3600) % 60 * 6f == 0f ) {
+                    hourRotation.animateTo(
+                        targetValue = 360f,
+                        animationSpec = tween(
+                            durationMillis = 0
+                        )
+                    )
+                }
+            }
 
             when {
                 timeRemaining > 3600 -> {
@@ -210,7 +261,7 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
         if(minuteDp.value.dp > 0.dp) {
             Clock(
                 timeRemaining = (timeRemaining / 3600) % 60,
-                rotate = hourRotation,
+                rotate = hourRotation.value,
                 clockSize = hourDp.value.dp,
                 modifier = Modifier
             )
@@ -224,7 +275,7 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
             if(minuteDp.value.dp > 0.dp) {
                 Clock(
                     timeRemaining = (timeRemaining / 60) % 60,
-                    rotate = minuteRotation,
+                    rotate = minuteRotation.value,
                     clockSize = minuteDp.value.dp,
                     modifier = Modifier
                 )
@@ -232,7 +283,7 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
 
             Clock(
                 timeRemaining = timeRemaining % 60,
-                rotate = secondRotation,
+                rotate = secondRotation.value,
                 clockSize = secondDp.value.dp,
                 modifier = Modifier
             )
@@ -248,7 +299,6 @@ fun Clock(
     modifier: Modifier = Modifier
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
-
 
     BoxWithConstraints {
         Canvas(

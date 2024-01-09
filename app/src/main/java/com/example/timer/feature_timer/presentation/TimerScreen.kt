@@ -12,7 +12,6 @@ import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
@@ -24,21 +23,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TimePickerState
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -47,23 +40,20 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.rive.runtime.kotlin.RiveAnimationView
 import app.rive.runtime.kotlin.core.Fit
 import com.example.timer.R
-import com.example.timer.components.InfiniteCircularList
 import com.example.timer.components.KeepScreenOn
 import com.example.timer.components.TimeDisplay
 import com.example.timer.components.TimeInput
@@ -72,7 +62,7 @@ import com.example.timer.feature_timer.TimerService
 import com.example.timer.feature_timer.TimerState
 import com.example.timer.ui.theme.TimerTheme
 import kotlinx.coroutines.flow.collectLatest
-import org.intellij.lang.annotations.JdkConstants.FontStyle
+import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.S)
 @SuppressLint("RememberReturnType", "SuspiciousIndentation")
@@ -86,6 +76,7 @@ fun TimerScreen(
     val timerUiState by timerViewModel.uiState.collectAsState()
     var alarmAnimation: RiveAnimationView? = null
     val applicationContext = context.applicationContext
+    val scope = rememberCoroutineScope()
 
     val timeRemaining by remember { ClockTimer.timeRemaining }
     val timerState by remember { ClockTimer.timerState }
@@ -161,6 +152,17 @@ fun TimerScreen(
         TimerState.Finished, TimerState.Running -> KeepScreenOn()
         else -> {}
     }
+    Text(text = timerUiState.timers.toString())
+    Button(
+        onClick = {
+            scope.launch {
+                timerViewModel.addTimer()
+            }
+        },
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxSize()
+    ) {}
 
     if (timerState == TimerState.Finished) {
         Box(

@@ -1,22 +1,22 @@
 package com.example.timer.feature_timer.presentation
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.timer.feature_timer.ClockTimer
 import com.example.timer.feature_timer.TimerState
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.example.timer.feature_timer.data.TimerRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 
-@HiltViewModel
-class TimerViewModel @Inject constructor(
-    private val userPreferencesRepository: UserPreferencesRepository
+class TimerViewModel(
+    private val timerRepository: TimerRepository
 ): ViewModel() {
 
     private val _uiState = MutableStateFlow(TimerUiState())
@@ -25,6 +25,18 @@ class TimerViewModel @Inject constructor(
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
+    var x = 0
+    suspend fun addTimer(){
+        timerRepository.addTimer("test$x", 20)
+        x++
+        getTimer()
+    }
+
+    suspend fun getTimer(){
+        timerRepository.userPreferencesFlow.collectLatest {
+            _uiState.value = _uiState.value.copy(timers = it)
+        }
+    }
     fun startCountDown() {
         viewModelScope.launch {
             _eventFlow.emit(
@@ -83,5 +95,17 @@ class TimerViewModel @Inject constructor(
         object StartTimer : UiEvent()
         object PauseTimer: UiEvent()
         object ResetTimer: UiEvent()
+    }
+}
+class TimerViewModelFactory(
+    private val timerRepository: TimerRepository
+) : ViewModelProvider.Factory {
+
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(TimerViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return TimerViewModel(timerRepository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

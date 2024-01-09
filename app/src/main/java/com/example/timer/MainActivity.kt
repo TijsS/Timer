@@ -19,25 +19,20 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.datastore.preferences.SharedPreferencesMigration
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.ViewModelProvider
 import com.example.timer.feature_timer.TimerService
+import com.example.timer.feature_timer.data.TimerRepository
 import com.example.timer.feature_timer.presentation.TimerScreen
+import com.example.timer.feature_timer.presentation.TimerViewModel
+import com.example.timer.feature_timer.presentation.TimerViewModelFactory
 import com.example.timer.ui.theme.TimerTheme
-
-
-private val Context.dataStore by preferencesDataStore(
-    name = "timers",
-    produceMigrations = { context ->
-        // Since we're migrating from SharedPreferences, add a migration based on the
-        // SharedPreferences name
-        listOf(SharedPreferencesMigration(context, "timers"))
-    }
-)
-
 
 class MainActivity : ComponentActivity() {
 
+    private lateinit var viewModel: TimerViewModel
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private val permissions = arrayOf(
@@ -50,6 +45,11 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        viewModel = ViewModelProvider(
+            this,
+            TimerViewModelFactory(TimerRepository.getInstance(this))
+        )[TimerViewModel::class.java]
 
 
         val permissionsToRequest = ArrayList<String>()

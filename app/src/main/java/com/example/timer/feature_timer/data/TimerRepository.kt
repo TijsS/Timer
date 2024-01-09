@@ -1,49 +1,60 @@
 package com.example.timer.feature_timer.data
 
-import android.util.Log
+import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
 import com.example.timer.feature_timer.Timer
-import com.example.timer.feature_timer.data.TimerRepository.PreferencesKeys.TIMER_NAME
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
-import java.io.IOException
 
-class TimerRepository (private val dataStore: DataStore<Preferences>) {
+private val TIMER_NAME = stringPreferencesKey("timer_name")
+private val TIMER_DURATION = longPreferencesKey("timer_duration")
 
-    /**
-     * Get the user preferences flow.
-     */
-    val userPreferencesFlow: Flow<Timer> = dataStore.data
-        .catch { exception ->
-\            if (exception is IOException) {
-                Log.e("TAG", "Error reading preferences.", exception)
-                emit(emptyPreferences())
-            } else {
-                throw exception
-            }
-        }.map { timers ->
-            mapUserPreferences(timers)
+class TimerRepository private constructor (private val context: Context) {
+
+    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+
+    val userPreferencesFlow: Flow<List<Timer>> = context.dataStore.data.map { timers ->
+            mapTimer(timers)
         }
 
+    suspend fun addTimer(name: String, duration: Long) {
 
-
-    private fun mapUserPreferences(preferences: Preferences): Timer {
-        // Get the sort order from preferences and convert it to a [SortOrder] object
-        val name = preferences[TIMER_NAME] ?: ""
-
-        // Get our show completed value, defaulting to false if not set:
-        val duration = preferences[TIMER_DURATION] ?: 0
-        return Timer(name, duration)
+        context.dataStore.edit { preferences ->
+            preferences[stringPreferencesKey(name)] = name
+            preferences[TIMER_DURATION] = duration
+        }
     }
 
-    companion object PreferencesKeys {
-        val TIMER_NAME = stringPreferencesKey("timer_name")
-        val TIMER_DURATION = longPreferencesKey("timer_duration")
+
+    private fun mapTimer(preferences: Preferences): List<Timer> {
+        val timers = mutableListOf<Timer>()
+        preferences.asMap().forEach { _ ->
+            val name = preferences[TIMER_NAME] ?: ""
+            val duration = preferences[TIMER_DURATION] ?: 0
+            timers.add(Timer(name, duration))
+        }
+        return timers
+    }
+
+    companion object {
+        @Volatile
+        private var INSTANCE: TimerRepository? = null
+
+        fun getInstance(context: Context): TimerRepository {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE?.let {
+                    return it
+                }
+
+                val instance = TimerRepository(context)
+                INSTANCE = instance
+                instance
+            }
+        }
     }
 }

@@ -9,10 +9,10 @@ import android.content.Intent
 import android.media.AudioAttributes
 import android.os.Build
 import android.os.Bundle
-import android.os.CombinedVibration
 import android.os.CountDownTimer
 import android.os.IBinder
 import android.os.VibrationEffect
+import android.os.Vibrator
 import android.os.VibratorManager
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
@@ -23,11 +23,11 @@ import com.example.timer.feature_notification.CHANNEL_ID
 import com.example.timer.feature_notification.CHANNEL_NAME
 import com.example.timer.feature_notification.NOTIFICATION_ID
 import com.example.timer.feature_notification.createNotification
-import com.example.timer.feature_wearable.DataLayerListenerService
 import com.example.timer.feature_notification.notificationChannel
 import com.example.timer.feature_notification.notificationManager
 import com.example.timer.feature_notification.updateNotificationAlarmFinished
 import com.example.timer.feature_notification.updateNotificationContentText
+import com.example.timer.feature_wearable.DataLayerListenerService
 import com.example.timer.feature_wearable.DataLayerListenerService.Companion.PAUSE_TIMER_SEND
 import com.example.timer.feature_wearable.DataLayerListenerService.Companion.RESET_TIMER_SEND
 import com.example.timer.feature_wearable.DataLayerListenerService.Companion.START_TIMER_SEND
@@ -49,7 +49,8 @@ class TimerService: Service(), RecognitionListener {
 
     private lateinit var speechRecognizer: SpeechRecognizer
 
-    private val vibratorManager by lazy { getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager }
+    private lateinit var vibrator: Vibrator
+
     private val dataClient by lazy { Wearable.getDataClient(this) }
 
     private var countDownTimer: CountDownTimer? = null
@@ -63,6 +64,17 @@ class TimerService: Service(), RecognitionListener {
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate() {
         super.onCreate()
+
+        vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            Log.d("xxx", "create vibratormanager ")
+            val vibratorManager =
+                getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            vibratorManager.defaultVibrator
+        } else {
+            Log.d("xxx", "create vibrator  ")
+            @Suppress("DEPRECATION")
+            getSystemService(VIBRATOR_SERVICE) as Vibrator
+        }
 
         notificationChannel =
             NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH)
@@ -140,8 +152,7 @@ class TimerService: Service(), RecognitionListener {
     private fun notifiedReset() {
         countDownTimer?.cancel()
 
-        vibratorManager?.cancel()
-
+        vibrator.cancel()
 
         ClockTimer.apply{
             timeRemaining.intValue = 0
@@ -203,13 +214,11 @@ class TimerService: Service(), RecognitionListener {
     }
 
     private fun vibrate() {
-        vibratorManager?.vibrate(
-            CombinedVibration.createParallel(
-                VibrationEffect.createWaveform(
-                    longArrayOf(0, 200, 600, 500),
-                    intArrayOf(0, 255, 55, 0),
-                    1
-                )
+        vibrator.vibrate(
+            VibrationEffect.createWaveform(
+                longArrayOf(0, 200, 600, 500),
+                intArrayOf(0, 255, 55, 0),
+                1
             )
         )
     }
