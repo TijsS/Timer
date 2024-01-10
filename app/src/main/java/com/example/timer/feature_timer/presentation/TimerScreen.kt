@@ -12,6 +12,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
@@ -25,11 +26,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.VerticalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Button
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -54,16 +59,18 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import app.rive.runtime.kotlin.RiveAnimationView
 import app.rive.runtime.kotlin.core.Fit
 import com.example.timer.R
+import com.example.timer.components.HorizontalPagerIndicator
 import com.example.timer.components.KeepScreenOn
 import com.example.timer.components.TimeDisplay
 import com.example.timer.components.TimeInput
+import com.example.timer.components.VerticalPagerIndicator
 import com.example.timer.feature_timer.ClockTimer
 import com.example.timer.feature_timer.TimerService
 import com.example.timer.feature_timer.TimerState
 import com.example.timer.ui.theme.TimerTheme
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.S)
 @SuppressLint("RememberReturnType", "SuspiciousIndentation")
 @Composable
@@ -152,17 +159,18 @@ fun TimerScreen(
         TimerState.Finished, TimerState.Running -> KeepScreenOn()
         else -> {}
     }
-    Text(text = timerUiState.timers.toString())
-    Button(
-        onClick = {
-            scope.launch {
-                timerViewModel.addTimer()
-            }
-        },
-        modifier = Modifier
-            .padding(16.dp)
-            .fillMaxSize()
-    ) {}
+//    Button(
+//        onClick = {
+//            scope.launch {
+//                timerViewModel.addTimer()
+//            }
+//        },
+//        modifier = Modifier
+//            .padding(16.dp)
+//            .fillMaxSize()
+//    ) {}
+//    Text(text = timerUiState.timers.toString(), color = Color.Magenta)
+
 
     if (timerState == TimerState.Finished) {
         Box(
@@ -194,6 +202,9 @@ fun TimerScreen(
         }
     }
     else {
+
+        val pagerState = rememberPagerState(initialPage = Int.MAX_VALUE / 2 - 1)
+
         if (windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact) {
             Row(
                 horizontalArrangement = Arrangement.Center,
@@ -208,21 +219,33 @@ fun TimerScreen(
                         .weight(1f)
                 )
 
-                TimeControlArea(
-                    timerState = { timerState },
-                    resetInput = timerUiState.resetInput,
-                    startCountDown = { timerViewModel.startCountDown() },
-                    pauseCountdown = { timerViewModel.pauseCountDown() },
-                    resetCountDown = { timerViewModel.stopCountDown() },
-                    startListening = { startListening() },
-                    addTime = { timerViewModel.addSecondsToTimer() },
-                    secondInput = { timerViewModel.setSecondInput(it) },
-                    minuteInput = { timerViewModel.setMinuteInput(it) },
-                    hourInput = { timerViewModel.setHourInput(it) },
-                    timerGreaterThenZero = { timeRemaining > 0 },
-                    modifier = Modifier
-                        .weight(1f)
-                )
+                VerticalPager(
+                    state = pagerState,
+                    pageCount = Int.MAX_VALUE,
+                    modifier = Modifier.weight(1f)
+                ) { page ->
+
+                    if ( page % 2 == 0 ) {
+                        TimeControlArea(
+                            timerState = { timerState },
+                            resetInput = timerUiState.resetInput,
+                            startCountDown = { timerViewModel.startCountDown() },
+                            pauseCountdown = { timerViewModel.pauseCountDown() },
+                            resetCountDown = { timerViewModel.stopCountDown() },
+                            startListening = { startListening() },
+                            addTime = { timerViewModel.addSecondsToTimer() },
+                            secondInput = { timerViewModel.setSecondInput(it) },
+                            minuteInput = { timerViewModel.setMinuteInput(it) },
+                            hourInput = { timerViewModel.setHourInput(it) },
+                            timerGreaterThenZero = { timeRemaining > 0 },
+                            modifier = Modifier
+                                .weight(1f)
+                        )
+                    } else {
+                        Text(text = "test", Modifier.fillMaxSize())
+                    }
+                }
+                VerticalPagerIndicator(pagerState = pagerState)
             }
         }
         else {
@@ -239,21 +262,38 @@ fun TimerScreen(
                         .weight(2f)
                 )
 
-                TimeControlArea(
-                    timerState = { timerState },
-                    resetInput = timerUiState.resetInput,
-                    startCountDown = { timerViewModel.startCountDown() },
-                    pauseCountdown = { timerViewModel.pauseCountDown() },
-                    resetCountDown = { timerViewModel.stopCountDown() },
-                    startListening = { startListening() },
-                    addTime = { timerViewModel.addSecondsToTimer() },
-                    secondInput = { timerViewModel.setSecondInput(it) },
-                    minuteInput = { timerViewModel.setMinuteInput(it) },
-                    hourInput = { timerViewModel.setHourInput(it) },
-                    timerGreaterThenZero = { timeRemaining > 0 },
-                    modifier = Modifier
-                        .weight(1.5f)
+                Divider(
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                    modifier = Modifier.padding(26.dp)
                 )
+
+                HorizontalPager(
+                    state = pagerState,
+                    pageCount = Int.MAX_VALUE,
+                    modifier = Modifier.weight(1f)
+                ) { page ->
+
+                    if ( page % 2 == 0 ) {
+                        TimeControlArea(
+                            timerState = { timerState },
+                            resetInput = timerUiState.resetInput,
+                            startCountDown = { timerViewModel.startCountDown() },
+                            pauseCountdown = { timerViewModel.pauseCountDown() },
+                            resetCountDown = { timerViewModel.stopCountDown() },
+                            startListening = { startListening() },
+                            addTime = { timerViewModel.addSecondsToTimer() },
+                            secondInput = { timerViewModel.setSecondInput(it) },
+                            minuteInput = { timerViewModel.setMinuteInput(it) },
+                            hourInput = { timerViewModel.setHourInput(it) },
+                            timerGreaterThenZero = { timeRemaining > 0 },
+                            modifier = Modifier
+                                .weight(1.5f)
+                        )
+                    } else {
+                        Text(text = "test", Modifier.fillMaxSize())
+                    }
+                }
+                HorizontalPagerIndicator(pagerState = pagerState)
             }
         }
     }

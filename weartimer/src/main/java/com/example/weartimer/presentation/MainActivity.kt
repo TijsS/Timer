@@ -10,15 +10,11 @@ import android.Manifest.permission.FOREGROUND_SERVICE
 import android.Manifest.permission.POST_NOTIFICATIONS
 import android.Manifest.permission.VIBRATE
 import android.Manifest.permission.WAKE_LOCK
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.os.IBinder
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
@@ -53,13 +49,13 @@ import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.PageIndicatorState
 import androidx.wear.compose.material.SwipeToDismissBox
 import androidx.wear.compose.material.Text
-import com.example.weartimer.R
 import com.example.weartimer.ClockTimer
+import com.example.weartimer.R
 import com.example.weartimer.TimerService
 import com.example.weartimer.TimerState
 import com.example.weartimer.WearTimerApp
-import com.example.weartimer.timeRemainingToClockFormat
 import com.example.weartimer.presentation.theme.TimerTheme
+import com.example.weartimer.timeRemainingToClockFormat
 import com.google.android.horologist.composables.TimePicker
 import kotlinx.coroutines.launch
 import java.time.LocalTime
@@ -130,6 +126,7 @@ fun WearApp(applicationContext: Context) {
         if (timerState == TimerState.Finished) {
             val state = rememberSwipeToDismissBoxState()
             SwipeToDismissBox(
+                state = state,
                 onDismissed = {
                     ClockTimer.timerState.value = TimerState.Stopped
                     resetTimer(applicationContext)

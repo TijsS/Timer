@@ -1,18 +1,16 @@
 package com.example.timer.feature_timer.data
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.timer.feature_timer.Timer
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-private val TIMER_NAME = stringPreferencesKey("timer_name")
-private val TIMER_DURATION = longPreferencesKey("timer_duration")
 
 class TimerRepository private constructor (private val context: Context) {
 
@@ -23,23 +21,39 @@ class TimerRepository private constructor (private val context: Context) {
         }
 
     suspend fun addTimer(name: String, duration: Long) {
+        val timer = longPreferencesKey(name)
 
         context.dataStore.edit { preferences ->
-            preferences[stringPreferencesKey(name)] = name
-            preferences[TIMER_DURATION] = duration
+            preferences[timer] = duration
+        }
+    }
+
+    suspend fun removeTimer(name: String) {
+        val timer = longPreferencesKey(name)
+
+        context.dataStore.edit { preferences ->
+            preferences.remove(timer)
+        }
+    }
+
+    suspend fun removeAllTimers() {
+        context.dataStore.edit { preferences ->
+            preferences.clear()
         }
     }
 
 
     private fun mapTimer(preferences: Preferences): List<Timer> {
         val timers = mutableListOf<Timer>()
-        preferences.asMap().forEach { _ ->
-            val name = preferences[TIMER_NAME] ?: ""
-            val duration = preferences[TIMER_DURATION] ?: 0
-            timers.add(Timer(name, duration))
+        preferences.asMap().forEach { timer ->
+            Log.d(" ", "mapTimer:  ${timer.key} ${timer.value}")
+            val duration: Long = preferences[timer.key].toString().toLong()
+//            val duration = preferences[timer.value] ?: 0
+            timers.add(Timer(timer.key.toString(), duration))
         }
         return timers
     }
+
 
     companion object {
         @Volatile

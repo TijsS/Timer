@@ -26,8 +26,14 @@ class TimerViewModel(
     val eventFlow = _eventFlow.asSharedFlow()
 
     var x = 0
+
+    init {
+        viewModelScope.launch {
+            timerRepository.removeAllTimers()
+        }
+    }
     suspend fun addTimer(){
-        timerRepository.addTimer("test$x", 20)
+        timerRepository.addTimer("test$x", x.toLong())
         x++
         getTimer()
     }
