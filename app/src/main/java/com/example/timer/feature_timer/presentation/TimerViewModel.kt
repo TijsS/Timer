@@ -25,24 +25,32 @@ class TimerViewModel(
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
-    var x = 0
-
     init {
         viewModelScope.launch {
-            timerRepository.removeAllTimers()
+            getTimers()
         }
     }
     suspend fun addTimer(){
-        timerRepository.addTimer("test$x", x.toLong())
-        x++
-        getTimer()
+        timerRepository.addTimer()
+        getTimers()
     }
 
-    suspend fun getTimer(){
+    suspend fun updateTimer(timerId: Int, name: String, duration: Long){
+        timerRepository.updateTimer(timerId, name, duration)
+        getTimers()
+    }
+
+    suspend fun getTimers(){
         timerRepository.userPreferencesFlow.collectLatest {
             _uiState.value = _uiState.value.copy(timers = it)
         }
     }
+
+    suspend fun removeTimer(timerCount: Int){
+        timerRepository.removeTimer(timerCount = timerCount)
+        getTimers()
+    }
+
     fun startCountDown() {
         viewModelScope.launch {
             _eventFlow.emit(

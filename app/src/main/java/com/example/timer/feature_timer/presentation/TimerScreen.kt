@@ -36,7 +36,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -70,6 +69,7 @@ import com.example.timer.feature_timer.TimerService
 import com.example.timer.feature_timer.TimerState
 import com.example.timer.ui.theme.TimerTheme
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.S)
@@ -230,7 +230,12 @@ fun TimerScreen(
                                 .weight(1f)
                         )
                     } else {
-                        Text(text = "test", Modifier.fillMaxSize())
+                        PresetTimers(
+                            timers = timerUiState.timers,
+                            addTimer = { scope.launch { timerViewModel.addTimer() } },
+                            removeTimer = { scope.launch { timerViewModel.removeTimer(it)} },
+                            updateTimer = { timerId, name, duration -> scope.launch { timerViewModel.updateTimer(timerId, name, duration) }}
+                        )
                     }
                 }
                 VerticalPagerIndicator(pagerState = pagerState)
@@ -278,7 +283,12 @@ fun TimerScreen(
                                 .weight(1.5f)
                         )
                     } else {
-                        PresetTimers()
+                        PresetTimers(
+                            timers = timerUiState.timers,
+                            addTimer = { scope.launch { timerViewModel.addTimer() } },
+                            removeTimer = { scope.launch { timerViewModel.removeTimer(it)} },
+                            updateTimer = { timerId, name, duration -> scope.launch { timerViewModel.updateTimer(timerId, name, duration) }}
+                        )
                     }
                 }
                 HorizontalPagerIndicator(pagerState = pagerState)
