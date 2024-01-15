@@ -17,18 +17,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.timer.feature_timer.presentation.TimerScreen
 import com.example.timer.ui.theme.TimerTheme
 
 @Composable
@@ -38,8 +32,10 @@ fun TimeInput(
     minuteInput: (Int) -> Unit,
     secondInput: (Int) -> Unit,
     addTime: () -> Unit,
-    resetInput: Boolean
+    resetInput: Boolean,
+    small: Boolean = false
 ) {
+    val (infiniteCircularListWidth, infiniteCircularListHeight) = if(small) 25.dp to 20.dp else 50.dp to 40.dp
     Row(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
@@ -50,14 +46,16 @@ fun TimeInput(
         Spacer(modifier = Modifier.width(40.dp))
 
         InfiniteCircularList(
-            width = 50.dp,
-            itemHeight = 40.dp,
+            width = infiniteCircularListWidth,
+            itemHeight = infiniteCircularListHeight,
             items = (0..10).toMutableList(),
             initialItem = 0,
             resetInput = resetInput,
             onItemSelected = { _, item ->
                 hourInput(item)
-            }
+            },
+            small = small,
+            numberOfDisplayedItems = if ( small ) 1 else 3
         )
 
         Text(
@@ -69,14 +67,17 @@ fun TimeInput(
         )
 
         InfiniteCircularList(
-            width = 50.dp,
-            itemHeight = 40.dp,
+            width = infiniteCircularListWidth,
+            itemHeight = infiniteCircularListHeight,
             items = (0..59).toMutableList(),
             initialItem = 0,
+            resetInput = resetInput,
+            small = small,
+
             onItemSelected = { _, item ->
                 minuteInput(item)
             },
-            resetInput = resetInput
+            numberOfDisplayedItems = if ( small ) 1 else 3
         )
 
         Text(
@@ -88,14 +89,16 @@ fun TimeInput(
         )
 
         InfiniteCircularList(
-            width = 50.dp,
-            itemHeight = 40.dp,
+            width = infiniteCircularListWidth,
+            itemHeight = infiniteCircularListHeight,
             items = (0..59).toMutableList(),
             initialItem = 0,
+            resetInput = resetInput,
+            small = small,
             onItemSelected = { _, item ->
                 secondInput(item)
             },
-            resetInput = resetInput
+            numberOfDisplayedItems = if ( small ) 1 else 3
         )
 
         IconButton(
@@ -127,6 +130,25 @@ fun TimeInputPreview() {
                 secondInput = {},
                 addTime = {},
                 resetInput = false
+            )
+        }
+    }
+}
+@RequiresApi(Build.VERSION_CODES.S)
+@Preview(showBackground = true)
+@Composable
+fun SmallTimeInputPreview() {
+    TimerTheme {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            TimeInput(
+                hourInput = {},
+                minuteInput = {},
+                secondInput = {},
+                addTime = {},
+                resetInput = false,
+                small = true
             )
         }
     }

@@ -1,21 +1,20 @@
 package com.example.timer.components
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,13 +31,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.timer.ui.theme.TimerTheme
 
+@SuppressLint("MutableCollectionMutableState")
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun InfiniteCircularList(
@@ -51,6 +49,7 @@ fun InfiniteCircularList(
     textColor: Color = MaterialTheme.colorScheme.onSurface,
     selectedTextColor: Color = MaterialTheme.colorScheme.onSurface,
     resetInput: Boolean,
+    small: Boolean = false,
     onItemSelected: (index: Int, item: Int) -> Unit = { _, _ -> }
 ) {
 
@@ -61,9 +60,10 @@ fun InfiniteCircularList(
         removeLast()
     }
 
-    val itemHalfHeight = LocalDensity.current.run { itemHeight.toPx() / 2f }
+    val itemHalfHeight = LocalDensity.current.run { itemHeight.toPx() / 2 }
     val scrollState = rememberLazyListState(0)
     val scrollShadow = MaterialTheme.colorScheme.surface
+    val fontsize = if( small ) MaterialTheme.typography.labelMedium.fontSize else MaterialTheme.typography.titleLarge.fontSize
 
     var manualResetInput by remember {
         mutableStateOf(false)
@@ -77,34 +77,39 @@ fun InfiniteCircularList(
         mutableStateOf(reshuffledItems)
     }
 
+
+
     LaunchedEffect(resetInput, manualResetInput) {
         var targetIndex = reshuffledItems.indexOf(initialItem) - 1
         targetIndex += ((Int.MAX_VALUE / 2) / reshuffledItems.size) * reshuffledItems.size
         lastSelectedIndex = targetIndex
         scrollState.scrollToItem(targetIndex)
     }
-
+    Log.d("TAG", "InfiniteCircularList: ${itemHeight * numberOfDisplayedItems}")
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
         modifier = Modifier
             .width(width)
             .height(itemHeight * numberOfDisplayedItems)
             .clickable {
                 manualResetInput = !manualResetInput
             }
-            .drawWithContent {
-                drawContent()
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            scrollShadow,
-                            Color.Transparent,
-                            scrollShadow,
+            .conditional(!small) {
+                drawWithContent {
+                    drawContent()
+                    drawRect(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                scrollShadow,
+                                Color.Transparent,
+                                scrollShadow,
+                            ),
+                            startY = 25f,
+                            endY = size.height - 25f
                         ),
-                        startY = 25f,
-                        endY = size.height - 25f
-                    ),
-                )
+                    )
+                }
             },
         state = scrollState,
         flingBehavior = rememberSnapFlingBehavior(
@@ -114,7 +119,7 @@ fun InfiniteCircularList(
         items(
             count = Int.MAX_VALUE,
             itemContent = { i ->
-                val item: Int = itemsState[(i % itemsState.size)] as Int
+                val item: Int = itemsState[(i % itemsState.size)]
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
@@ -139,14 +144,22 @@ fun InfiniteCircularList(
                         color = if (lastSelectedIndex == i) selectedTextColor else textColor,
                         //to hide the initial switch to the half size index
                         fontSize = if (lastSelectedIndex == i && lastSelectedIndex != 0 || i == 1) {
-                            MaterialTheme.typography.titleLarge.fontSize * itemScaleFact
+                            fontsize * itemScaleFact
                         } else {
-                            MaterialTheme.typography.titleLarge.fontSize
+                            fontsize
                         }
                     )
                 }
             }
         )
+    }
+}
+
+fun Modifier.conditional(condition : Boolean, modifier : Modifier.() -> Modifier) : Modifier {
+    return if (condition) {
+        then(modifier(Modifier))
+    } else {
+        this
     }
 }
 
@@ -165,7 +178,7 @@ fun ScrollPickerPreview() {
             textColor = MaterialTheme.colorScheme.onSurface,
             selectedTextColor = MaterialTheme.colorScheme.onSurface,
             resetInput = false,
-            onItemSelected = { _, _ -> }
+            onItemSelected = { _, _ -> },
         )
     }
 }

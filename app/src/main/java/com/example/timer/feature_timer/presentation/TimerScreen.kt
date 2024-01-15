@@ -61,6 +61,7 @@ import app.rive.runtime.kotlin.core.Fit
 import com.example.timer.R
 import com.example.timer.components.HorizontalPagerIndicator
 import com.example.timer.components.KeepScreenOn
+import com.example.timer.components.PresetTimers
 import com.example.timer.components.TimeDisplay
 import com.example.timer.components.TimeInput
 import com.example.timer.components.VerticalPagerIndicator
@@ -159,18 +160,6 @@ fun TimerScreen(
         TimerState.Finished, TimerState.Running -> KeepScreenOn()
         else -> {}
     }
-//    Button(
-//        onClick = {
-//            scope.launch {
-//                timerViewModel.addTimer()
-//            }
-//        },
-//        modifier = Modifier
-//            .padding(16.dp)
-//            .fillMaxSize()
-//    ) {}
-//    Text(text = timerUiState.timers.toString(), color = Color.Magenta)
-
 
     if (timerState == TimerState.Finished) {
         Box(
@@ -203,7 +192,7 @@ fun TimerScreen(
     }
     else {
 
-        val pagerState = rememberPagerState(initialPage = Int.MAX_VALUE / 2 - 1)
+        val pagerState = rememberPagerState(initialPage = 0)
 
         if (windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact) {
             Row(
@@ -221,10 +210,9 @@ fun TimerScreen(
 
                 VerticalPager(
                     state = pagerState,
-                    pageCount = Int.MAX_VALUE,
+                    pageCount = 2,
                     modifier = Modifier.weight(1f)
                 ) { page ->
-
                     if ( page % 2 == 0 ) {
                         TimeControlArea(
                             timerState = { timerState },
@@ -269,7 +257,7 @@ fun TimerScreen(
 
                 HorizontalPager(
                     state = pagerState,
-                    pageCount = Int.MAX_VALUE,
+                    pageCount = 2,
                     modifier = Modifier.weight(1f)
                 ) { page ->
 
@@ -290,7 +278,7 @@ fun TimerScreen(
                                 .weight(1.5f)
                         )
                     } else {
-                        Text(text = "test", Modifier.fillMaxSize())
+                        PresetTimers()
                     }
                 }
                 HorizontalPagerIndicator(pagerState = pagerState)

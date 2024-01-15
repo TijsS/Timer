@@ -30,7 +30,7 @@ fun HorizontalPagerIndicator(pagerState: PagerState){
         horizontalArrangement = Arrangement.Center
     ) {
         repeat(2) { iteration ->
-            val color = if ( (pagerState.currentPage - 1) % 2 == iteration ) Color.DarkGray else Color.LightGray
+            val color = if ( pagerState.currentPage == iteration ) Color.LightGray else Color.DarkGray
             Box(
                 modifier = Modifier
                     .padding(horizontal = 6.dp)
@@ -52,7 +52,7 @@ fun VerticalPagerIndicator(pagerState: PagerState){
         verticalArrangement = Arrangement.Center
     ) {
         repeat(2) { iteration ->
-            val color = if ( (pagerState.currentPage - 1) % 2 == iteration ) Color.DarkGray else Color.LightGray
+            val color = if ( pagerState.currentPage == iteration - 1) Color.DarkGray else Color.LightGray
             Box(
                 modifier = Modifier
                     .padding(vertical = 6.dp)
