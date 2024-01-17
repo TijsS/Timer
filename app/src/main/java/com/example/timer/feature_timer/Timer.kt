@@ -3,17 +3,20 @@ package com.example.timer.feature_timer
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
 
-
+@Entity
 data class Timer(
+    @PrimaryKey(autoGenerate = true)val id: Int = 0,
     val name: String,
     val duration: Long,
 )
 
 object ClockTimer {
     var timerState: MutableState<TimerState> = mutableStateOf(TimerState.Stopped)
-    var timeRemaining = mutableIntStateOf(0)
+    var millisRemaining = mutableIntStateOf(0)
 }
 
 fun Int.intTimeToString(): String {

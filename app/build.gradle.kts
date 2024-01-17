@@ -1,8 +1,8 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-//    id("kotlin-kapt")
-//    id("com.google.dagger.hilt.android")
+    id("com.google.devtools.ksp")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -43,15 +43,13 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.3"
+        kotlinCompilerExtensionVersion = "1.5.8"
     }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
-
-
 }
 
 
@@ -69,8 +67,18 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
     //hilt
-//    implementation("com.google.dagger:hilt-android:2.44")
-//    kapt("com.google.dagger:hilt-android-compiler:2.44")
+    implementation("com.google.dagger:hilt-android:2.48.1")
+    ksp("com.google.dagger:dagger-compiler:2.48")// Dagger compiler
+    ksp("com.google.dagger:hilt-compiler:2.48")// Hilt compiler
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+
+    val room_version = "2.6.1"
+
+    implementation("androidx.room:room-runtime:$room_version")
+    annotationProcessor("androidx.room:room-compiler:$room_version")
+    ksp("androidx.room:room-compiler:2.6.1")
+
+    implementation("androidx.room:room-ktx:$room_version")
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
     implementation(platform("androidx.compose:compose-bom:2023.03.00"))
@@ -93,7 +101,3 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
-// Allow references to generated code
-//kapt {
-//    correctErrorTypes = true
-//}

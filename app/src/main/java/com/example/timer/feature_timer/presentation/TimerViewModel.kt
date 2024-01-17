@@ -1,11 +1,12 @@
 package com.example.timer.feature_timer.presentation
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.timer.feature_timer.ClockTimer
+import com.example.timer.feature_timer.Timer
 import com.example.timer.feature_timer.TimerState
 import com.example.timer.feature_timer.data.TimerRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,11 +14,12 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-
-class TimerViewModel(
+@HiltViewModel
+class TimerViewModel @Inject constructor(
     private val timerRepository: TimerRepository
-): ViewModel() {
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TimerUiState())
     val uiState: StateFlow<TimerUiState> = _uiState.asStateFlow()
@@ -31,23 +33,23 @@ class TimerViewModel(
         }
     }
     suspend fun addTimer(){
-        timerRepository.addTimer()
+        timerRepository.addTimer(Timer(name = "", duration = 0))
         getTimers()
     }
 
     suspend fun updateTimer(timerId: Int, name: String, duration: Long){
-        timerRepository.updateTimer(timerId, name, duration)
+        timerRepository.updateTimer(Timer(timerId, name, duration))
         getTimers()
     }
 
     suspend fun getTimers(){
-        timerRepository.userPreferencesFlow.collectLatest {
+        timerRepository.getTimersFlow().collectLatest {
             _uiState.value = _uiState.value.copy(timers = it)
         }
     }
 
-    suspend fun removeTimer(timerCount: Int){
-        timerRepository.removeTimer(timerCount = timerCount)
+    suspend fun removeTimer(timerId: Int){
+        timerRepository.removeTimer(timerId = timerId)
         getTimers()
     }
 
@@ -81,22 +83,8 @@ class TimerViewModel(
         _uiState.value = _uiState.value.copy(dismissPercentage = if( percentage < 0 ) 0f else if( percentage > 100 ) 100f else percentage)
     }
 
-    fun setSecondInput(second: Int) {
-        _uiState.value = _uiState.value.copy(secondInput = second)
-    }
-
-    fun setMinuteInput(minute: Int) {
-        _uiState.value = _uiState.value.copy(minuteInput = minute)
-    }
-
-    fun setHourInput(hour: Int) {
-        _uiState.value = _uiState.value.copy(hourInput = hour)
-    }
-
     fun addSecondsToTimer() {
-        val seconds = _uiState.value.secondInput + _uiState.value.minuteInput * 60 + _uiState.value.hourInput * 3600
 
-        ClockTimer.timeRemaining.intValue += seconds
         _uiState.value = _uiState.value.copy(resetInput = !_uiState.value.resetInput)
 
         if (ClockTimer.timerState.value == TimerState.Running) {
@@ -104,22 +92,30 @@ class TimerViewModel(
         }
     }
 
-    sealed class UiEvent {
-        object StopTimer: UiEvent()
-        object StartTimer : UiEvent()
-        object PauseTimer: UiEvent()
-        object ResetTimer: UiEvent()
-    }
-}
-class TimerViewModelFactory(
-    private val timerRepository: TimerRepository
-) : ViewModelProvider.Factory {
+    fun addSecondsToTimerFromPreset(duration: Long) {
+        ClockTimer.millisRemaining.intValue += duration.toInt()
 
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(TimerViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return TimerViewModel(timerRepository) as T
+        if (ClockTimer.timerState.value == TimerState.Running) {
+            startCountDown()
         }
-        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+
+    sealed class UiEvent {
+        data object StopTimer: UiEvent()
+        data object StartTimer : UiEvent()
+        data object PauseTimer: UiEvent()
+        data object ResetTimer: UiEvent()
     }
 }
+//class TimerViewModelFactory(
+//    private val timerRepository: TimerRepository
+//) : ViewModelProvider.Factory {
+//
+//    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+//        if (modelClass.isAssignableFrom(TimerViewModel::class.java)) {
+//            @Suppress("UNCHECKED_CAST")
+//            return TimerViewModel(timerRepository) as T
+//        }
+//        throw IllegalArgumentException("Unknown ViewModel class")
+//    }
+//}

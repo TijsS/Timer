@@ -3,7 +3,6 @@ package com.example.timer
 import android.Manifest.permission.POST_NOTIFICATIONS
 import android.Manifest.permission.RECORD_AUDIO
 import android.Manifest.permission.WAKE_LOCK
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -19,17 +18,13 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStore
-import androidx.lifecycle.ViewModelProvider
 import com.example.timer.feature_timer.TimerService
-import com.example.timer.feature_timer.data.TimerRepository
 import com.example.timer.feature_timer.presentation.TimerScreen
 import com.example.timer.feature_timer.presentation.TimerViewModel
-import com.example.timer.feature_timer.presentation.TimerViewModelFactory
 import com.example.timer.ui.theme.TimerTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private lateinit var viewModel: TimerViewModel
@@ -46,10 +41,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        viewModel = ViewModelProvider(
-            this,
-            TimerViewModelFactory(TimerRepository.getInstance(this))
-        )[TimerViewModel::class.java]
+//        viewModel = ViewModelProvider(
+//            this,
+//            TimerViewModelFactory(TimerRepository.getInstance(this))
+//        )[TimerViewModel::class.java]
 
 
         val permissionsToRequest = ArrayList<String>()

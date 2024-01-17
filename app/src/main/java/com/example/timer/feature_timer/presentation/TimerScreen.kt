@@ -54,7 +54,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import app.rive.runtime.kotlin.RiveAnimationView
 import app.rive.runtime.kotlin.core.Fit
 import com.example.timer.R
@@ -78,15 +78,15 @@ import kotlinx.coroutines.launch
 fun TimerScreen(
     startListening: () -> Unit,
     context: Context = LocalContext.current,
-    timerViewModel: TimerViewModel = viewModel(),
+    timerViewModel: TimerViewModel = hiltViewModel(),
     windowSizeClass: WindowSizeClass
 ) {
-    val timerUiState by timerViewModel.uiState.collectAsState()
+    val timerUiState by timerViewModel.uiState.collectAsState( )
     var alarmAnimation: RiveAnimationView? = null
     val applicationContext = context.applicationContext
     val scope = rememberCoroutineScope()
 
-    val timeRemaining by remember { ClockTimer.timeRemaining }
+    val timeRemaining by remember { ClockTimer.millisRemaining }
     val timerState by remember { ClockTimer.timerState }
     val currentDistanceAnimated by animateFloatAsState(
         targetValue = timerUiState.dismissPercentage,
@@ -221,10 +221,7 @@ fun TimerScreen(
                             pauseCountdown = { timerViewModel.pauseCountDown() },
                             resetCountDown = { timerViewModel.stopCountDown() },
                             startListening = { startListening() },
-                            addTime = { timerViewModel.addSecondsToTimer() },
-                            secondInput = { timerViewModel.setSecondInput(it) },
-                            minuteInput = { timerViewModel.setMinuteInput(it) },
-                            hourInput = { timerViewModel.setHourInput(it) },
+                            addSeconds = { timerViewModel.addSecondsToTimerFromPreset(it) },
                             timerGreaterThenZero = { timeRemaining > 0 },
                             modifier = Modifier
                                 .weight(1f)
@@ -234,7 +231,8 @@ fun TimerScreen(
                             timers = timerUiState.timers,
                             addTimer = { scope.launch { timerViewModel.addTimer() } },
                             removeTimer = { scope.launch { timerViewModel.removeTimer(it)} },
-                            updateTimer = { timerId, name, duration -> scope.launch { timerViewModel.updateTimer(timerId, name, duration) }}
+                            updateTimer = { timerId, name, duration -> scope.launch { timerViewModel.updateTimer(timerId, name, duration) }},
+                            addTime = { timerViewModel.addSecondsToTimerFromPreset(it) }
                         )
                     }
                 }
@@ -274,10 +272,7 @@ fun TimerScreen(
                             pauseCountdown = { timerViewModel.pauseCountDown() },
                             resetCountDown = { timerViewModel.stopCountDown() },
                             startListening = { startListening() },
-                            addTime = { timerViewModel.addSecondsToTimer() },
-                            secondInput = { timerViewModel.setSecondInput(it) },
-                            minuteInput = { timerViewModel.setMinuteInput(it) },
-                            hourInput = { timerViewModel.setHourInput(it) },
+                            addSeconds = { timerViewModel.addSecondsToTimerFromPreset(it) },
                             timerGreaterThenZero = { timeRemaining > 0 },
                             modifier = Modifier
                                 .weight(1.5f)
@@ -287,7 +282,8 @@ fun TimerScreen(
                             timers = timerUiState.timers,
                             addTimer = { scope.launch { timerViewModel.addTimer() } },
                             removeTimer = { scope.launch { timerViewModel.removeTimer(it)} },
-                            updateTimer = { timerId, name, duration -> scope.launch { timerViewModel.updateTimer(timerId, name, duration) }}
+                            updateTimer = { timerId, name, duration -> scope.launch { timerViewModel.updateTimer(timerId, name, duration) }},
+                            addTime = { timerViewModel.addSecondsToTimerFromPreset(it) }
                         )
                     }
                 }
@@ -330,10 +326,7 @@ fun TimeControlArea(
     pauseCountdown: () -> Unit,
     resetCountDown: () -> Unit,
     startListening: () -> Unit,
-    addTime: () -> Unit,
-    secondInput: (Int) -> Unit,
-    minuteInput: (Int) -> Unit,
-    hourInput: (Int) -> Unit,
+    addSeconds: (Long) -> Unit,
     timerGreaterThenZero: () -> Boolean,
     resetInput: Boolean,
     modifier: Modifier = Modifier,
@@ -346,10 +339,7 @@ fun TimeControlArea(
     ) {
 
         TimeInput(
-            hourInput = hourInput,
-            minuteInput = minuteInput,
-            secondInput = secondInput,
-            addTime = addTime,
+            addSeconds = addSeconds,
             resetInput = resetInput
         )
 

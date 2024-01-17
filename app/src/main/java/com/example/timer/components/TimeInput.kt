@@ -18,6 +18,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices
@@ -28,14 +32,16 @@ import com.example.timer.ui.theme.TimerTheme
 @Composable
 fun TimeInput(
     modifier: Modifier = Modifier,
-    hourInput: (Int) -> Unit,
-    minuteInput: (Int) -> Unit,
-    secondInput: (Int) -> Unit,
-    addTime: () -> Unit,
+    addSeconds: ( Long ) -> Unit,
     resetInput: Boolean,
     small: Boolean = false
 ) {
     val (infiniteCircularListWidth, infiniteCircularListHeight) = if(small) 25.dp to 20.dp else 50.dp to 40.dp
+
+    var secondInput by remember{ mutableLongStateOf(0)}
+    var minuteInput by remember{ mutableLongStateOf(0)}
+    var hourInput by remember{ mutableLongStateOf(0)}
+
     Row(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
@@ -51,9 +57,7 @@ fun TimeInput(
             items = (0..10).toMutableList(),
             initialItem = 0,
             resetInput = resetInput,
-            onItemSelected = { _, item ->
-                hourInput(item)
-            },
+            onItemSelected = { hours -> hourInput = hours },
             small = small,
             numberOfDisplayedItems = if ( small ) 1 else 3
         )
@@ -74,9 +78,7 @@ fun TimeInput(
             resetInput = resetInput,
             small = small,
 
-            onItemSelected = { _, item ->
-                minuteInput(item)
-            },
+            onItemSelected = { minutes -> minuteInput = minutes },
             numberOfDisplayedItems = if ( small ) 1 else 3
         )
 
@@ -95,14 +97,14 @@ fun TimeInput(
             initialItem = 0,
             resetInput = resetInput,
             small = small,
-            onItemSelected = { _, item ->
-                secondInput(item)
-            },
+            onItemSelected = { seconds -> secondInput = seconds },
             numberOfDisplayedItems = if ( small ) 1 else 3
         )
 
         IconButton(
-            onClick = { addTime() },
+            onClick = {
+                addSeconds(hourInput * 3600 + minuteInput * 60 + secondInput)
+                      },
             modifier =
             Modifier
                 .padding(start = 16.dp)
@@ -125,10 +127,7 @@ fun TimeInputPreview() {
             modifier = Modifier.fillMaxSize(),
         ) {
             TimeInput(
-                hourInput = {},
-                minuteInput = {},
-                secondInput = {},
-                addTime = {},
+                addSeconds = {},
                 resetInput = false
             )
         }
@@ -143,10 +142,7 @@ fun SmallTimeInputPreview() {
             modifier = Modifier.fillMaxSize(),
         ) {
             TimeInput(
-                hourInput = {},
-                minuteInput = {},
-                secondInput = {},
-                addTime = {},
+                addSeconds = {},
                 resetInput = false,
                 small = true
             )
@@ -162,10 +158,7 @@ fun TimeInputPreviewHorizontal() {
             modifier = Modifier.fillMaxSize(),
         ) {
             TimeInput(
-                hourInput = {},
-                minuteInput = {},
-                secondInput = {},
-                addTime = {},
+                addSeconds = {},
                 resetInput = false
             )
         }

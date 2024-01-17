@@ -103,10 +103,10 @@ class TimerService: Service(), RecognitionListener {
 
         countDownTimer?.cancel() // Cancel any existing timers
 
-        countDownTimer = object : CountDownTimer(ClockTimer.timeRemaining.intValue.toLong() * 1000, 1000) {
+        countDownTimer = object : CountDownTimer(ClockTimer.millisRemaining.intValue.toLong() * 1000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
-                ClockTimer.timeRemaining.intValue -= 1
-                applicationContext.updateNotificationContentText( 2, ClockTimer.timeRemaining.intValue.intTimeToString() )
+                ClockTimer.millisRemaining.intValue -= 1
+                applicationContext.updateNotificationContentText( 2, ClockTimer.millisRemaining.intValue.intTimeToString() )
             }
 
             @RequiresApi(34)
@@ -130,7 +130,7 @@ class TimerService: Service(), RecognitionListener {
         serviceScope.launch {
             try {
                 val request = PutDataMapRequest.create(START_TIMER_SEND).apply {
-                    dataMap.putInt(DataLayerListenerService.TIMER_DURATION_KEY, ClockTimer.timeRemaining.intValue)
+                    dataMap.putInt(DataLayerListenerService.TIMER_DURATION_KEY, ClockTimer.millisRemaining.intValue)
                     dataMap.putInt(DataLayerListenerService.START_TIMER_TIME_KEY, System.currentTimeMillis().toInt() )
                 }
                     .asPutDataRequest()
@@ -155,7 +155,7 @@ class TimerService: Service(), RecognitionListener {
         vibrator.cancel()
 
         ClockTimer.apply{
-            timeRemaining.intValue = 0
+            millisRemaining.intValue = 0
             timerState.value = TimerState.Stopped
         }
         stopForeground(STOP_FOREGROUND_REMOVE)
@@ -166,7 +166,7 @@ class TimerService: Service(), RecognitionListener {
             try {
                 //TODO convert to message api
                 val request = PutDataMapRequest.create(RESET_TIMER_SEND).apply {
-                    dataMap.putInt(DataLayerListenerService.TIMER_DURATION_KEY, ClockTimer.timeRemaining.intValue)
+                    dataMap.putInt(DataLayerListenerService.TIMER_DURATION_KEY, ClockTimer.millisRemaining.intValue)
                     dataMap.putInt(DataLayerListenerService.START_TIMER_TIME_KEY, System.currentTimeMillis().toInt() )
                 }
                     .asPutDataRequest()
@@ -187,7 +187,7 @@ class TimerService: Service(), RecognitionListener {
     private fun notifiedPause(){
         countDownTimer?.cancel()
         ClockTimer.timerState.value = TimerState.Paused
-        applicationContext.updateNotificationContentText( 2, ClockTimer.timeRemaining.intValue.intTimeToString() )
+        applicationContext.updateNotificationContentText( 2, ClockTimer.millisRemaining.intValue.intTimeToString() )
     }
 
     private fun pause() {
@@ -195,7 +195,7 @@ class TimerService: Service(), RecognitionListener {
             try {
                 //TODO convert to message api
                 val request = PutDataMapRequest.create(PAUSE_TIMER_SEND).apply {
-                    dataMap.putInt(DataLayerListenerService.TIMER_DURATION_KEY, ClockTimer.timeRemaining.intValue)
+                    dataMap.putInt(DataLayerListenerService.TIMER_DURATION_KEY, ClockTimer.millisRemaining.intValue)
                     dataMap.putInt(DataLayerListenerService.START_TIMER_TIME_KEY, System.currentTimeMillis().toInt() )
                 }
                     .asPutDataRequest()
@@ -339,7 +339,7 @@ class TimerService: Service(), RecognitionListener {
             if (secondIndex-1 < 0 ) return@let
 
             recognizedWords[secondIndex-1].toIntOrNull()?.let {
-                ClockTimer.timeRemaining.intValue += it
+                ClockTimer.millisRemaining.intValue += it
             }
         }
 
@@ -347,7 +347,7 @@ class TimerService: Service(), RecognitionListener {
             if (minuteIndex-1 < 0 ) return@let
 
             recognizedWords[minuteIndex-1].toIntOrNull()?.let {
-                ClockTimer.timeRemaining.intValue += it * 60
+                ClockTimer.millisRemaining.intValue += it * 60
             }
         }
 
@@ -355,7 +355,7 @@ class TimerService: Service(), RecognitionListener {
             if (hourIndex-1 < 0 ) return@let
 
             recognizedWords[hourIndex-1].toIntOrNull()?.let {
-                ClockTimer.timeRemaining.intValue += it * 60 * 60
+                ClockTimer.millisRemaining.intValue += it * 60 * 60
             }
         }
 

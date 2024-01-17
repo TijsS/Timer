@@ -2,7 +2,6 @@ package com.example.timer.components
 
 import android.annotation.SuppressLint
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -50,10 +49,10 @@ fun InfiniteCircularList(
     selectedTextColor: Color = MaterialTheme.colorScheme.onSurface,
     resetInput: Boolean,
     small: Boolean = false,
-    onItemSelected: (index: Int, item: Int) -> Unit = { _, _ -> }
+    onItemSelected: (Long) -> Unit
 ) {
 
-    //To hide the switch from index 0 to the halfway index on startup
+    //put last value as first value in list, to hide the switch from index 0 to the halfway index on startup
     val reshuffledItems = mutableListOf<Int>().apply {
         addAll(items)
         add(0, items.last())
@@ -77,15 +76,13 @@ fun InfiniteCircularList(
         mutableStateOf(reshuffledItems)
     }
 
-
-
     LaunchedEffect(resetInput, manualResetInput) {
         var targetIndex = reshuffledItems.indexOf(initialItem) - 1
-        targetIndex += ((Int.MAX_VALUE / 2) / reshuffledItems.size) * reshuffledItems.size
+        targetIndex += ((Int.MAX_VALUE / 2) / reshuffledItems.size) * reshuffledItems.size + if (small) +1 else 0
         lastSelectedIndex = targetIndex
         scrollState.scrollToItem(targetIndex)
     }
-    Log.d("TAG", "InfiniteCircularList: ${itemHeight * numberOfDisplayedItems}")
+
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -129,10 +126,11 @@ fun InfiniteCircularList(
                             val y = coordinates.positionInParent().y - itemHalfHeight
                             val parentHalfHeight =
                                 (coordinates.parentCoordinates?.size?.height ?: 0) / 2f
+
                             val isSelected =
-                                (y > parentHalfHeight - itemHalfHeight && y < parentHalfHeight + itemHalfHeight)
-                            if (isSelected && lastSelectedIndex != i) {
-                                onItemSelected(i % itemsState.size, item)
+                                if(small) ( IntArray(71) { it - 70 }.contains(y.toInt())) else (y > parentHalfHeight - itemHalfHeight  && y < parentHalfHeight + itemHalfHeight )
+                            if (isSelected) {
+                                onItemSelected(item.toLong())
                                 lastSelectedIndex = i
                             }
                         }
@@ -147,7 +145,7 @@ fun InfiniteCircularList(
                             fontsize * itemScaleFact
                         } else {
                             fontsize
-                        }
+                        },
                     )
                 }
             }
@@ -178,7 +176,7 @@ fun ScrollPickerPreview() {
             textColor = MaterialTheme.colorScheme.onSurface,
             selectedTextColor = MaterialTheme.colorScheme.onSurface,
             resetInput = false,
-            onItemSelected = { _, _ -> },
+            onItemSelected = { _ -> },
         )
     }
 }
