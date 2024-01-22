@@ -27,6 +27,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerDefaults.flingBehavior
+import androidx.compose.foundation.pager.PagerSnapDistance
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
@@ -210,7 +212,12 @@ fun TimerScreen(
 
                 VerticalPager(
                     state = pagerState,
+                    beyondBoundsPageCount = 1,
                     pageCount = 2,
+                    flingBehavior = flingBehavior(
+                        state = pagerState,
+                        pagerSnapDistance = PagerSnapDistance.atMost(4)
+                    ),
                     modifier = Modifier.weight(1f)
                 ) { page ->
                     if ( page % 2 == 0 ) {
@@ -232,7 +239,12 @@ fun TimerScreen(
                             addTimer = { scope.launch { timerViewModel.addTimer() } },
                             removeTimer = { scope.launch { timerViewModel.removeTimer(it)} },
                             updateTimer = { timerId, name, duration -> scope.launch { timerViewModel.updateTimer(timerId, name, duration) }},
-                            addTime = { timerViewModel.addSecondsToTimerFromPreset(it) }
+                            addTime = {
+                                timerViewModel.addSecondsToTimerFromPreset(it)
+                                scope.launch {
+                                    pagerState.animateScrollToPage(0)
+                                }
+                            }
                         )
                     }
                 }
@@ -258,36 +270,56 @@ fun TimerScreen(
                     modifier = Modifier.padding(26.dp)
                 )
 
-                HorizontalPager(
-                    state = pagerState,
-                    pageCount = 2,
+                Box(
                     modifier = Modifier.weight(1f)
-                ) { page ->
+                ) {
+                    HorizontalPager(
+                        state = pagerState,
+                        beyondBoundsPageCount = 1,
+                        pageCount = 2,
+                        flingBehavior = flingBehavior(
+                            state = pagerState,
+                            pagerSnapDistance = PagerSnapDistance.atMost(4)
+                        ),
+                    ) { page ->
 
-                    if ( page % 2 == 0 ) {
-                        TimeControlArea(
-                            timerState = { timerState },
-                            resetInput = timerUiState.resetInput,
-                            startCountDown = { timerViewModel.startCountDown() },
-                            pauseCountdown = { timerViewModel.pauseCountDown() },
-                            resetCountDown = { timerViewModel.stopCountDown() },
-                            startListening = { startListening() },
-                            addSeconds = { timerViewModel.addSecondsToTimerFromPreset(it) },
-                            timerGreaterThenZero = { timeRemaining > 0 },
-                            modifier = Modifier
-                                .weight(1.5f)
-                        )
-                    } else {
-                        PresetTimers(
-                            timers = timerUiState.timers,
-                            addTimer = { scope.launch { timerViewModel.addTimer() } },
-                            removeTimer = { scope.launch { timerViewModel.removeTimer(it)} },
-                            updateTimer = { timerId, name, duration -> scope.launch { timerViewModel.updateTimer(timerId, name, duration) }},
-                            addTime = { timerViewModel.addSecondsToTimerFromPreset(it) }
-                        )
+                        if (page % 2 == 0) {
+                            TimeControlArea(
+                                timerState = { timerState },
+                                resetInput = timerUiState.resetInput,
+                                startCountDown = { timerViewModel.startCountDown() },
+                                pauseCountdown = { timerViewModel.pauseCountDown() },
+                                resetCountDown = { timerViewModel.stopCountDown() },
+                                startListening = { startListening() },
+                                addSeconds = { timerViewModel.addSecondsToTimerFromPreset(it) },
+                                timerGreaterThenZero = { timeRemaining > 0 },
+                                modifier = Modifier
+                            )
+                        } else {
+                            PresetTimers(
+                                timers = timerUiState.timers,
+                                addTimer = { scope.launch { timerViewModel.addTimer() } },
+                                removeTimer = { scope.launch { timerViewModel.removeTimer(it) } },
+                                updateTimer = { timerId, name, duration ->
+                                    scope.launch {
+                                        timerViewModel.updateTimer(
+                                            timerId,
+                                            name,
+                                            duration
+                                        )
+                                    }
+                                },
+                                addTime = {
+                                    timerViewModel.addSecondsToTimerFromPreset(it)
+                                    scope.launch {
+                                        pagerState.animateScrollToPage(0)
+                                    }
+                                }
+                            )
+                        }
                     }
+                    HorizontalPagerIndicator(pagerState = pagerState)
                 }
-                HorizontalPagerIndicator(pagerState = pagerState)
             }
         }
     }
@@ -336,11 +368,12 @@ fun TimeControlArea(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .padding(top = 8.dp)
+            .fillMaxSize()
     ) {
 
         TimeInput(
             addSeconds = addSeconds,
-            resetInput = resetInput
+            resetInput = resetInput,
         )
 
         Row(
@@ -375,7 +408,7 @@ fun TimeControlArea(
         IconButton(
             onClick = { startListening() },
             modifier = Modifier
-                .padding(16.dp)
+                .padding(bottom = 32.dp)
         ) {
             Icon(
                 painter = painterResource(R.drawable.baseline_mic_24),

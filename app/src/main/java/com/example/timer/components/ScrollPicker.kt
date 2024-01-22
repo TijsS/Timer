@@ -77,7 +77,7 @@ fun InfiniteCircularList(
     }
 
     LaunchedEffect(resetInput, manualResetInput) {
-        var targetIndex = reshuffledItems.indexOf(initialItem) - 1
+        var targetIndex = reshuffledItems.indexOf( if(small) initialItem else 0 ) - 1
         targetIndex += ((Int.MAX_VALUE / 2) / reshuffledItems.size) * reshuffledItems.size + if (small) +1 else 0
         lastSelectedIndex = targetIndex
         scrollState.scrollToItem(targetIndex)
@@ -89,8 +89,10 @@ fun InfiniteCircularList(
         modifier = Modifier
             .width(width)
             .height(itemHeight * numberOfDisplayedItems)
-            .clickable {
-                manualResetInput = !manualResetInput
+            .conditional(!small) {
+                clickable {
+                    manualResetInput = !manualResetInput
+                }
             }
             .conditional(!small) {
                 drawWithContent {

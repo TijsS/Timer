@@ -7,8 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,9 +24,10 @@ import androidx.compose.ui.unit.dp
 fun HorizontalPagerIndicator(pagerState: PagerState){
     Row(
         Modifier
-            .height(50.dp)
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.Bottom
     ) {
         repeat(2) { iteration ->
             val color = if ( pagerState.currentPage == iteration ) Color.LightGray else Color.DarkGray

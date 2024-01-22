@@ -32,15 +32,17 @@ import com.example.timer.ui.theme.TimerTheme
 @Composable
 fun TimeInput(
     modifier: Modifier = Modifier,
-    addSeconds: ( Long ) -> Unit,
+    addSeconds: (Long) -> Unit,
     resetInput: Boolean,
-    small: Boolean = false
+    small: Boolean = false,
+    savePresetTimer: ( Long ) -> Unit = { _ -> },
+    duration: Long = 0
 ) {
     val (infiniteCircularListWidth, infiniteCircularListHeight) = if(small) 25.dp to 20.dp else 50.dp to 40.dp
 
-    var secondInput by remember{ mutableLongStateOf(0)}
-    var minuteInput by remember{ mutableLongStateOf(0)}
-    var hourInput by remember{ mutableLongStateOf(0)}
+    var secondInput by remember{ mutableLongStateOf(duration % 60) }
+    var minuteInput by remember{ mutableLongStateOf( duration / 60 % 60 ) }
+    var hourInput by remember{ mutableLongStateOf( duration / 3600 % 24 ) }
 
     Row(
         horizontalArrangement = Arrangement.Center,
@@ -55,9 +57,12 @@ fun TimeInput(
             width = infiniteCircularListWidth,
             itemHeight = infiniteCircularListHeight,
             items = (0..10).toMutableList(),
-            initialItem = 0,
+            initialItem = hourInput.toInt(),
             resetInput = resetInput,
-            onItemSelected = { hours -> hourInput = hours },
+            onItemSelected = {
+                hours -> hourInput = hours
+                savePresetTimer( hourInput * 3600 + minuteInput * 60 + secondInput )
+                             },
             small = small,
             numberOfDisplayedItems = if ( small ) 1 else 3
         )
@@ -74,11 +79,13 @@ fun TimeInput(
             width = infiniteCircularListWidth,
             itemHeight = infiniteCircularListHeight,
             items = (0..59).toMutableList(),
-            initialItem = 0,
+            initialItem = minuteInput.toInt(),
             resetInput = resetInput,
             small = small,
-
-            onItemSelected = { minutes -> minuteInput = minutes },
+            onItemSelected = {
+                minutes -> minuteInput = minutes
+                savePresetTimer( hourInput * 3600 + minuteInput * 60 + secondInput )
+                             },
             numberOfDisplayedItems = if ( small ) 1 else 3
         )
 
@@ -93,12 +100,15 @@ fun TimeInput(
         InfiniteCircularList(
             width = infiniteCircularListWidth,
             itemHeight = infiniteCircularListHeight,
+            numberOfDisplayedItems = if ( small ) 1 else 3,
             items = (0..59).toMutableList(),
-            initialItem = 0,
+            initialItem = secondInput.toInt(),
             resetInput = resetInput,
             small = small,
-            onItemSelected = { seconds -> secondInput = seconds },
-            numberOfDisplayedItems = if ( small ) 1 else 3
+            onItemSelected = {
+                seconds -> secondInput = seconds
+                savePresetTimer( hourInput * 3600 + minuteInput * 60 + secondInput )
+                             },
         )
 
         IconButton(
@@ -128,7 +138,7 @@ fun TimeInputPreview() {
         ) {
             TimeInput(
                 addSeconds = {},
-                resetInput = false
+                resetInput = false,
             )
         }
     }
@@ -144,7 +154,7 @@ fun SmallTimeInputPreview() {
             TimeInput(
                 addSeconds = {},
                 resetInput = false,
-                small = true
+                small = true,
             )
         }
     }
@@ -159,7 +169,7 @@ fun TimeInputPreviewHorizontal() {
         ) {
             TimeInput(
                 addSeconds = {},
-                resetInput = false
+                resetInput = false,
             )
         }
     }

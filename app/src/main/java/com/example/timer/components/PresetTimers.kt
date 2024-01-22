@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -48,6 +48,7 @@ fun PresetTimers(
     addTime: (Long) -> Unit
 ) {
     val scrollState = rememberLazyListState(0)
+    var job by remember { mutableStateOf<Job?>(null) }
 
     LazyColumn(
         contentPadding = PaddingValues(4.dp),
@@ -64,24 +65,34 @@ fun PresetTimers(
             item {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
+                    horizontalArrangement = Arrangement.Start,
                     modifier = Modifier
-                        .combinedClickable (
-                            onClick = {  },
+                        .combinedClickable(
+                            onClick = { },
                             onLongClick = { removeTimer(timer.id) },
                             onLongClickLabel = "delete timer"
                         )
+                        .fillMaxWidth()
 
                 ) {
                     HiddenInput(
                         timer = timer,
                         onValueChange = updateTimer,
                     )
+//                    Text(text = "lkdasjfklasdjfklasdjfklasjd fjsdalkfjalskdjfl;kasdjf;lkasdjfl;ksadj;lfa")
 
                     TimeInput(
                         addSeconds = addTime,
                         resetInput = false,
-                        small = true
+                        small = true,
+                        duration = timer.duration,
+                        savePresetTimer = { duration ->
+                            job?.cancel()
+                            job = CoroutineScope(Dispatchers.Main).launch {
+                                delay(100) //save after 500 millis of pause in typing
+                                updateTimer(timer.id, timer.name, duration)
+                            }
+                        }
                     )
                 }
             }
@@ -129,9 +140,7 @@ fun HiddenInput(
         keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
         modifier = Modifier
             .width(150.dp)
-            .padding(0.dp)
     )
-
 }
 
 @Composable
