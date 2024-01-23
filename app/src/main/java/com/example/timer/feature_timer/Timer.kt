@@ -10,8 +10,8 @@ import androidx.room.PrimaryKey
 @Entity
 data class Timer(
     @PrimaryKey(autoGenerate = true)val id: Int = 0,
-    val name: String,
-    val duration: Long,
+    var name: String,
+    var duration: Long,
 )
 
 object ClockTimer {

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -32,6 +33,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.timer.feature_timer.Timer
 import com.example.timer.ui.theme.TimerTheme
+import com.example.timer.ui.theme.Values.LARGE_PADDING
+import com.example.timer.ui.theme.Values.SMALL_PADDING
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -41,18 +44,18 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PresetTimers(
-    timers: List<Timer>,
-    addTimer: () -> Unit,
-    removeTimer: (Int) -> Unit,
-    updateTimer: (Int, String, Long) -> Unit,
-    addTime: (Long) -> Unit
+    presetTimers: List<Timer>,
+    addEmptyPresetTimer: () -> Unit,
+    removePresetTimer: (Int) -> Unit,
+    updatePresetTimer: (Timer) -> Unit,
+    addTimeToClockTimer: (Long) -> Unit
 ) {
     val scrollState = rememberLazyListState(0)
-    var job by remember { mutableStateOf<Job?>(null) }
+    var updateTimerJob by remember { mutableStateOf<Job?>(null) }
 
     LazyColumn(
-        contentPadding = PaddingValues(4.dp),
-        verticalArrangement = Arrangement.Center,
+        contentPadding = PaddingValues(SMALL_PADDING),
+        verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally,
         state = scrollState,
         flingBehavior = rememberSnapFlingBehavior(
@@ -60,37 +63,39 @@ fun PresetTimers(
         ),
         modifier = Modifier
             .fillMaxSize()
+            .padding(bottom = LARGE_PADDING)
     ) {
-        timers.forEach{ timer ->
+        presetTimers.forEach { timer ->
             item {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start,
                     modifier = Modifier
                         .combinedClickable(
-                            onClick = { },
-                            onLongClick = { removeTimer(timer.id) },
-                            onLongClickLabel = "delete timer"
+                            onClick = {
+                                // Left empty on purpose, onLongClick only available in combinedClickable
+                            },
+                            onLongClick = { removePresetTimer(timer.id) },
+                            onLongClickLabel = "delete ${timer.name}"
                         )
                         .fillMaxWidth()
 
                 ) {
                     HiddenInput(
                         timer = timer,
-                        onValueChange = updateTimer,
+                        onValueChange = updatePresetTimer,
                     )
-//                    Text(text = "lkdasjfklasdjfklasdjfklasjd fjsdalkfjalskdjfl;kasdjf;lkasdjfl;ksadj;lfa")
 
                     TimeInput(
-                        addSeconds = addTime,
+                        addSeconds = addTimeToClockTimer,
                         resetInput = false,
                         small = true,
                         duration = timer.duration,
                         savePresetTimer = { duration ->
-                            job?.cancel()
-                            job = CoroutineScope(Dispatchers.Main).launch {
-                                delay(100) //save after 500 millis of pause in typing
-                                updateTimer(timer.id, timer.name, duration)
+                            updateTimerJob?.cancel()
+                            updateTimerJob = CoroutineScope(Dispatchers.IO).launch {
+                                delay(100) //save after 100 millis of pause in scrolling
+                                updatePresetTimer(timer.apply { this.duration = duration })
                             }
                         }
                     )
@@ -98,10 +103,11 @@ fun PresetTimers(
             }
         }
         item {
-            AddPresetTimer( addTimer )
+            AddPresetTimer(addEmptyPresetTimer)
         }
     }
 }
+
 @Composable
 private fun AddPresetTimer(addTimer: () -> Unit) {
     IconButton(onClick = { addTimer() }) {
@@ -116,20 +122,20 @@ private fun AddPresetTimer(addTimer: () -> Unit) {
 @Composable
 fun HiddenInput(
     timer: Timer,
-    onValueChange: (Int, String, Long) -> Unit,
+    onValueChange: (Timer) -> Unit,
 ) {
-    var currentInput by remember { mutableStateOf(timer.name) }
-    var job by remember { mutableStateOf<Job?>(null) }
+    var nameInput by remember { mutableStateOf(timer.name) }
+    var updateTimerJob by remember { mutableStateOf<Job?>(null) }
     val focusManager = LocalFocusManager.current
 
     TextField(
-        value = currentInput,
+        value = nameInput,
         onValueChange = {
-            currentInput = it
-            job?.cancel()
-            job = CoroutineScope(Dispatchers.Main).launch {
+            nameInput = it
+            updateTimerJob?.cancel()
+            updateTimerJob = CoroutineScope(Dispatchers.IO).launch {
                 delay(500) //save after 500 millis of pause in typing
-                onValueChange(timer.id, it, timer.duration)
+                onValueChange(timer.apply { this.name = nameInput })
             }
         },
         singleLine = true,
@@ -148,10 +154,10 @@ fun HiddenInput(
 fun PresetTimersPreview() {
     TimerTheme {
         PresetTimers(
-            emptyList(),
-            {  },
-            {  },
-            { _, _, _ ->  },
+            listOf(Timer(1, "brushing", 120), Timer(2, "walk", 60*30)),
+            { },
+            { },
+            { _ -> },
             { _ -> }
         )
     }

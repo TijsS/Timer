@@ -32,23 +32,24 @@ class TimerViewModel @Inject constructor(
             getTimers()
         }
     }
-    suspend fun addTimer(){
+
+    suspend fun addTimer() {
         timerRepository.addTimer(Timer(name = "", duration = 0))
         getTimers()
     }
 
-    suspend fun updateTimer(timerId: Int, name: String, duration: Long){
-        timerRepository.updateTimer(Timer(timerId, name, duration))
+    suspend fun updateTimer(timer: Timer) {
+        timerRepository.updateTimer(timer)
         getTimers()
     }
 
-    suspend fun getTimers(){
+    suspend fun getTimers() {
         timerRepository.getTimersFlow().collectLatest {
             _uiState.value = _uiState.value.copy(timers = it)
         }
     }
 
-    suspend fun removeTimer(timerId: Int){
+    suspend fun removeTimer(timerId: Int) {
         timerRepository.removeTimer(timerId = timerId)
         getTimers()
     }
@@ -80,11 +81,12 @@ class TimerViewModel @Inject constructor(
     }
 
     fun setDismissPercentage(percentage: Float) {
-        _uiState.value = _uiState.value.copy(dismissPercentage = if( percentage < 0 ) 0f else if( percentage > 100 ) 100f else percentage)
+        _uiState.value =
+            _uiState.value.copy(dismissPercentage = if (percentage < 0) 0f else if (percentage > 100) 100f else percentage)
     }
 
-    fun addSecondsToTimer() {
-
+    fun addSecondsToTimerFromPreset(duration: Long) {
+        ClockTimer.millisRemaining.intValue += duration.toInt()
         _uiState.value = _uiState.value.copy(resetInput = !_uiState.value.resetInput)
 
         if (ClockTimer.timerState.value == TimerState.Running) {
@@ -92,30 +94,10 @@ class TimerViewModel @Inject constructor(
         }
     }
 
-    fun addSecondsToTimerFromPreset(duration: Long) {
-        ClockTimer.millisRemaining.intValue += duration.toInt()
-
-        if (ClockTimer.timerState.value == TimerState.Running) {
-            startCountDown()
-        }
-    }
-
     sealed class UiEvent {
-        data object StopTimer: UiEvent()
+        data object StopTimer : UiEvent()
         data object StartTimer : UiEvent()
-        data object PauseTimer: UiEvent()
-        data object ResetTimer: UiEvent()
+        data object PauseTimer : UiEvent()
+        data object ResetTimer : UiEvent()
     }
 }
-//class TimerViewModelFactory(
-//    private val timerRepository: TimerRepository
-//) : ViewModelProvider.Factory {
-//
-//    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-//        if (modelClass.isAssignableFrom(TimerViewModel::class.java)) {
-//            @Suppress("UNCHECKED_CAST")
-//            return TimerViewModel(timerRepository) as T
-//        }
-//        throw IllegalArgumentException("Unknown ViewModel class")
-//    }
-//}

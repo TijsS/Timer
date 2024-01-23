@@ -38,6 +38,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -83,7 +84,7 @@ fun TimerScreen(
     timerViewModel: TimerViewModel = hiltViewModel(),
     windowSizeClass: WindowSizeClass
 ) {
-    val timerUiState by timerViewModel.uiState.collectAsState( )
+    val timerUiState by timerViewModel.uiState.collectAsState()
     var alarmAnimation: RiveAnimationView? = null
     val applicationContext = context.applicationContext
     val scope = rememberCoroutineScope()
@@ -184,15 +185,14 @@ fun TimerScreen(
                     stateMachineName = "StateMachine",
                     fit = Fit.COVER,
                     modifier = Modifier
-                        .size(maxWidth * 0.7f,  maxHeight* 0.7f)
+                        .size(maxWidth * 0.7f, maxHeight * 0.7f)
                 ) { view ->
                     alarmAnimation = view
                     alarmAnimation?.fireState("StateMachine", "startRinging")
                 }
             }
         }
-    }
-    else {
+    } else {
 
         val pagerState = rememberPagerState(initialPage = 0)
 
@@ -209,10 +209,12 @@ fun TimerScreen(
                     modifier = Modifier
                         .weight(1f)
                 )
+                Text(text = pagerState.currentPage.toString())
 
                 VerticalPager(
                     state = pagerState,
                     beyondBoundsPageCount = 1,
+                    reverseLayout = true,
                     pageCount = 2,
                     flingBehavior = flingBehavior(
                         state = pagerState,
@@ -220,7 +222,7 @@ fun TimerScreen(
                     ),
                     modifier = Modifier.weight(1f)
                 ) { page ->
-                    if ( page % 2 == 0 ) {
+                    if (page % 2 == 0) {
                         TimeControlArea(
                             timerState = { timerState },
                             resetInput = timerUiState.resetInput,
@@ -235,11 +237,15 @@ fun TimerScreen(
                         )
                     } else {
                         PresetTimers(
-                            timers = timerUiState.timers,
-                            addTimer = { scope.launch { timerViewModel.addTimer() } },
-                            removeTimer = { scope.launch { timerViewModel.removeTimer(it)} },
-                            updateTimer = { timerId, name, duration -> scope.launch { timerViewModel.updateTimer(timerId, name, duration) }},
-                            addTime = {
+                            presetTimers = timerUiState.timers,
+                            addEmptyPresetTimer = { scope.launch { timerViewModel.addTimer() } },
+                            removePresetTimer = { scope.launch { timerViewModel.removeTimer(it) } },
+                            updatePresetTimer = { timer ->
+                                scope.launch {
+                                    timerViewModel.updateTimer(timer)
+                                }
+                            },
+                            addTimeToClockTimer = {
                                 timerViewModel.addSecondsToTimerFromPreset(it)
                                 scope.launch {
                                     pagerState.animateScrollToPage(0)
@@ -250,8 +256,7 @@ fun TimerScreen(
                 }
                 VerticalPagerIndicator(pagerState = pagerState)
             }
-        }
-        else {
+        } else {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
@@ -297,19 +302,15 @@ fun TimerScreen(
                             )
                         } else {
                             PresetTimers(
-                                timers = timerUiState.timers,
-                                addTimer = { scope.launch { timerViewModel.addTimer() } },
-                                removeTimer = { scope.launch { timerViewModel.removeTimer(it) } },
-                                updateTimer = { timerId, name, duration ->
+                                presetTimers = timerUiState.timers,
+                                addEmptyPresetTimer = { scope.launch { timerViewModel.addTimer() } },
+                                removePresetTimer = { scope.launch { timerViewModel.removeTimer(it) } },
+                                updatePresetTimer = { timer ->
                                     scope.launch {
-                                        timerViewModel.updateTimer(
-                                            timerId,
-                                            name,
-                                            duration
-                                        )
+                                        timerViewModel.updateTimer(timer)
                                     }
                                 },
-                                addTime = {
+                                addTimeToClockTimer = {
                                     timerViewModel.addSecondsToTimerFromPreset(it)
                                     scope.launch {
                                         pagerState.animateScrollToPage(0)
@@ -344,7 +345,7 @@ fun ComposableRiveAnimationView(
                     autoplay = true,
                     alignment = alignment,
                     fit = fit,
-                    )
+                )
             }
         },
         update = { view -> onInit(view) }
@@ -363,7 +364,7 @@ fun TimeControlArea(
     resetInput: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    Column (
+    Column(
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
@@ -425,7 +426,7 @@ fun TimerActionButton(
     startCountDown: () -> Unit,
     pauseCountDown: () -> Unit,
     modifier: Modifier,
-){
+) {
     timerState().let {
         when (it) {
             TimerState.Paused, TimerState.Stopped -> StartTimerButton(

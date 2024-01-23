@@ -12,16 +12,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Devices
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.timer.ui.theme.TimerTheme
+import com.example.timer.ui.theme.Values.SMALL_PADDING
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun HorizontalPagerIndicator(pagerState: PagerState){
+fun HorizontalPagerIndicator(pagerState: PagerState) {
     Row(
         Modifier
             .fillMaxSize()
@@ -30,10 +35,10 @@ fun HorizontalPagerIndicator(pagerState: PagerState){
         verticalAlignment = Alignment.Bottom
     ) {
         repeat(2) { iteration ->
-            val color = if ( pagerState.currentPage == iteration ) Color.LightGray else Color.DarkGray
+            val color = if (pagerState.currentPage == iteration) Color.LightGray else Color.DarkGray
             Box(
                 modifier = Modifier
-                    .padding(horizontal = 6.dp)
+                    .padding(horizontal = SMALL_PADDING)
                     .background(color, CircleShape)
                     .size(6.dp)
             )
@@ -43,7 +48,7 @@ fun HorizontalPagerIndicator(pagerState: PagerState){
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun VerticalPagerIndicator(pagerState: PagerState){
+fun VerticalPagerIndicator(pagerState: PagerState) {
     Column(
         Modifier
             .width(50.dp)
@@ -51,14 +56,33 @@ fun VerticalPagerIndicator(pagerState: PagerState){
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        repeat(2) { iteration ->
-            val color = if ( pagerState.currentPage == iteration - 1) Color.DarkGray else Color.LightGray
+        (1 downTo 0).forEach { iteration ->
+            val color = if (pagerState.currentPage == iteration) Color.LightGray else Color.DarkGray
             Box(
                 modifier = Modifier
-                    .padding(vertical = 6.dp)
+                    .padding(vertical = SMALL_PADDING)
                     .background(color, CircleShape)
                     .size(6.dp)
             )
         }
+    }
+}
+
+
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+@Preview(showBackground = true)
+fun HorizontalPagerIndicatorPreview() {
+    TimerTheme {
+        HorizontalPagerIndicator(pagerState = rememberPagerState())
+    }
+}
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+@Preview(showBackground = true, device = Devices.AUTOMOTIVE_1024p)
+fun VerticalPagerIndicatorPreview() {
+    TimerTheme {
+        VerticalPagerIndicator(pagerState = rememberPagerState())
     }
 }

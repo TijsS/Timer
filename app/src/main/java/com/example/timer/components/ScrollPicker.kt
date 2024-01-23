@@ -52,7 +52,12 @@ fun InfiniteCircularList(
     onItemSelected: (Long) -> Unit
 ) {
 
-    //put last value as first value in list, to hide the switch from index 0 to the halfway index on startup
+    /* put last value as first value in list, to hide the switch from index 0 to the halfway index on recomposition
+    without reshuffling |  with reshuffling
+         []             |       [59]
+        [00]            |       [00]
+        [01]            |       [01]
+    */
     val reshuffledItems = mutableListOf<Int>().apply {
         addAll(items)
         add(0, items.last())
@@ -62,7 +67,7 @@ fun InfiniteCircularList(
     val itemHalfHeight = LocalDensity.current.run { itemHeight.toPx() / 2 }
     val scrollState = rememberLazyListState(0)
     val scrollShadow = MaterialTheme.colorScheme.surface
-    val fontsize = if( small ) MaterialTheme.typography.labelMedium.fontSize else MaterialTheme.typography.titleLarge.fontSize
+    val fontSize = if (small) MaterialTheme.typography.labelMedium.fontSize else MaterialTheme.typography.titleLarge.fontSize
 
     var manualResetInput by remember {
         mutableStateOf(false)
@@ -77,7 +82,7 @@ fun InfiniteCircularList(
     }
 
     LaunchedEffect(resetInput, manualResetInput) {
-        var targetIndex = reshuffledItems.indexOf( if(small) initialItem else 0 ) - 1
+        var targetIndex = reshuffledItems.indexOf(if (small) initialItem else 0) - 1
         targetIndex += ((Int.MAX_VALUE / 2) / reshuffledItems.size) * reshuffledItems.size + if (small) +1 else 0
         lastSelectedIndex = targetIndex
         scrollState.scrollToItem(targetIndex)
@@ -117,8 +122,8 @@ fun InfiniteCircularList(
     ) {
         items(
             count = Int.MAX_VALUE,
-            itemContent = { i ->
-                val item: Int = itemsState[(i % itemsState.size)]
+            itemContent = { index ->
+                val item: Int = itemsState[(index % itemsState.size)]
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
@@ -130,23 +135,23 @@ fun InfiniteCircularList(
                                 (coordinates.parentCoordinates?.size?.height ?: 0) / 2f
 
                             val isSelected =
-                                if(small) ( IntArray(71) { it - 70 }.contains(y.toInt())) else (y > parentHalfHeight - itemHalfHeight  && y < parentHalfHeight + itemHalfHeight )
+                                if (small) (IntArray(71) { it - 70 }.contains(y.toInt())) else (y > parentHalfHeight - itemHalfHeight && y < parentHalfHeight + itemHalfHeight)
                             if (isSelected) {
                                 onItemSelected(item.toLong())
-                                lastSelectedIndex = i
+                                lastSelectedIndex = index
                             }
                         }
 
                 ) {
                     Text(
-                        text = if(item.toString().length == 1) "0$item" else "$item",
+                        text = if (item.toString().length == 1) "0$item" else "$item",
                         style = MaterialTheme.typography.titleLarge,
-                        color = if (lastSelectedIndex == i) selectedTextColor else textColor,
+                        color = if (lastSelectedIndex == index) selectedTextColor else textColor,
                         //to hide the initial switch to the half size index
-                        fontSize = if (lastSelectedIndex == i && lastSelectedIndex != 0 || i == 1) {
-                            fontsize * itemScaleFact
+                        fontSize = if (lastSelectedIndex == index && lastSelectedIndex != 0 || index == 1) {
+                            fontSize * itemScaleFact
                         } else {
-                            fontsize
+                            fontSize
                         },
                     )
                 }
@@ -155,7 +160,7 @@ fun InfiniteCircularList(
     }
 }
 
-fun Modifier.conditional(condition : Boolean, modifier : Modifier.() -> Modifier) : Modifier {
+fun Modifier.conditional(condition: Boolean, modifier: Modifier.() -> Modifier): Modifier {
     return if (condition) {
         then(modifier(Modifier))
     } else {
