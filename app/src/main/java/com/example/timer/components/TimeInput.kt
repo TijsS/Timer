@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -16,7 +15,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -28,6 +26,8 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.timer.ui.theme.TimerTheme
+import com.example.timer.ui.theme.Values.LARGE_PADDING
+import com.example.timer.ui.theme.Values.MEDIUM_PADDING
 
 @Composable
 fun TimeInput(
@@ -35,14 +35,14 @@ fun TimeInput(
     addSeconds: (Long) -> Unit,
     resetInput: Boolean,
     small: Boolean = false,
-    savePresetTimer: ( Long ) -> Unit = { _ -> },
+    savePresetTimer: (Long) -> Unit = { _ -> },
     duration: Long = 0
 ) {
-    val (infiniteCircularListWidth, infiniteCircularListHeight) = if(small) 25.dp to 20.dp else 50.dp to 40.dp
+    val (infiniteCircularListWidth, infiniteCircularListHeight) = if (small) 25.dp to 20.dp else 50.dp to 40.dp
 
-    var secondInput by remember{ mutableLongStateOf(duration % 60) }
-    var minuteInput by remember{ mutableLongStateOf( duration / 60 % 60 ) }
-    var hourInput by remember{ mutableLongStateOf( duration / 3600 % 24 ) }
+    var secondInput by remember { mutableLongStateOf(duration % 60) }
+    var minuteInput by remember { mutableLongStateOf(duration / 60 % 60) }
+    var hourInput by remember { mutableLongStateOf(duration / 3600 % 24) }
 
     Row(
         horizontalArrangement = Arrangement.Center,
@@ -59,21 +59,15 @@ fun TimeInput(
             items = (0..10).toMutableList(),
             initialItem = hourInput.toInt(),
             resetInput = resetInput,
-            onItemSelected = {
-                hours -> hourInput = hours
-                savePresetTimer( hourInput * 3600 + minuteInput * 60 + secondInput )
-                             },
+            onItemSelected = { hours ->
+                hourInput = hours
+                savePresetTimer(hourInput * 3600 + minuteInput * 60 + secondInput)
+            },
             small = small,
-            numberOfDisplayedItems = if ( small ) 1 else 3
+            numberOfDisplayedItems = if (small) 1 else 3
         )
 
-        Text(
-            text = ":",
-            style = MaterialTheme.typography.displaySmall,
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .offset(y = (-4).dp)
-        )
+        ClockColon(size = if (small) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.displaySmall)
 
         InfiniteCircularList(
             width = infiniteCircularListWidth,
@@ -82,43 +76,37 @@ fun TimeInput(
             initialItem = minuteInput.toInt(),
             resetInput = resetInput,
             small = small,
-            onItemSelected = {
-                minutes -> minuteInput = minutes
-                savePresetTimer( hourInput * 3600 + minuteInput * 60 + secondInput )
-                             },
-            numberOfDisplayedItems = if ( small ) 1 else 3
+            onItemSelected = { minutes ->
+                minuteInput = minutes
+                savePresetTimer(hourInput * 3600 + minuteInput * 60 + secondInput)
+            },
+            numberOfDisplayedItems = if (small) 1 else 3
         )
 
-        Text(
-            text = ":",
-            style = MaterialTheme.typography.displaySmall,
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .offset(y = (-4).dp)
-        )
+        ClockColon(size = if (small) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.displaySmall)
 
         InfiniteCircularList(
             width = infiniteCircularListWidth,
             itemHeight = infiniteCircularListHeight,
-            numberOfDisplayedItems = if ( small ) 1 else 3,
+            numberOfDisplayedItems = if (small) 1 else 3,
             items = (0..59).toMutableList(),
             initialItem = secondInput.toInt(),
             resetInput = resetInput,
             small = small,
-            onItemSelected = {
-                seconds -> secondInput = seconds
-                savePresetTimer( hourInput * 3600 + minuteInput * 60 + secondInput )
-                             },
+            onItemSelected = { seconds ->
+                secondInput = seconds
+                savePresetTimer(hourInput * 3600 + minuteInput * 60 + secondInput)
+            },
         )
 
         IconButton(
             onClick = {
                 addSeconds(hourInput * 3600 + minuteInput * 60 + secondInput)
-                      },
+            },
             modifier =
             Modifier
-                .padding(start = 16.dp)
-                .width(24.dp)
+                .padding(start = MEDIUM_PADDING)
+                .width(if(small) MEDIUM_PADDING else LARGE_PADDING)
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
@@ -143,6 +131,7 @@ fun TimeInputPreview() {
         }
     }
 }
+
 @RequiresApi(Build.VERSION_CODES.S)
 @Preview(showBackground = true)
 @Composable
@@ -159,6 +148,7 @@ fun SmallTimeInputPreview() {
         }
     }
 }
+
 @RequiresApi(Build.VERSION_CODES.S)
 @Preview(showBackground = true, device = Devices.AUTOMOTIVE_1024p)
 @Composable

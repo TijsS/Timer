@@ -68,7 +68,7 @@ fun PresetTimers(
         items(
             items = presetTimers,
             key = { timer -> timer.id }
-        ){ timer ->
+        ) { timer ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Start,
@@ -105,14 +105,14 @@ fun PresetTimers(
 
         }
         item {
-            AddPresetTimer(addEmptyPresetTimer)
+            AddEmptyPresetTimer(addEmptyPresetTimer)
         }
     }
 }
 
 @Composable
-private fun AddPresetTimer(addTimer: () -> Unit) {
-    IconButton(onClick = { addTimer() }) {
+private fun AddEmptyPresetTimer(addEmptyPresetTimer: () -> Unit) {
+    IconButton(onClick = { addEmptyPresetTimer() }) {
         Icon(
             imageVector = Icons.Default.Add,
             contentDescription = "Add preset timer"
@@ -157,7 +157,7 @@ fun HiddenInput(
 fun PresetTimersPreview() {
     TimerTheme {
         PresetTimers(
-            listOf(Timer(1, "brushing", 120), Timer(2, "walk", 60*30)),
+            listOf(Timer(1, "brushing", 120), Timer(2, "walk", 60 * 30)),
             { },
             { },
             { _ -> },
