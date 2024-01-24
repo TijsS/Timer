@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
@@ -52,7 +53,6 @@ fun PresetTimers(
 ) {
     val scrollState = rememberLazyListState(0)
     var updateTimerJob by remember { mutableStateOf<Job?>(null) }
-
     LazyColumn(
         contentPadding = PaddingValues(SMALL_PADDING),
         verticalArrangement = Arrangement.Top,
@@ -65,42 +65,44 @@ fun PresetTimers(
             .fillMaxSize()
             .padding(bottom = LARGE_PADDING)
     ) {
-        presetTimers.forEach { timer ->
-            item {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start,
-                    modifier = Modifier
-                        .combinedClickable(
-                            onClick = {
-                                // Left empty on purpose, onLongClick only available in combinedClickable
-                            },
-                            onLongClick = { removePresetTimer(timer.id) },
-                            onLongClickLabel = "delete ${timer.name}"
-                        )
-                        .fillMaxWidth()
-
-                ) {
-                    HiddenInput(
-                        timer = timer,
-                        onValueChange = updatePresetTimer,
+        items(
+            items = presetTimers,
+            key = { timer -> timer.id }
+        ){ timer ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start,
+                modifier = Modifier
+                    .combinedClickable(
+                        onClick = {
+                            // Left empty on purpose, onLongClick only available in combinedClickable
+                        },
+                        onLongClick = { removePresetTimer(timer.id) },
+                        onLongClickLabel = "delete ${timer.name}"
                     )
+                    .fillMaxWidth()
 
-                    TimeInput(
-                        addSeconds = addTimeToClockTimer,
-                        resetInput = false,
-                        small = true,
-                        duration = timer.duration,
-                        savePresetTimer = { duration ->
-                            updateTimerJob?.cancel()
-                            updateTimerJob = CoroutineScope(Dispatchers.IO).launch {
-                                delay(100) //save after 100 millis of pause in scrolling
-                                updatePresetTimer(timer.apply { this.duration = duration })
-                            }
+            ) {
+                HiddenInput(
+                    timer = timer,
+                    onValueChange = updatePresetTimer,
+                )
+
+                TimeInput(
+                    addSeconds = addTimeToClockTimer,
+                    resetInput = false,
+                    small = true,
+                    duration = timer.duration,
+                    savePresetTimer = { duration ->
+                        updateTimerJob?.cancel()
+                        updateTimerJob = CoroutineScope(Dispatchers.IO).launch {
+                            delay(100) //save after 100 millis of pause in scrolling
+                            updatePresetTimer(timer.apply { this.duration = duration })
                         }
-                    )
-                }
+                    }
+                )
             }
+
         }
         item {
             AddPresetTimer(addEmptyPresetTimer)
@@ -124,6 +126,7 @@ fun HiddenInput(
     timer: Timer,
     onValueChange: (Timer) -> Unit,
 ) {
+
     var nameInput by remember { mutableStateOf(timer.name) }
     var updateTimerJob by remember { mutableStateOf<Job?>(null) }
     val focusManager = LocalFocusManager.current

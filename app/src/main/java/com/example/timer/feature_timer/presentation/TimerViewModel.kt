@@ -1,5 +1,6 @@
 package com.example.timer.feature_timer.presentation
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.timer.feature_timer.ClockTimer
@@ -12,7 +13,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -28,30 +30,32 @@ class TimerViewModel @Inject constructor(
     val eventFlow = _eventFlow.asSharedFlow()
 
     init {
-        viewModelScope.launch {
-            getTimers()
-        }
+        getTimers()
     }
 
     suspend fun addTimer() {
         timerRepository.addTimer(Timer(name = "", duration = 0))
-        getTimers()
+//        getTimers()
     }
 
     suspend fun updateTimer(timer: Timer) {
         timerRepository.updateTimer(timer)
-        getTimers()
+//        getTimers()
     }
 
-    suspend fun getTimers() {
-        timerRepository.getTimersFlow().collectLatest {
-            _uiState.value = _uiState.value.copy(timers = it)
-        }
+    fun getTimers() {
+        timerRepository.getTimersFlow()
+            .onEach { timers ->
+                _uiState.value = uiState.value.copy(
+                    timers = timers
+                )
+            }
+            .launchIn(viewModelScope)
     }
 
     suspend fun removeTimer(timerId: Int) {
         timerRepository.removeTimer(timerId = timerId)
-        getTimers()
+//        getTimers()
     }
 
     fun startCountDown() {

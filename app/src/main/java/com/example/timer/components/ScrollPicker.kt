@@ -67,7 +67,8 @@ fun InfiniteCircularList(
     val itemHalfHeight = LocalDensity.current.run { itemHeight.toPx() / 2 }
     val scrollState = rememberLazyListState(0)
     val scrollShadow = MaterialTheme.colorScheme.surface
-    val fontSize = if (small) MaterialTheme.typography.labelMedium.fontSize else MaterialTheme.typography.titleLarge.fontSize
+    val fontSize =
+        if (small) MaterialTheme.typography.labelMedium.fontSize else MaterialTheme.typography.titleLarge.fontSize
 
     var manualResetInput by remember {
         mutableStateOf(false)
@@ -133,9 +134,8 @@ fun InfiniteCircularList(
                             val y = coordinates.positionInParent().y - itemHalfHeight
                             val parentHalfHeight =
                                 (coordinates.parentCoordinates?.size?.height ?: 0) / 2f
-
                             val isSelected =
-                                if (small) (IntArray(71) { it - 70 }.contains(y.toInt())) else (y > parentHalfHeight - itemHalfHeight && y < parentHalfHeight + itemHalfHeight)
+                                if (small) (y > itemHalfHeight * -2 && y < 0) else (y > parentHalfHeight - itemHalfHeight && y < parentHalfHeight + itemHalfHeight)
                             if (isSelected) {
                                 onItemSelected(item.toLong())
                                 lastSelectedIndex = index
@@ -157,14 +157,6 @@ fun InfiniteCircularList(
                 }
             }
         )
-    }
-}
-
-fun Modifier.conditional(condition: Boolean, modifier: Modifier.() -> Modifier): Modifier {
-    return if (condition) {
-        then(modifier(Modifier))
-    } else {
-        this
     }
 }
 
