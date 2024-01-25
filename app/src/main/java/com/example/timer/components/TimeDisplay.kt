@@ -18,7 +18,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -39,9 +38,9 @@ import kotlin.math.sin
 @Composable
 fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
 
-    var secondVisibility by remember { mutableStateOf(true) }
-    var minuteVisibility by remember { mutableStateOf(false) }
-    var hourVisibility by remember { mutableStateOf(false) }
+//    var secondVisibility by remember { mutableStateOf(true) }
+//    var minuteVisibility by remember { mutableStateOf(false) }
+//    var hourVisibility by remember { mutableStateOf(false) }
 
     val largeTargetDp = 320.dp.value
     val mediumTargetDp = 230.dp.value
@@ -50,194 +49,160 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
 
     val animationDurationMedium = 1000
 
-    val secondDp by remember { mutableStateOf(Animatable(largeTargetDp)) }
-    val minuteDp by remember { mutableStateOf(Animatable(reallySmallTargetDp)) }
-    val hourDp by remember { mutableStateOf(Animatable(reallySmallTargetDp)) }
+//    val secondDp by remember { mutableStateOf(Animatable(largeTargetDp)) }
+//    val minuteDp by remember { mutableStateOf(Animatable(reallySmallTargetDp)) }
+//    val hourDp by remember { mutableStateOf(Animatable(reallySmallTargetDp)) }
+//
+//    val secondRotation by remember { mutableStateOf(Animatable(0f)) }
+//    val minuteRotation by remember { mutableStateOf(Animatable(0f)) }
+//    val hourRotation by remember { mutableStateOf(Animatable(0f)) }
 
-    val secondRotation by remember { mutableStateOf(Animatable(0f)) }
-    val minuteRotation by remember { mutableStateOf(Animatable(0f)) }
-    val hourRotation by remember { mutableStateOf(Animatable(0f)) }
-
-    val secondClock = ClockState(secondVisibility, Animatable(largeTargetDp), Animatable(0f))
-    val minuteClock = ClockState(minuteVisibility, Animatable(reallySmallTargetDp), Animatable(0f))
-    val hourClock = ClockState(hourVisibility, Animatable(reallySmallTargetDp), Animatable(0f))
+    val secondClock by remember {
+        mutableStateOf(
+            ClockState(
+//        secondVisibility,
+                Animatable(largeTargetDp), Animatable(0f)
+            )
+        )
+    }
+    val minuteClock by remember {
+        mutableStateOf(
+            ClockState(
+//        minuteVisibility,
+                Animatable(reallySmallTargetDp), Animatable(0f)
+            )
+        )
+    }
+    val hourClock by remember {
+        mutableStateOf(
+            ClockState(
+//        hourVisibility,
+                Animatable(reallySmallTargetDp), Animatable(0f)
+            )
+        )
+    }
     val clocks = listOf(secondClock, minuteClock, hourClock)
 
     BoxWithConstraints {
-//        LaunchedEffect(timeRemaining) {
-//            launch {
-//                secondRotation.animateTo(
-//                    targetValue = timeRemaining % 60 * 6f, animationSpec = tween(
-//                        durationMillis = animationDurationMedium
-//                    )
-//                )
-//
-//                //skip to start position to pretend the arc is a circle
-//                if (timeRemaining % 60 * 6f == 0f) {
-//                    secondRotation.animateTo(
-//                        targetValue = 360f, animationSpec = tween(
-//                            durationMillis = 0
-//                        )
-//                    )
-//                }
-//            }
-//
-//            launch {
-//                val minutesRemaining = (timeRemaining / 60) % 60 * 6f
-//                if (minuteRotation.value == minutesRemaining) return@launch
-//                minuteRotation.animateTo(
-//                    targetValue = minutesRemaining, animationSpec = tween(
-//                        durationMillis = if (timeRemaining == 0) 0 else animationDurationMedium
-//                    )
-//                )
-//
-//                //skip to start position to pretend the arc is a circle
-//                if (minutesRemaining == 0f) {
-//                    minuteRotation.animateTo(
-//                        targetValue = 360f, animationSpec = tween(
-//                            durationMillis = 0
-//                        )
-//                    )
-//                }
-//            }
-//
-//            launch {
-//                hourRotation.animateTo(
-//                    targetValue = (timeRemaining / 3600) % 60 * 6f, animationSpec = tween(
-//                        durationMillis = if (timeRemaining == 0) 0 else animationDurationMedium
-//                    )
-//                )
-//
-//                if ((timeRemaining / 3600) % 60 * 6f == 0f) {
-//                    hourRotation.animateTo(
-//                        targetValue = 360f, animationSpec = tween(
-//                            durationMillis = 0
-//                        )
-//                    )
-//                }
-//            }
-//
-//            when {
-//                timeRemaining > 3600 -> {
-//                    if (maxHeight / maxWidth < 1.1f) {
-//                        launch {
-//                            secondDp.animateTo(
-//                                smallTargetDp, animationSpec = tween(
-//                                    durationMillis = animationDurationMedium,
-//                                )
-//                            )
-//
-//                            launch {
-//                                minuteDp.animateTo(
-//                                    smallTargetDp, animationSpec = tween(
-//                                        durationMillis = animationDurationMedium,
-//                                    )
-//                                )
-//                            }
-//
-//                            launch {
-//                                hourDp.animateTo(
-//                                    smallTargetDp, animationSpec = tween(
-//                                        durationMillis = animationDurationMedium,
-//                                    )
-//                                )
-//                            }
-//                        }
-//                    } else {
-//                        launch {
-//                            secondDp.animateTo(
-//                                smallTargetDp, animationSpec = tween(
-//                                    durationMillis = animationDurationMedium,
-//                                )
-//                            )
-//                        }
-//                        launch {
-//                            minuteDp.animateTo(
-//                                smallTargetDp, animationSpec = tween(
-//                                    durationMillis = animationDurationMedium,
-//                                )
-//                            )
-//                        }
-//
-//                        launch {
-//                            hourDp.animateTo(
-//                                largeTargetDp, animationSpec = tween(
-//                                    durationMillis = animationDurationMedium,
-//                                )
-//                            )
-//                        }
-//                    }
-//
-//                    hourVisibility = true
-//                    minuteVisibility = true
-//                    secondVisibility = true
-//
-//                }
-//
-//                timeRemaining > 60 -> {
-//                    launch {
-//                        secondDp.animateTo(
-//                            smallTargetDp, animationSpec = tween(
-//                                durationMillis = animationDurationMedium,
-//                            )
-//                        )
-//                    }
-//
-//                    launch {
-//                        minuteDp.animateTo(
-//                            mediumTargetDp, animationSpec = tween(
-//                                durationMillis = animationDurationMedium,
-//                            )
-//                        )
-//                    }
-//
-//                    launch {
-//                        hourDp.animateTo(
-//                            reallySmallTargetDp, animationSpec = tween(
-//                                durationMillis = animationDurationMedium,
-//                            )
-//                        )
-//                    }
-//
-//                    hourVisibility = false
-//                    minuteVisibility = true
-//                    secondVisibility = true
-//                }
-//
-//                else -> {
-//                    launch {
-//                        minuteDp.animateTo(
-//                            reallySmallTargetDp, animationSpec = tween(
-//                                durationMillis = animationDurationMedium,
-//                            )
-//                        )
-//                    }
-//
-//                    launch {
-//                        hourDp.animateTo(
-//                            reallySmallTargetDp, animationSpec = tween(
-//                                durationMillis = animationDurationMedium,
-//                            )
-//                        )
-//                    }
-//
-//                    launch {
-//                        secondDp.animateTo(
-//                            largeTargetDp, animationSpec = tween(
-//                                durationMillis = animationDurationMedium,
-//                            )
-//                        )
-//                    }
-//
-//                    hourVisibility = false
-//                    minuteVisibility = false
-//                    secondVisibility = true
-//                }
-//            }
-//        }
-        LaunchedEffect(key1 = timeRemaining ) {
+        LaunchedEffect(timeRemaining) {
+            when {
+                timeRemaining > 3600 -> {
+                    if (maxHeight / maxWidth < 1.1f) {
+                        launch {
+                            secondClock.size.animateTo(
+                                smallTargetDp, animationSpec = tween(
+                                    durationMillis = animationDurationMedium,
+                                )
+                            )
+
+                            launch {
+                                minuteClock.size.animateTo(
+                                    smallTargetDp, animationSpec = tween(
+                                        durationMillis = animationDurationMedium,
+                                    )
+                                )
+                            }
+
+                            launch {
+                                hourClock.size.animateTo(
+                                    smallTargetDp, animationSpec = tween(
+                                        durationMillis = animationDurationMedium,
+                                    )
+                                )
+                            }
+                        }
+                    } else {
+                        launch {
+                            secondClock.size.animateTo(
+                                smallTargetDp, animationSpec = tween(
+                                    durationMillis = animationDurationMedium,
+                                )
+                            )
+                        }
+                        launch {
+                            minuteClock.size.animateTo(
+                                smallTargetDp, animationSpec = tween(
+                                    durationMillis = animationDurationMedium,
+                                )
+                            )
+                        }
+
+                        launch {
+                            hourClock.size.animateTo(
+                                largeTargetDp, animationSpec = tween(
+                                    durationMillis = animationDurationMedium,
+                                )
+                            )
+                        }
+                    }
+                }
+
+                timeRemaining > 60 -> {
+                    launch {
+                        secondClock.size.animateTo(
+                            smallTargetDp, animationSpec = tween(
+                                durationMillis = animationDurationMedium,
+                            )
+                        )
+                    }
+
+                    launch {
+                        minuteClock.size.animateTo(
+                            mediumTargetDp, animationSpec = tween(
+                                durationMillis = animationDurationMedium,
+                            )
+                        )
+                    }
+
+                    launch {
+                        hourClock.size.animateTo(
+                            reallySmallTargetDp, animationSpec = tween(
+                                durationMillis = animationDurationMedium,
+                            )
+                        )
+                    }
+                }
+
+                else -> {
+                    launch {
+                        minuteClock.size.animateTo(
+                            reallySmallTargetDp, animationSpec = tween(
+                                durationMillis = animationDurationMedium,
+                            )
+                        )
+                    }
+
+                    launch {
+                        hourClock.size.animateTo(
+                            reallySmallTargetDp, animationSpec = tween(
+                                durationMillis = animationDurationMedium,
+                            )
+                        )
+                    }
+
+                    launch {
+                        secondClock.size.animateTo(
+                            largeTargetDp, animationSpec = tween(
+                                durationMillis = animationDurationMedium,
+                            )
+                        )
+                    }
+                }
+            }
+
             clocks.forEach { clock ->
                 launch {
+
+                    // To keep the minute clock from rotating to 0 during 1:00:59 -> 1:00:00
+                    if (clock == minuteClock && clock.rotation.value.toInt() == timeRemaining / 60 % 60) return@launch
+
+                    //skip to start position to pretend the arc is a circle
+                    if (clock.rotation.targetValue == 0f) {
+                        clock.rotation.animateTo(
+                            targetValue = 360f,
+                            animationSpec = tween(durationMillis = 0)
+                        )
+                    }
                     clock.rotation.animateTo(
                         targetValue = when (clock) {
                             secondClock -> timeRemaining % 60 * 6f
@@ -245,30 +210,8 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
                             hourClock -> (timeRemaining / 3600) % 60 * 6f
                             else -> 0f
                         },
-                        animationSpec = tween(durationMillis = 1000)
+                        animationSpec = tween(durationMillis = 900)
                     )
-
-                    if (clock.rotation.value == 0f) {
-                        clock.rotation.animateTo(
-                            targetValue = 360f,
-                            animationSpec = tween(durationMillis = 0)
-                        )
-                    }
-                }
-
-                if (timeRemaining > 3600) {
-                    val targetDp = if (maxHeight / maxWidth < 1.1f) smallTargetDp else largeTargetDp
-                    launch {
-                        clock.size.animateTo(targetDp, animationSpec = tween(durationMillis = 1000))
-                    }
-                } else if (timeRemaining > 60) {
-                    launch {
-                        clock.size.animateTo(mediumTargetDp, animationSpec = tween(durationMillis = 1000))
-                    }
-                } else {
-                    launch {
-                        clock.size.animateTo(reallySmallTargetDp, animationSpec = tween(durationMillis = 1000))
-                    }
                 }
             }
         }
@@ -279,9 +222,13 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.Center,
         modifier = modifier.fillMaxSize()
     ) {
-        if (minuteDp.value.dp > 0.dp) {
+
+
+        if (hourClock.size.value > 0) {
             Clock(
-                rotate = hourRotation.value, clockSize = hourDp.value.dp, modifier = Modifier
+                rotate = hourClock.rotation.value,
+                clockSize = hourClock.size.value.dp,
+                modifier = Modifier
             )
         }
         Row(
@@ -289,16 +236,19 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            if (minuteDp.value.dp > 0.dp) {
+
+            if (minuteClock.size.value > 0) {
                 Clock(
-                    rotate = minuteRotation.value,
-                    clockSize = minuteDp.value.dp,
+                    rotate = minuteClock.rotation.value,
+                    clockSize = minuteClock.size.value.dp,
                     modifier = Modifier
                 )
             }
 
             Clock(
-                rotate = secondRotation.value, clockSize = secondDp.value.dp, modifier = Modifier
+                rotate = secondClock.rotation.value,
+                clockSize = secondClock.size.value.dp,
+                modifier = Modifier
             )
         }
     }
@@ -376,7 +326,7 @@ fun Clock(
 }
 
 data class ClockState(
-    val visibility: Boolean,
+//    val visibility: Boolean,
     val size: Animatable<Float, AnimationVector1D>,
     val rotation: Animatable<Float, AnimationVector1D>
 )
