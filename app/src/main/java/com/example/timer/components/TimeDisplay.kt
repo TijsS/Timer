@@ -58,29 +58,15 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
 //    val hourRotation by remember { mutableStateOf(Animatable(0f)) }
 
     val secondClock by remember {
-        mutableStateOf(
-            ClockState(
-//        secondVisibility,
-                Animatable(largeTargetDp), Animatable(0f)
-            )
-        )
+        mutableStateOf(ClockState(Animatable(largeTargetDp), Animatable(0f)))
     }
     val minuteClock by remember {
-        mutableStateOf(
-            ClockState(
-//        minuteVisibility,
-                Animatable(reallySmallTargetDp), Animatable(0f)
-            )
-        )
+        mutableStateOf(ClockState(Animatable(reallySmallTargetDp), Animatable(0f)))
     }
     val hourClock by remember {
-        mutableStateOf(
-            ClockState(
-//        hourVisibility,
-                Animatable(reallySmallTargetDp), Animatable(0f)
-            )
-        )
+        mutableStateOf(ClockState(Animatable(reallySmallTargetDp), Animatable(0f)))
     }
+
     val clocks = listOf(secondClock, minuteClock, hourClock)
 
     BoxWithConstraints {
