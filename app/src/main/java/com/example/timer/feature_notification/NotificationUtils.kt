@@ -18,17 +18,23 @@ import com.example.timer.feature_timer.TimerState
 lateinit var notificationChannel: NotificationChannel
 lateinit var notificationManager: NotificationManager
 
+lateinit var activityPendingIntent: PendingIntent
+lateinit var resetPendingIntent: PendingIntent
+lateinit var pausePendingIntent: PendingIntent
+
+
 const val CHANNEL_ID = "13"
 const val NOTIFICATION_ID = "2"
 const val CHANNEL_NAME = "Timer Notifications"
+const val REQUEST_CODE = 2
 
 @RequiresApi(Build.VERSION_CODES.S)
-fun createNotification(context : Context): NotificationCompat.Builder {
+fun createNotification(context: Context): NotificationCompat.Builder {
     val activityIntent = Intent(context, MainActivity::class.java)
 
-    val activityPendingIntent = PendingIntent.getActivity(
+    activityPendingIntent = PendingIntent.getActivity(
         context,
-        2,
+        REQUEST_CODE,
         activityIntent,
         PendingIntent.FLAG_IMMUTABLE
     )
@@ -36,9 +42,9 @@ fun createNotification(context : Context): NotificationCompat.Builder {
     val pauseIntent = Intent(context, TimerNotificationReceiver::class.java)
     pauseIntent.action = TimerNotificationReceiver.Action.Pause.toString()
 
-    val pausePendingIntent = PendingIntent.getBroadcast(
+     pausePendingIntent = PendingIntent.getBroadcast(
         context,
-        2,
+         REQUEST_CODE,
         pauseIntent,
         PendingIntent.FLAG_IMMUTABLE
     )
@@ -46,9 +52,9 @@ fun createNotification(context : Context): NotificationCompat.Builder {
     val resetIntent = Intent(context, TimerNotificationReceiver::class.java)
     resetIntent.action = TimerNotificationReceiver.Action.Reset.toString()
 
-    val resetPendingIntent = PendingIntent.getBroadcast(
+    resetPendingIntent = PendingIntent.getBroadcast(
         context,
-        2,
+        REQUEST_CODE,
         resetIntent,
         PendingIntent.FLAG_IMMUTABLE
     )
@@ -70,39 +76,19 @@ fun createNotification(context : Context): NotificationCompat.Builder {
         )
 }
 
-fun Context.dismissNotification(channelId: String) {
+fun dismissNotification(channelId: String) {
     notificationManager.cancel(channelId.toInt())
 }
 
 @RequiresApi(Build.VERSION_CODES.S)
 fun Context.updateNotificationContentText(id: Int, newBody: String) {
 
-    val pauseIntent = Intent(this, TimerNotificationReceiver::class.java)
-    pauseIntent.action = TimerNotificationReceiver.Action.Pause.toString()
-
-    val pausePendingIntent = PendingIntent.getBroadcast(
-        this,
-        2,
-        pauseIntent,
-        PendingIntent.FLAG_IMMUTABLE
-    )
-
-    val resetIntent = Intent(this, TimerNotificationReceiver::class.java)
-    resetIntent.action = TimerNotificationReceiver.Action.Reset.toString()
-
-    val resetPendingIntent = PendingIntent.getBroadcast(
-        this,
-        2,
-        resetIntent,
-        PendingIntent.FLAG_IMMUTABLE
-    )
-
     val playIntent = Intent(this, TimerNotificationReceiver::class.java)
     playIntent.action = TimerNotificationReceiver.Action.Play.toString()
 
     val playPendingIntent = PendingIntent.getBroadcast(
         this,
-        2,
+        REQUEST_CODE,
         playIntent,
         PendingIntent.FLAG_IMMUTABLE
     )
@@ -111,16 +97,14 @@ fun Context.updateNotificationContentText(id: Int, newBody: String) {
         it.id == id
     }
 
-
     if (existingNotification != null) {
-        // Modify the contentText of the existing notification
-         val builder = createNotification(this)
-             .setSmallIcon(R.drawable.baseline_alarm_24)
-             .setContentText(newBody)
-             .clearActions()
+        val builder = createNotification(this)
+            .setSmallIcon(R.drawable.baseline_alarm_24)
+            .setContentText(newBody)
+            .clearActions()
 
         if (ClockTimer.timerState.value == TimerState.Paused) {
-            builder.addAction (
+            builder.addAction(
                 R.drawable.baseline_play_arrow_24,
                 "Play",
                 playPendingIntent
@@ -155,29 +139,10 @@ fun Context.updateNotificationAlarmFinished(
         dismissNotification(id.toString())
     }
 
-    val activityIntent = Intent(this, MainActivity::class.java)
-
-    val activityPendingIntent = PendingIntent.getActivity(
-        this,
-        2,
-        activityIntent,
-        PendingIntent.FLAG_IMMUTABLE
-    )
-
-    val resetIntent = Intent(this, TimerNotificationReceiver::class.java)
-    resetIntent.action = TimerNotificationReceiver.Action.Reset.toString()
-
-    val resetPendingIntent = PendingIntent.getBroadcast(
-        this,
-        2,
-        resetIntent,
-        PendingIntent.FLAG_IMMUTABLE
-    )
-
     val builder = NotificationCompat.Builder(this, CHANNEL_ID)
         .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
         .setContentTitle("Timer")
-        .setContentText("Times up!")
+        .setContentText("Time's up!")
         .setPriority(NotificationCompat.PRIORITY_HIGH)
         .setSound(null)
         .setFullScreenIntent(activityPendingIntent, true)
