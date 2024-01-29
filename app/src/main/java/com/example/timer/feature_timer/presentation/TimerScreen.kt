@@ -7,25 +7,19 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Build
 import android.os.IBinder
-import androidx.annotation.RawRes
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerDefaults.flingBehavior
 import androidx.compose.foundation.pager.PagerSnapDistance
@@ -38,7 +32,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -56,10 +49,8 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.rive.runtime.kotlin.RiveAnimationView
-import app.rive.runtime.kotlin.core.Fit
 import com.example.timer.R
 import com.example.timer.components.HorizontalPagerIndicator
 import com.example.timer.components.KeepScreenOn
@@ -70,6 +61,9 @@ import com.example.timer.components.VerticalPagerIndicator
 import com.example.timer.feature_timer.ClockTimer
 import com.example.timer.feature_timer.TimerService
 import com.example.timer.feature_timer.TimerState
+import com.example.timer.feature_timer.presentation.components.PauseTimerButton
+import com.example.timer.feature_timer.presentation.components.StartTimerButton
+import com.example.timer.feature_timer.presentation.components.TimerFinished
 import com.example.timer.ui.theme.TimerTheme
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -89,7 +83,7 @@ fun TimerScreen(
     val applicationContext = context.applicationContext
     val scope = rememberCoroutineScope()
 
-    val timeRemaining by remember { ClockTimer.millisRemaining }
+    val timeRemaining by remember { ClockTimer.secondsRemaining }
     val timerState by remember { ClockTimer.timerState }
     val currentDistanceAnimated by animateFloatAsState(
         targetValue = timerUiState.dismissPercentage,
@@ -105,7 +99,7 @@ fun TimerScreen(
     )
 
 
-    LaunchedEffect(key1 = true) {
+    LaunchedEffect(true) {
         timerViewModel.eventFlow.collectLatest { event ->
             when (event) {
                 is TimerViewModel.UiEvent.StopTimer -> {
@@ -165,33 +159,11 @@ fun TimerScreen(
     }
 
     if (timerState == TimerState.Finished) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .fillMaxSize()
-                .draggable(
-                    orientation = Orientation.Vertical,
-                    state = rememberDraggableState { delta ->
-                        timerViewModel.setDismissPercentage(timerUiState.dismissPercentage + delta / 5)
-                    },
-                    onDragStopped = {
-                        timerViewModel.setDismissPercentage(0f)
-                    }
-                ),
-        ) {
-            BoxWithConstraints {
-                ComposableRiveAnimationView(
-                    animation = R.raw.alarm,
-                    stateMachineName = "StateMachine",
-                    fit = Fit.COVER,
-                    modifier = Modifier
-                        .size(maxWidth * 0.7f, maxHeight * 0.7f)
-                ) { view ->
-                    alarmAnimation = view
-                    alarmAnimation?.fireState("StateMachine", "startRinging")
-                }
-            }
-        }
+        TimerFinished(
+            setDismissPercentage = { delta -> timerViewModel.setDismissPercentage(timerUiState.dismissPercentage + delta / 5) },
+            resetDismissPercentage = { timerViewModel.setDismissPercentage(0f) },
+            setAlarmAnimation = { alarmAnimation = it }
+        )
     } else {
 
         val pagerState = rememberPagerState(initialPage = 0)
@@ -209,7 +181,6 @@ fun TimerScreen(
                     modifier = Modifier
                         .weight(1f)
                 )
-                Text(text = pagerState.currentPage.toString())
 
                 VerticalPager(
                     state = pagerState,
@@ -225,12 +196,12 @@ fun TimerScreen(
                     if (page % 2 == 0) {
                         TimeControlArea(
                             timerState = { timerState },
-                            resetInput = timerUiState.resetInput,
+                            resetInput = timerUiState.resetMainTimeInput,
                             startCountDown = { timerViewModel.startCountDown() },
                             pauseCountdown = { timerViewModel.pauseCountDown() },
                             resetCountDown = { timerViewModel.stopCountDown() },
-                            startListening = { startListening() },
-                            addSeconds = { timerViewModel.addSecondsToTimerFromPreset(it) },
+                            startListening = startListening,
+                            addSecondsToTimer = { timerViewModel.addSecondsToTimer(it) },
                             timerGreaterThenZero = { timeRemaining > 0 },
                             modifier = Modifier
                                 .weight(1f)
@@ -238,15 +209,15 @@ fun TimerScreen(
                     } else {
                         PresetTimers(
                             presetTimers = timerUiState.timers,
-                            addEmptyPresetTimer = { scope.launch { timerViewModel.addTimer() } },
-                            removePresetTimer = { scope.launch { timerViewModel.removeTimer(it) } },
+                            addEmptyPresetTimer = { scope.launch { timerViewModel.addEmptyPresetTimer() } },
+                            removePresetTimer = { scope.launch { timerViewModel.removePresetTimer(it) } },
                             updatePresetTimer = { timer ->
                                 scope.launch {
-                                    timerViewModel.updateTimer(timer)
+                                    timerViewModel.updatePresetTimer(timer)
                                 }
                             },
-                            addTimeToClockTimer = {
-                                timerViewModel.addSecondsToTimerFromPreset(it)
+                            addSecondsToTimer = {
+                                timerViewModel.addSecondsToTimer(it)
                                 scope.launch {
                                     pagerState.animateScrollToPage(0)
                                 }
@@ -291,27 +262,27 @@ fun TimerScreen(
                         if (page % 2 == 0) {
                             TimeControlArea(
                                 timerState = { timerState },
-                                resetInput = timerUiState.resetInput,
+                                resetInput = timerUiState.resetMainTimeInput,
                                 startCountDown = { timerViewModel.startCountDown() },
                                 pauseCountdown = { timerViewModel.pauseCountDown() },
                                 resetCountDown = { timerViewModel.stopCountDown() },
                                 startListening = { startListening() },
-                                addSeconds = { timerViewModel.addSecondsToTimerFromPreset(it) },
+                                addSecondsToTimer = { timerViewModel.addSecondsToTimer(it) },
                                 timerGreaterThenZero = { timeRemaining > 0 },
                                 modifier = Modifier
                             )
                         } else {
                             PresetTimers(
                                 presetTimers = timerUiState.timers,
-                                addEmptyPresetTimer = { scope.launch { timerViewModel.addTimer() } },
-                                removePresetTimer = { scope.launch { timerViewModel.removeTimer(it) } },
+                                addEmptyPresetTimer = { scope.launch { timerViewModel.addEmptyPresetTimer() } },
+                                removePresetTimer = { scope.launch { timerViewModel.removePresetTimer(it) } },
                                 updatePresetTimer = { timer ->
                                     scope.launch {
-                                        timerViewModel.updateTimer(timer)
+                                        timerViewModel.updatePresetTimer(timer)
                                     }
                                 },
-                                addTimeToClockTimer = {
-                                    timerViewModel.addSecondsToTimerFromPreset(it)
+                                addSecondsToTimer = {
+                                    timerViewModel.addSecondsToTimer(it)
                                     scope.launch {
                                         pagerState.animateScrollToPage(0)
                                     }
@@ -327,39 +298,13 @@ fun TimerScreen(
 }
 
 @Composable
-fun ComposableRiveAnimationView(
-    modifier: Modifier = Modifier,
-    @RawRes animation: Int,
-    stateMachineName: String? = null,
-    alignment: app.rive.runtime.kotlin.core.Alignment = app.rive.runtime.kotlin.core.Alignment.CENTER,
-    fit: Fit = Fit.CONTAIN,
-    onInit: (RiveAnimationView) -> Unit
-) {
-    AndroidView(
-        modifier = modifier,
-        factory = { context ->
-            RiveAnimationView(context).also {
-                it.setRiveResource(
-                    resId = animation,
-                    stateMachineName = stateMachineName,
-                    autoplay = true,
-                    alignment = alignment,
-                    fit = fit,
-                )
-            }
-        },
-        update = { view -> onInit(view) }
-    )
-}
-
-@Composable
 fun TimeControlArea(
     timerState: () -> TimerState,
     startCountDown: () -> Unit,
     pauseCountdown: () -> Unit,
     resetCountDown: () -> Unit,
     startListening: () -> Unit,
-    addSeconds: (Long) -> Unit,
+    addSecondsToTimer: (Int) -> Unit,
     timerGreaterThenZero: () -> Boolean,
     resetInput: Boolean,
     modifier: Modifier = Modifier,
@@ -373,7 +318,7 @@ fun TimeControlArea(
     ) {
 
         TimeInput(
-            addSeconds = addSeconds,
+            addSecondsToTimer = addSecondsToTimer,
             resetInput = resetInput,
         )
 
@@ -430,52 +375,18 @@ fun TimerActionButton(
     timerState().let {
         when (it) {
             TimerState.Paused, TimerState.Stopped -> StartTimerButton(
-                startTimer = { startCountDown() },
+                startTimer =  startCountDown,
                 timerGreaterThenZero = timerGreaterThenZero,
                 modifier = modifier
             )
 
             TimerState.Running -> PauseTimerButton(
-                pauseTimer = { pauseCountDown() },
+                pauseTimer = pauseCountDown,
                 modifier = modifier
             )
 
             else -> {}
         }
-    }
-}
-
-@Composable
-fun PauseTimerButton(
-    pauseTimer: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    IconButton(
-        onClick = { pauseTimer() },
-        modifier = modifier
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.baseline_pause_24),
-            contentDescription = "Start timer"
-        )
-    }
-}
-
-@Composable
-fun StartTimerButton(
-    modifier: Modifier = Modifier,
-    timerGreaterThenZero: () -> Boolean,
-    startTimer: () -> Unit,
-) {
-    IconButton(
-        onClick = { startTimer() },
-        enabled = timerGreaterThenZero(),
-        modifier = modifier
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.baseline_play_arrow_24),
-            contentDescription = "Start timer"
-        )
     }
 }
 

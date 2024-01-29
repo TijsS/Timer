@@ -35,7 +35,7 @@ class DataLayerListenerService : WearableListenerService() {
                             }
                             getInt(TIMER_DURATION_KEY).also { timerDuration ->
                                 ClockTimer.apply {
-                                    this.millisRemaining.intValue = timerDuration - ( timePassedSinceStart / 1000 )
+                                    this.secondsRemaining.intValue = timerDuration - ( timePassedSinceStart / 1000 )
                                 }
                             }
                         }

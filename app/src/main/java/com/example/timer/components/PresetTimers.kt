@@ -49,7 +49,7 @@ fun PresetTimers(
     addEmptyPresetTimer: () -> Unit,
     removePresetTimer: (Int) -> Unit,
     updatePresetTimer: (Timer) -> Unit,
-    addTimeToClockTimer: (Long) -> Unit
+    addSecondsToTimer: (Int) -> Unit
 ) {
     val scrollState = rememberLazyListState(0)
     var updateTimerJob by remember { mutableStateOf<Job?>(null) }
@@ -89,7 +89,7 @@ fun PresetTimers(
                 )
 
                 TimeInput(
-                    addSeconds = addTimeToClockTimer,
+                    addSecondsToTimer = addSecondsToTimer,
                     resetInput = false,
                     small = true,
                     duration = timer.duration,

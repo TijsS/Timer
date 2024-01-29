@@ -81,7 +81,7 @@ fun dismissNotification(channelId: String) {
 }
 
 @RequiresApi(Build.VERSION_CODES.S)
-fun Context.updateNotificationContentText(id: Int, newBody: String) {
+fun Context.updateNotificationContentText(newBody: String) {
 
     val playIntent = Intent(this, TimerNotificationReceiver::class.java)
     playIntent.action = TimerNotificationReceiver.Action.Play.toString()
@@ -94,7 +94,7 @@ fun Context.updateNotificationContentText(id: Int, newBody: String) {
     )
 
     val existingNotification = notificationManager.activeNotifications.find {
-        it.id == id
+        it.id == CHANNEL_ID.toInt()
     }
 
     if (existingNotification != null) {
@@ -123,20 +123,19 @@ fun Context.updateNotificationContentText(id: Int, newBody: String) {
         )
 
         // Update the notification with the new content
-        notificationManager.notify(id, builder.build())
+        notificationManager.notify(CHANNEL_ID.toInt(), builder.build())
     }
 }
 
 @RequiresApi(34)
 fun Context.updateNotificationAlarmFinished(
-    id: Int,
 ) {
     val existingNotification = notificationManager.activeNotifications.find {
-        it.id == id
+        it.id == CHANNEL_ID.toInt()
     }
 
     if (existingNotification != null) {
-        dismissNotification(id.toString())
+        dismissNotification(CHANNEL_ID)
     }
 
     val builder = NotificationCompat.Builder(this, CHANNEL_ID)

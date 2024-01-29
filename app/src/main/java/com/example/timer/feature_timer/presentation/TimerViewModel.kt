@@ -1,6 +1,5 @@
 package com.example.timer.feature_timer.presentation
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.timer.feature_timer.ClockTimer
@@ -30,20 +29,18 @@ class TimerViewModel @Inject constructor(
     val eventFlow = _eventFlow.asSharedFlow()
 
     init {
-        getTimers()
+        getPresetTimers()
     }
 
-    suspend fun addTimer() {
+    suspend fun addEmptyPresetTimer() {
         timerRepository.addTimer(Timer(name = "", duration = 0))
-//        getTimers()
     }
 
-    suspend fun updateTimer(timer: Timer) {
+    suspend fun updatePresetTimer(timer: Timer) {
         timerRepository.updateTimer(timer)
-//        getTimers()
     }
 
-    fun getTimers() {
+    fun getPresetTimers() {
         timerRepository.getTimersFlow()
             .onEach { timers ->
                 _uiState.value = uiState.value.copy(
@@ -53,9 +50,8 @@ class TimerViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    suspend fun removeTimer(timerId: Int) {
+    suspend fun removePresetTimer(timerId: Int) {
         timerRepository.removeTimer(timerId = timerId)
-//        getTimers()
     }
 
     fun startCountDown() {
@@ -89,9 +85,10 @@ class TimerViewModel @Inject constructor(
             _uiState.value.copy(dismissPercentage = if (percentage < 0) 0f else if (percentage > 100) 100f else percentage)
     }
 
-    fun addSecondsToTimerFromPreset(duration: Long) {
-        ClockTimer.millisRemaining.intValue += duration.toInt()
-        _uiState.value = _uiState.value.copy(resetInput = !_uiState.value.resetInput)
+    fun addSecondsToTimer(duration: Int) {
+        ClockTimer.secondsRemaining.intValue += duration.toInt()
+        _uiState.value =
+            _uiState.value.copy(resetMainTimeInput = !_uiState.value.resetMainTimeInput)
 
         if (ClockTimer.timerState.value == TimerState.Running) {
             startCountDown()

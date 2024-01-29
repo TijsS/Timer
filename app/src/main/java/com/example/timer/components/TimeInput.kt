@@ -17,7 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -25,6 +25,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.timer.feature_timer.toHours
+import com.example.timer.feature_timer.toMinutes
+import com.example.timer.feature_timer.toSeconds
 import com.example.timer.ui.theme.TimerTheme
 import com.example.timer.ui.theme.Values.LARGE_PADDING
 import com.example.timer.ui.theme.Values.MEDIUM_PADDING
@@ -32,17 +35,17 @@ import com.example.timer.ui.theme.Values.MEDIUM_PADDING
 @Composable
 fun TimeInput(
     modifier: Modifier = Modifier,
-    addSeconds: (Long) -> Unit,
+    addSecondsToTimer: (Int) -> Unit,
     resetInput: Boolean,
     small: Boolean = false,
-    savePresetTimer: (Long) -> Unit = { _ -> },
-    duration: Long = 0
+    savePresetTimer: (Int) -> Unit = { _ -> },
+    duration: Int = 0
 ) {
     val (infiniteCircularListWidth, infiniteCircularListHeight) = if (small) 25.dp to 20.dp else 50.dp to 40.dp
 
-    var secondInput by remember { mutableLongStateOf(duration % 60) }
-    var minuteInput by remember { mutableLongStateOf(duration / 60 % 60) }
-    var hourInput by remember { mutableLongStateOf(duration / 3600 % 24) }
+    var secondInput by remember { mutableIntStateOf(duration.toSeconds()) }
+    var minuteInput by remember { mutableIntStateOf(duration.toMinutes()) }
+    var hourInput by remember { mutableIntStateOf(duration.toHours()) }
 
     Row(
         horizontalArrangement = Arrangement.Center,
@@ -57,7 +60,7 @@ fun TimeInput(
             width = infiniteCircularListWidth,
             itemHeight = infiniteCircularListHeight,
             items = (0..10).toMutableList(),
-            initialItem = hourInput.toInt(),
+            initialItem = hourInput,
             resetInput = resetInput,
             onItemSelected = { hours ->
                 hourInput = hours
@@ -73,7 +76,7 @@ fun TimeInput(
             width = infiniteCircularListWidth,
             itemHeight = infiniteCircularListHeight,
             items = (0..59).toMutableList(),
-            initialItem = minuteInput.toInt(),
+            initialItem = minuteInput,
             resetInput = resetInput,
             small = small,
             onItemSelected = { minutes ->
@@ -90,7 +93,7 @@ fun TimeInput(
             itemHeight = infiniteCircularListHeight,
             numberOfDisplayedItems = if (small) 1 else 3,
             items = (0..59).toMutableList(),
-            initialItem = secondInput.toInt(),
+            initialItem = secondInput,
             resetInput = resetInput,
             small = small,
             onItemSelected = { seconds ->
@@ -101,12 +104,12 @@ fun TimeInput(
 
         IconButton(
             onClick = {
-                addSeconds(hourInput * 3600 + minuteInput * 60 + secondInput)
+                addSecondsToTimer(hourInput * 3600 + minuteInput * 60 + secondInput)
             },
             modifier =
             Modifier
                 .padding(start = MEDIUM_PADDING)
-                .width(if(small) MEDIUM_PADDING else LARGE_PADDING)
+                .width(if (small) MEDIUM_PADDING else LARGE_PADDING)
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
@@ -125,7 +128,7 @@ fun TimeInputPreview() {
             modifier = Modifier.fillMaxSize(),
         ) {
             TimeInput(
-                addSeconds = {},
+                addSecondsToTimer = {},
                 resetInput = false,
             )
         }
@@ -141,7 +144,7 @@ fun SmallTimeInputPreview() {
             modifier = Modifier.fillMaxSize(),
         ) {
             TimeInput(
-                addSeconds = {},
+                addSecondsToTimer = {},
                 resetInput = false,
                 small = true,
             )
@@ -158,7 +161,7 @@ fun TimeInputPreviewHorizontal() {
             modifier = Modifier.fillMaxSize(),
         ) {
             TimeInput(
-                addSeconds = {},
+                addSecondsToTimer = {},
                 resetInput = false,
             )
         }

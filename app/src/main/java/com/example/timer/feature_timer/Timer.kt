@@ -11,19 +11,17 @@ import androidx.room.PrimaryKey
 data class Timer(
     @PrimaryKey(autoGenerate = true)val id: Int = 0,
     var name: String,
-    var duration: Long,
+    var duration: Int,
 )
 
 object ClockTimer {
     var timerState: MutableState<TimerState> = mutableStateOf(TimerState.Stopped)
-    var millisRemaining = mutableIntStateOf(0)
+    var secondsRemaining = mutableIntStateOf(0)
 }
 
 fun Int.intTimeToString(): String {
 
-    val hours = this / 3600
-    val minutes = (this % 3600) / 60
-    val seconds = this % 60
+    val hours = this.toHours()
 
     var string = ""
 
@@ -31,8 +29,21 @@ fun Int.intTimeToString(): String {
         string += "$hours:"
     }
 
-    return string + String.format("%02d:%02d", minutes, seconds)
+    return string + String.format("%02d:%02d", this.toMinutes(), this.toSeconds())
 }
+
+fun Int.toHours(): Int {
+    return this / 3600
+}
+
+fun Int.toMinutes(): Int {
+    return (this % 3600) / 60
+}
+
+fun Int.toSeconds(): Int {
+    return this % 60
+}
+
 sealed class TimerState {
     object Running : TimerState()
     object Paused : TimerState()

@@ -49,7 +49,7 @@ fun InfiniteCircularList(
     selectedTextColor: Color = MaterialTheme.colorScheme.onSurface,
     resetInput: Boolean,
     small: Boolean = false,
-    onItemSelected: (Long) -> Unit
+    onItemSelected: (Int) -> Unit
 ) {
 
     /* put last value as first value in list, to hide the switch from index 0 to the halfway index on recomposition
@@ -137,7 +137,7 @@ fun InfiniteCircularList(
                             val isSelected =
                                 if (small) (y > itemHalfHeight * -2 && y < 0) else (y > parentHalfHeight - itemHalfHeight && y < parentHalfHeight + itemHalfHeight)
                             if (isSelected) {
-                                onItemSelected(item.toLong())
+                                onItemSelected(item)
                                 lastSelectedIndex = index
                             }
                         }

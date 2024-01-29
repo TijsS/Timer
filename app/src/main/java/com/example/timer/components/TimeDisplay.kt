@@ -28,6 +28,9 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.timer.feature_timer.toHours
+import com.example.timer.feature_timer.toMinutes
+import com.example.timer.feature_timer.toSeconds
 import com.example.timer.ui.theme.TimerTheme
 import kotlinx.coroutines.launch
 import java.lang.Math.PI
@@ -72,7 +75,7 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
     BoxWithConstraints {
         LaunchedEffect(timeRemaining) {
             when {
-                timeRemaining > 3600 -> {
+                timeRemaining.toHours() > 1 -> {
                     if (maxHeight / maxWidth < 1.1f) {
                         launch {
                             secondClock.size.animateTo(
@@ -180,7 +183,7 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
                 launch {
 
                     // To keep the minute clock from rotating to 0 during 1:00:59 -> 1:00:00
-                    if (clock == minuteClock && clock.rotation.value.toInt() == timeRemaining / 60 % 60) return@launch
+                    if (clock == minuteClock && clock.rotation.value.toInt() == timeRemaining.toMinutes()) return@launch
 
                     //skip to start position to pretend the arc is a circle
                     if (clock.rotation.targetValue == 0f) {
@@ -191,9 +194,9 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
                     }
                     clock.rotation.animateTo(
                         targetValue = when (clock) {
-                            secondClock -> timeRemaining % 60 * 6f
-                            minuteClock -> (timeRemaining / 60) % 60 * 6f
-                            hourClock -> (timeRemaining / 3600) % 60 * 6f
+                            secondClock -> timeRemaining.toSeconds() * 6f
+                            minuteClock -> timeRemaining.toMinutes() * 6f
+                            hourClock -> timeRemaining.toHours() * 6f
                             else -> 0f
                         },
                         animationSpec = tween(durationMillis = 900)
