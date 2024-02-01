@@ -8,7 +8,6 @@ import com.example.timer.feature_timer.ClockTimer
 import com.example.timer.feature_timer.TimerService
 import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
-import com.google.android.gms.wearable.Wearable
 import com.google.android.gms.wearable.WearableListenerService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,7 +15,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 
 class DataLayerListenerService : WearableListenerService() {
-    private val dataClient by lazy { Wearable.getDataClient(this) }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     @RequiresApi(Build.VERSION_CODES.S)
@@ -31,11 +29,13 @@ class DataLayerListenerService : WearableListenerService() {
                     Intent(this, TimerService::class.java).also { intent ->
                         DataMapItem.fromDataItem(dataEvent.dataItem).dataMap.apply {
                             getInt(START_TIMER_TIME_KEY).also { startTime ->
-                                timePassedSinceStart = System.currentTimeMillis().toInt() - startTime
+                                timePassedSinceStart =
+                                    System.currentTimeMillis().toInt() - startTime
                             }
                             getInt(TIMER_DURATION_KEY).also { timerDuration ->
                                 ClockTimer.apply {
-                                    this.secondsRemaining.intValue = timerDuration - ( timePassedSinceStart / 1000 )
+                                    this.secondsRemaining.intValue =
+                                        timerDuration - (timePassedSinceStart / 1000)
                                 }
                             }
                         }
@@ -67,7 +67,7 @@ class DataLayerListenerService : WearableListenerService() {
     }
 
     companion object {
-        private const val TAG = "xxx"
+        private const val TAG = "DataLayerListenerService"
         const val TIMER_DURATION_KEY = "timerDuration"
         const val START_TIMER_TIME_KEY = "startTime"
         const val START_TIMER_RECEIVE = "/startTimerPhone"

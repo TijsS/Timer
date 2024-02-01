@@ -53,7 +53,6 @@ import com.example.weartimer.ClockTimer
 import com.example.weartimer.R
 import com.example.weartimer.TimerService
 import com.example.weartimer.TimerState
-import com.example.weartimer.WearTimerApp
 import com.example.weartimer.presentation.theme.TimerTheme
 import com.example.weartimer.timeRemainingToClockFormat
 import com.google.android.horologist.composables.TimePicker
@@ -61,7 +60,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalTime
 
 class MainActivity : ComponentActivity() {
-    private val timerApp = WearTimerApp() // Create an instance of TimerApp
+//    private val timerApp = WearTimerApp() // Create an instance of TimerApp
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private val permissions = arrayOf(
@@ -105,24 +104,11 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun WearApp(applicationContext: Context) {
-    val timeRemaining by remember { ClockTimer.timeRemaining }
+    val timeRemaining by remember { ClockTimer.secondsRemaining }
     val coroutineScope = rememberCoroutineScope()
     val timerState by remember { ClockTimer.timerState }
 
     TimerTheme {
-        /* If you have enough items in your list, use [ScalingLazyColumn] which is an optimized
-         * version of LazyColumn for wear devices with some added features. For more information,
-         * see d.android.com/wear/compose.
-         */
-//        Column(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .background(MaterialTheme.colors.background),
-//            verticalArrangement = Arrangement.Center
-//        ) {
-//            Greeting(greetingName = timeRemaining.timeRemainingToClockFormat())
-//        }
-
         if (timerState == TimerState.Finished) {
             val state = rememberSwipeToDismissBoxState()
             SwipeToDismissBox(
@@ -196,7 +182,7 @@ fun WearApp(applicationContext: Context) {
                                 onTimeConfirm = {
                                     val seconds = it.toSecondOfDay()
 
-                                    ClockTimer.timeRemaining.value += seconds
+                                    ClockTimer.secondsRemaining.value += seconds
 
                                     if (ClockTimer.timerState.value == TimerState.Running) {
                                         startTimer(applicationContext)
@@ -236,17 +222,6 @@ fun startTimer(applicationContext: Context) {
     Intent(applicationContext, TimerService::class.java).also { intent ->
         intent.action = TimerService.Action.Start.toString()
         applicationContext.startService(intent)
-//
-//        val bindIntent = Intent(applicationContext, TimerService::class.java)
-//        val serviceConnection = object : ServiceConnection {
-//            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-//            }
-//
-//            override fun onServiceDisconnected(name: ComponentName?) {
-//            }
-//        }
-//
-//        applicationContext.bindService(bindIntent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
 }
 

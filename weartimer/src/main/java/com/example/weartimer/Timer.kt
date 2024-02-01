@@ -14,14 +14,14 @@ sealed class TimerState {
 
 object ClockTimer {
     var timerState: MutableState<TimerState> = mutableStateOf(TimerState.Stopped)
-    var timeRemaining = mutableStateOf(0)
+    var secondsRemaining = mutableStateOf(0)
 }
 
 fun Int.timeRemainingToClockFormat(): String {
 
-    val hours = this / 3600
-    val minutes = (this % 3600) / 60
-    val seconds = this % 60
+    val hours = this.toHours()
+    val minutes = this.toMinutes()
+    val seconds = this.toSeconds()
 
     var string = ""
 
@@ -34,8 +34,8 @@ fun Int.timeRemainingToClockFormat(): String {
 
 fun Int.timeRemainingToClockFormatWithoutSeconds(): String {
 
-    val hours = this / 3600
-    val minutes = (this % 3600) / 60
+    val hours = this.toHours()
+    val minutes = this.toMinutes()
 
     var string = ""
 
@@ -44,4 +44,16 @@ fun Int.timeRemainingToClockFormatWithoutSeconds(): String {
     }
 
     return string + String.format("%02d", minutes)
+}
+
+fun Int.toHours(): Int {
+    return this / 3600
+}
+
+fun Int.toMinutes(): Int {
+    return (this % 3600) / 60
+}
+
+fun Int.toSeconds(): Int {
+    return this % 60
 }

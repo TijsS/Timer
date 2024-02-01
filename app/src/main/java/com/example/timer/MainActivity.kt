@@ -20,14 +20,11 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.timer.feature_timer.TimerService
 import com.example.timer.feature_timer.presentation.TimerScreen
-import com.example.timer.feature_timer.presentation.TimerViewModel
 import com.example.timer.ui.theme.TimerTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
-    private lateinit var viewModel: TimerViewModel
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private val permissions = arrayOf(
@@ -40,12 +37,6 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-//        viewModel = ViewModelProvider(
-//            this,
-//            TimerViewModelFactory(TimerRepository.getInstance(this))
-//        )[TimerViewModel::class.java]
-
 
         val permissionsToRequest = ArrayList<String>()
 
@@ -66,8 +57,8 @@ class MainActivity : ComponentActivity() {
             )
         } else {
             // All permissions already granted
-            // Speechrecognizer might not be available on first launch/all devices
-            if ( SpeechRecognizer.isRecognitionAvailable(this) ) {
+            // Speech recognizer might not be available on first launch/all devices
+            if (SpeechRecognizer.isRecognitionAvailable(this)) {
                 startListening()
             }
         }
@@ -76,7 +67,6 @@ class MainActivity : ComponentActivity() {
             val windowSizeClass = calculateWindowSizeClass(this)
 
             TimerTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                 ) {

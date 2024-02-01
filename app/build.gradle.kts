@@ -63,8 +63,9 @@ dependencies {
 
     //hilt
     implementation("com.google.dagger:hilt-android:2.48.1")
-    ksp("com.google.dagger:dagger-compiler:2.48")// Dagger compiler
-    ksp("com.google.dagger:hilt-compiler:2.48")// Hilt compiler
+    testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
+    ksp("com.google.dagger:dagger-compiler:2.48.1")// Dagger compiler
+    ksp("com.google.dagger:hilt-compiler:2.48.1")// Hilt compiler
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
     val room_version = "2.6.1"
@@ -85,8 +86,9 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.compose.material3:material3-window-size-class:1.1.2")
     testImplementation("junit:junit:4.13.2")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.1")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
+    testImplementation("io.mockk:mockk:1.12.3")
     implementation("androidx.test.ext:junit-ktx:1.1.5")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

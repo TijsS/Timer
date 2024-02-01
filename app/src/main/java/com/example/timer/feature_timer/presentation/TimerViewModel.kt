@@ -7,6 +7,8 @@ import com.example.timer.feature_timer.Timer
 import com.example.timer.feature_timer.TimerState
 import com.example.timer.feature_timer.data.TimerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +21,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TimerViewModel @Inject constructor(
-    private val timerRepository: TimerRepository
+    private val timerRepository: TimerRepository,
+    private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TimerUiState())
@@ -55,7 +58,7 @@ class TimerViewModel @Inject constructor(
     }
 
     fun startCountDown() {
-        viewModelScope.launch {
+        viewModelScope.launch(defaultDispatcher) {
             _eventFlow.emit(
                 UiEvent.StartTimer
             )
@@ -63,17 +66,15 @@ class TimerViewModel @Inject constructor(
     }
 
     fun pauseCountDown() {
-        viewModelScope.launch {
+        viewModelScope.launch(defaultDispatcher) {
             _eventFlow.emit(
                 UiEvent.PauseTimer
             )
         }
-
-        ClockTimer.timerState.value = TimerState.Paused
     }
 
     fun stopCountDown() {
-        viewModelScope.launch {
+        viewModelScope.launch(defaultDispatcher) {
             _eventFlow.emit(
                 UiEvent.StopTimer
             )
@@ -86,7 +87,8 @@ class TimerViewModel @Inject constructor(
     }
 
     fun addSecondsToTimer(duration: Int) {
-        ClockTimer.secondsRemaining.intValue += duration.toInt()
+        ClockTimer.secondsRemaining.intValue += duration
+
         _uiState.value =
             _uiState.value.copy(resetMainTimeInput = !_uiState.value.resetMainTimeInput)
 

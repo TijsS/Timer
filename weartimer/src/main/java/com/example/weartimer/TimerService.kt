@@ -24,7 +24,7 @@ import kotlinx.coroutines.tasks.await
 
 
 @RequiresApi(Build.VERSION_CODES.S)
-class TimerService: Service(){
+class TimerService : Service() {
 
     private val vibratorManager: VibratorManager by lazy {
         getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
@@ -39,47 +39,53 @@ class TimerService: Service(){
 
     private fun notifiedStart() {
         countDownTimer?.cancel() // Cancel any existing timers
-        countDownTimer = object : CountDownTimer((ClockTimer.timeRemaining.value * 1000).toLong(), 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                ClockTimer.timeRemaining.value -= 1
-                applicationContext.updateNotificationContentText( NOTIFICATION_ID.toInt(), ClockTimer.timeRemaining.value.timeRemainingToClockFormat() )
-            }
+        countDownTimer =
+            object : CountDownTimer((ClockTimer.secondsRemaining.value * 1000).toLong(), 1000) {
+                @RequiresApi(34)
+                override fun onTick(millisUntilFinished: Long) {
+                    ClockTimer.secondsRemaining.value -= 1
+                    applicationContext.updateNotificationAlarm()
 
-            @RequiresApi(34)
-            override fun onFinish() {
-                ClockTimer.timerState.value = TimerState.Finished
+                }
 
-                vibrate()
+                @RequiresApi(34)
+                override fun onFinish() {
+                    ClockTimer.timerState.value = TimerState.Finished
 
-                applicationContext.updateNotificationAlarmFinished( 2 )
+                    vibrate()
 
-            }
-        }.start()
+                    applicationContext.updateNotificationAlarmFinished(2)
+
+                }
+            }.start()
 
         ClockTimer.timerState.value = TimerState.Running
 
-//        notificationManager.notify( NOTIFICATION_ID.toInt(), createNotification(this) )
-        startForeground( NOTIFICATION_ID.toInt(), createNotification(this) )
+        startForeground(NOTIFICATION_ID.toInt(), createNotification(this))
     }
 
-    private fun start () {
+    private fun start() {
         serviceScope.launch {
             try {
                 val request = PutDataMapRequest.create(START_TIMER_SEND).apply {
-                    dataMap.putInt(DataLayerListenerService.TIMER_DURATION_KEY, ClockTimer.timeRemaining.value)
-                    dataMap.putInt(DataLayerListenerService.START_TIMER_TIME_KEY, System.currentTimeMillis().toInt() )
+                    dataMap.putInt(
+                        DataLayerListenerService.TIMER_DURATION_KEY,
+                        ClockTimer.secondsRemaining.value
+                    )
+                    dataMap.putInt(
+                        DataLayerListenerService.START_TIMER_TIME_KEY,
+                        System.currentTimeMillis().toInt()
+                    )
                 }
                     .asPutDataRequest()
                     .setUrgent()
 
-                val response = dataClient.putDataItem(request).await()
                 dataClient.putDataItem(request).await()
 
                 return@launch
 
             } catch (exception: Exception) {
                 Log.d(ContentValues.TAG, "Saving DataItem failed: $exception")
-
             }
         }
         notifiedStart()
@@ -88,36 +94,43 @@ class TimerService: Service(){
     override fun onBind(intent: Intent): IBinder? {
         return binder
     }
+
     override fun onUnbind(intent: Intent): Boolean {
         return allowRebind
     }
+
     override fun onRebind(intent: Intent) {
     }
 
 
-    private fun notifiedReset(){
+    private fun notifiedReset() {
         countDownTimer?.cancel()
         vibratorManager.cancel()
 
-        ClockTimer.apply{
-            timeRemaining.value = 0
+        ClockTimer.apply {
+            secondsRemaining.value = 0
             timerState.value = TimerState.Stopped
         }
         stopSelf()
     }
 
-    private fun reset(){
+    private fun reset() {
         serviceScope.launch {
             try {
-                //TODO convert to message api
                 val request = PutDataMapRequest.create(RESET_TIMER_SEND).apply {
-                    dataMap.putInt(DataLayerListenerService.TIMER_DURATION_KEY, ClockTimer.timeRemaining.value)
-                    dataMap.putInt(DataLayerListenerService.START_TIMER_TIME_KEY, System.currentTimeMillis().toInt() )
+                    dataMap.putInt(
+                        DataLayerListenerService.TIMER_DURATION_KEY,
+                        ClockTimer.secondsRemaining.value
+                    )
+                    dataMap.putInt(
+                        DataLayerListenerService.START_TIMER_TIME_KEY,
+                        System.currentTimeMillis().toInt()
+                    )
                 }
                     .asPutDataRequest()
                     .setUrgent()
 
-                val response = dataClient.putDataItem(request).await()
+                dataClient.putDataItem(request).await()
                 return@launch
             } catch (exception: Exception) {
                 Log.d(ContentValues.TAG, "Saving DataItem failed: $exception")
@@ -127,7 +140,7 @@ class TimerService: Service(){
         notifiedReset()
     }
 
-    private fun notifiedPause(){
+    private fun notifiedPause() {
         countDownTimer?.cancel()
         ClockTimer.timerState.value = TimerState.Paused
     }
@@ -135,15 +148,20 @@ class TimerService: Service(){
     private fun pause() {
         serviceScope.launch {
             try {
-                //TODO convert to message api
                 val request = PutDataMapRequest.create(PAUSE_TIMER_SEND).apply {
-                    dataMap.putInt(DataLayerListenerService.TIMER_DURATION_KEY, ClockTimer.timeRemaining.value)
-                    dataMap.putInt(DataLayerListenerService.START_TIMER_TIME_KEY, System.currentTimeMillis().toInt() )
+                    dataMap.putInt(
+                        DataLayerListenerService.TIMER_DURATION_KEY,
+                        ClockTimer.secondsRemaining.value
+                    )
+                    dataMap.putInt(
+                        DataLayerListenerService.START_TIMER_TIME_KEY,
+                        System.currentTimeMillis().toInt()
+                    )
                 }
                     .asPutDataRequest()
                     .setUrgent()
 
-                val response = dataClient.putDataItem(request).await()
+                dataClient.putDataItem(request).await()
 
                 return@launch
             } catch (exception: Exception) {
@@ -167,12 +185,19 @@ class TimerService: Service(){
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        when(intent?.action) {
-            Action.NotifiedStart.toString() -> { notifiedStart() }
+        when (intent?.action) {
+            Action.NotifiedStart.toString() -> {
+                notifiedStart()
+            }
+
             Action.NotifiedReset.toString() -> {
                 notifiedReset()
             }
-            Action.NotifiedPause.toString() -> { notifiedPause() }
+
+            Action.NotifiedPause.toString() -> {
+                notifiedPause()
+            }
+
             Action.Start.toString() -> start()
             Action.Pause.toString() -> pause()
             Action.Reset.toString() -> reset()
@@ -180,11 +205,6 @@ class TimerService: Service(){
         }
 
         return super.onStartCommand(intent, flags, startId)
-    }
-
-    override fun onDestroy() {
-        Log.d("xxx", "destroy service ")
-        super.onDestroy()
     }
 
     enum class Action {

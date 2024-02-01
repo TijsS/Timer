@@ -4,19 +4,13 @@ import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.google.android.gms.wearable.DataClient
 import com.google.android.gms.wearable.DataEventBuffer
-import com.google.android.gms.wearable.DataItem
 import com.google.android.gms.wearable.DataMapItem
-import com.google.android.gms.wearable.MessageEvent
-import com.google.android.gms.wearable.PutDataMapRequest
-import com.google.android.gms.wearable.Wearable
 import com.google.android.gms.wearable.WearableListenerService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 
 class DataLayerListenerService : WearableListenerService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -44,9 +38,8 @@ class DataLayerListenerService : WearableListenerService() {
                     if (timeRemaining < 0 ) return
 
                     ClockTimer.apply {
-                        this.timeRemaining.value = timeRemaining
+                        this.secondsRemaining.value = timeRemaining
                     }
-
 
                     Intent(this, TimerService::class.java).also { intent ->
                         intent.action = TimerService.Action.NotifiedStart.toString()
@@ -78,7 +71,7 @@ class DataLayerListenerService : WearableListenerService() {
     }
 
     companion object {
-        private const val TAG = "xxx"
+        private const val TAG = "DataLayerListenerService"
         const val TIMER_DURATION_KEY = "timerDuration"
         const val START_TIMER_TIME_KEY = "startTime"
         const val START_TIMER_RECEIVE = "/startTimerWear"

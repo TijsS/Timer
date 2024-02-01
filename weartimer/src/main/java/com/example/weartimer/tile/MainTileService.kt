@@ -60,7 +60,7 @@ class TimerTileService : SuspendingTileService() {
 
         return PrimaryLayout.Builder(buildDeviceParameters(context.resources))
             .setContent(
-                Text.Builder(context, ClockTimer.timeRemaining.value.timeRemainingToClockFormatWithoutSeconds() )
+                Text.Builder(context, ClockTimer.secondsRemaining.value.timeRemainingToClockFormatWithoutSeconds() )
                     .setModifiers(ModifiersBuilders.Modifiers.Builder().setClickable(launchAppClickable(openApp())).build())
                     .build()
             )
