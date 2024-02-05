@@ -100,7 +100,7 @@ fun TimerScreen(
 
 
     LaunchedEffect(true) {
-        timerViewModel.eventFlow.collectLatest { event ->
+        timerViewModel._eventFlow.collectLatest { event ->
             when (event) {
                 is TimerViewModel.UiEvent.StopTimer -> {
                     Intent(applicationContext, TimerService::class.java).also { intent ->

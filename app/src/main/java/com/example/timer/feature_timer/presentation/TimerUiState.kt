@@ -5,6 +5,6 @@ import com.example.timer.feature_timer.Timer
 
 data class TimerUiState (
     val dismissPercentage: Float = 0f,
-    var resetMainTimeInput: Boolean = false,
-    var timers: List<Timer> = emptyList()
+    val resetMainTimeInput: Boolean = false,
+    val timers: List<Timer> = emptyList()
 )
