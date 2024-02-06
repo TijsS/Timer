@@ -100,7 +100,7 @@ fun TimerScreen(
 
 
     LaunchedEffect(true) {
-        timerViewModel._eventFlow.collectLatest { event ->
+        timerViewModel.eventFlow.collectLatest { event ->
             when (event) {
                 is TimerViewModel.UiEvent.StopTimer -> {
                     Intent(applicationContext, TimerService::class.java).also { intent ->
@@ -134,6 +134,9 @@ fun TimerScreen(
                                 name: ComponentName?,
                                 service: IBinder?
                             ) {
+                                val binder = service as TimerService.LocalBinder
+                                val service = binder.getService()
+                                service.startListening()
                             }
 
                             override fun onServiceDisconnected(name: ComponentName?) {

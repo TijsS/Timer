@@ -10,12 +10,14 @@ import io.mockk.mockk
 import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -28,14 +30,16 @@ import org.junit.jupiter.api.extension.ExtendWith
 @ExtendWith(MockKExtension::class)
 class TimerViewModelTest {
 
-    lateinit var timerViewModel: TimerViewModel
+    private lateinit var timerViewModel: TimerViewModel
     private val dispatcher: TestDispatcher = StandardTestDispatcher()
-
     private val testScope = TestScope(dispatcher)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Before
     fun setup() {
+
+        ClockTimer.timerState.value = TimerState.Stopped
+        ClockTimer.secondsRemaining.intValue = 0
 
         val mockTimerRepository = mockk<TimerRepository>()
 
@@ -105,21 +109,19 @@ class TimerViewModelTest {
             val inputDuration = 30
             ClockTimer.timerState.value = TimerState.Running
 
-            val values = mutableListOf<TimerViewModel.UiEvent>()
-            testScope.launch {
-                timerViewModel._eventFlow.collectLatest { event ->
-                    values.add(event)
+
+            // Collect events emitted by eventFlow
+            val collectedEvents = mutableListOf<TimerViewModel.UiEvent>()
+            val collecting = launch {
+                timerViewModel.eventFlow.collectLatest { event ->
+                    collectedEvents.add(event)
                 }
             }
-            println("test =     ${this}")
-            println("test =     ${this.coroutineContext}")
-            println("test =     ${dispatcher}")
-            println("testDispatchers.Main =     ${testScope.coroutineContext}")
+            advanceUntilIdle()
 
         // When
-//            timerViewModel.emit(TimerViewModel.UiEvent.StartTimer)
-
             timerViewModel.addSecondsToTimer(inputDuration)
+            advanceUntilIdle()
 
         // Then
             // Verify that secondsRemaining is updated
@@ -128,30 +130,46 @@ class TimerViewModelTest {
             // Verify that resetMainTimeInput is toggled
             assertEquals(!timerViewModel.uiState.value.resetMainTimeInput, false)
 
-            // Verify that TimerStart event is emitted
-            assertEquals(values.single(), TimerViewModel.UiEvent.StartTimer)
+            // Verify that TimerStart event is emitted and no other events are emitted
+            assertEquals(collectedEvents.single(), TimerViewModel.UiEvent.StartTimer)
+            assertEquals(collectedEvents.size, 1)
+
+            collecting.cancelAndJoin()
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun addSecondsToTimer_nonRunningTimer() {
-        runTest {
-        // Given
+        testScope.runTest {
+            // Given
             val inputDuration = 30
+            ClockTimer.timerState.value = TimerState.Stopped
 
-        // When
+            // Collect events emitted by eventFlow
+            val collectedEvents = mutableListOf<TimerViewModel.UiEvent>()
+            val collecting = launch {
+                timerViewModel.eventFlow.collectLatest { event ->
+                    collectedEvents.add(event)
+                }
+            }
+            advanceUntilIdle()
+
+            // When
             timerViewModel.addSecondsToTimer(inputDuration)
+            advanceUntilIdle()
 
-        // Then
+            // Then
+            // Verify that secondsRemaining is updated
             assertEquals(inputDuration, ClockTimer.secondsRemaining.intValue)
 
             // Verify that resetMainTimeInput is toggled
             assertEquals(!timerViewModel.uiState.value.resetMainTimeInput, false)
 
-            // Verify that TimerStart event is emitted
-            timerViewModel._eventFlow.collectLatest{event ->
-                assertEquals(event, TimerViewModel.UiEvent.StartTimer)
-            }
+            // Verify that no events are emitted
+            assertEquals(collectedEvents.size, 0)
+
+            collecting.cancelAndJoin()
         }
     }
 }

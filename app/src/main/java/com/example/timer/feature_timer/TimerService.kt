@@ -7,6 +7,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
+import android.os.Binder
 import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
@@ -43,8 +44,8 @@ import java.util.Locale
 @RequiresApi(Build.VERSION_CODES.S)
 class TimerService : Service(), RecognitionListener {
 
-    private var startMode: Int = 0             // indicates how to behave if the service is killed
-    private var binder: IBinder? = null        // interface for clients that bind
+    private var startMode: Int = 0            // indicates how to behave if the service is killed
+    private var binder: IBinder? = LocalBinder()       // interface for clients that bind
     private var allowRebind: Boolean = true   // indicates whether onRebind should be used
 
     private lateinit var speechRecognizer: SpeechRecognizer
@@ -95,6 +96,14 @@ class TimerService : Service(), RecognitionListener {
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.packageName)
     }
+
+
+    class LocalBinder : Binder() {
+        val service: LocalService
+            get() =// Return this instance of LocalService so clients can call public methods.
+                this@LocalService
+    }
+
 
     private fun notifiedStart() {
         startListeningSafe()

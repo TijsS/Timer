@@ -86,41 +86,36 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
 
                             launch {
                                 minuteClock.size.animateTo(
-                                    smallTargetDp, animationSpec = tween(
-                                        durationMillis = animationDurationMedium,
-                                    )
+                                    smallTargetDp,
+                                    animationSpec = tween(durationMillis = animationDurationMedium)
                                 )
                             }
 
                             launch {
                                 hourClock.size.animateTo(
-                                    smallTargetDp, animationSpec = tween(
-                                        durationMillis = animationDurationMedium,
-                                    )
+                                    smallTargetDp,
+                                    animationSpec = tween(durationMillis = animationDurationMedium)
                                 )
                             }
                         }
                     } else {
                         launch {
                             secondClock.size.animateTo(
-                                smallTargetDp, animationSpec = tween(
-                                    durationMillis = animationDurationMedium,
-                                )
+                                smallTargetDp,
+                                animationSpec = tween(durationMillis = animationDurationMedium)
                             )
                         }
                         launch {
                             minuteClock.size.animateTo(
-                                smallTargetDp, animationSpec = tween(
-                                    durationMillis = animationDurationMedium,
-                                )
+                                smallTargetDp,
+                                animationSpec = tween(durationMillis = animationDurationMedium)
                             )
                         }
 
                         launch {
                             hourClock.size.animateTo(
-                                largeTargetDp, animationSpec = tween(
-                                    durationMillis = animationDurationMedium,
-                                )
+                                largeTargetDp,
+                                animationSpec = tween(durationMillis = animationDurationMedium)
                             )
                         }
                     }
@@ -211,8 +206,6 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.Center,
         modifier = modifier.fillMaxSize()
     ) {
-
-
         if (hourClock.size.value > 0) {
             Clock(
                 rotate = hourClock.rotation.value,
@@ -315,7 +308,6 @@ fun Clock(
 }
 
 data class ClockState(
-//    val visibility: Boolean,
     val size: Animatable<Float, AnimationVector1D>,
     val rotation: Animatable<Float, AnimationVector1D>
 )

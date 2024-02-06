@@ -98,6 +98,7 @@ fun Context.updateNotificationContentText(newBody: String) {
     }
 
     if (existingNotification != null) {
+        // Modify the contentText of the existing notification
         val builder = createNotification(this)
             .setSmallIcon(R.drawable.baseline_alarm_24)
             .setContentText(newBody)

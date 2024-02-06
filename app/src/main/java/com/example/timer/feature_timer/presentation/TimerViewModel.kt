@@ -7,16 +7,15 @@ import com.example.timer.feature_timer.TimerState
 import com.example.timer.feature_timer.data.TimerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.coroutines.CoroutineContext
 
 @HiltViewModel
 class TimerViewModel @Inject constructor(
@@ -24,17 +23,26 @@ class TimerViewModel @Inject constructor(
     private val externalScope: CoroutineScope
 ) : ViewModel() {
 
-    private val coroutineContext: CoroutineContext = externalScope.coroutineContext
-
     private val _uiState = MutableStateFlow(TimerUiState())
     val uiState: StateFlow<TimerUiState> = _uiState.asStateFlow()
 
-    val _eventFlow = MutableSharedFlow<UiEvent>()
-//    val eventFlow = _eventFlow.asSharedFlow()
-    suspend fun emit(value: UiEvent) = _eventFlow.emit(value)
+    private val _eventFlow = MutableSharedFlow<UiEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
+
+
 
     init {
         getPresetTimers()
+    }
+
+    private fun getPresetTimers() {
+        timerRepository.getTimersFlow()
+            .onEach { timers ->
+                _uiState.value = uiState.value.copy(
+                    timers = timers
+                )
+            }
+            .launchIn(externalScope)
     }
 
     suspend fun addEmptyPresetTimer() {
@@ -45,28 +53,12 @@ class TimerViewModel @Inject constructor(
         timerRepository.updateTimer(timer)
     }
 
-    fun getPresetTimers() {
-        timerRepository.getTimersFlow()
-            .onEach { timers ->
-                _uiState.value = uiState.value.copy(
-                    timers = timers
-                )
-            }
-            .launchIn(externalScope)
-    }
-
     suspend fun removePresetTimer(timerId: Int) {
         timerRepository.removeTimer(timerId = timerId)
     }
 
     fun startCountDown() {
-        println("real =     ${externalScope}")
-        println("real =     ${externalScope.coroutineContext}")
-        println("realDispatchers.Main =     ${externalScope.coroutineContext}")
-        println("realDispatchers.default =     ${Dispatchers.Default}")
-
         externalScope.launch {
-            emit(UiEvent.StartTimer)
             _eventFlow.emit(
                 UiEvent.StartTimer
             )
@@ -74,7 +66,7 @@ class TimerViewModel @Inject constructor(
     }
 
     fun pauseCountDown() {
-        externalScope.launch(coroutineContext) {
+        externalScope.launch {
             _eventFlow.emit(
                 UiEvent.PauseTimer
             )
@@ -82,7 +74,7 @@ class TimerViewModel @Inject constructor(
     }
 
     fun stopCountDown() {
-        externalScope.launch(coroutineContext) {
+        externalScope.launch {
             _eventFlow.emit(
                 UiEvent.StopTimer
             )

@@ -5,8 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresApi
+
 @RequiresApi(Build.VERSION_CODES.S)
-class TimerNotificationReceiver: BroadcastReceiver() {
+class TimerNotificationReceiver : BroadcastReceiver() {
 
     private fun start(context: Context) {
         Intent(context, TimerService::class.java).also { intent ->
@@ -15,7 +16,7 @@ class TimerNotificationReceiver: BroadcastReceiver() {
         }
     }
 
-    private fun pause( context: Context ) {
+    private fun pause(context: Context) {
         Intent(context, TimerService::class.java).also { intent ->
             intent.action = TimerService.Action.Pause.toString()
             context.startService(intent)
@@ -30,10 +31,10 @@ class TimerNotificationReceiver: BroadcastReceiver() {
     }
 
     override fun onReceive(context: Context, intent: Intent?) {
-        when(intent?.action) {
-            Action.Pause.toString() -> pause( context )
-            Action.Reset.toString() -> reset( context )
-            Action.Play.toString() -> start( context )
+        when (intent?.action) {
+            Action.Pause.toString() -> pause(context)
+            Action.Reset.toString() -> reset(context)
+            Action.Play.toString() -> start(context)
         }
     }
 

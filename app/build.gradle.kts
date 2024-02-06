@@ -63,6 +63,8 @@ dependencies {
 
     //hilt
     implementation("com.google.dagger:hilt-android:2.48.1")
+    implementation("androidx.test:rules:1.5.0")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
     ksp("com.google.dagger:dagger-compiler:2.48.1")// Dagger compiler
     ksp("com.google.dagger:hilt-compiler:2.48.1")// Hilt compiler
