@@ -1,10 +1,11 @@
-package com.example.timer.feature_timer
+package com.example.timer.feature_notification
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresApi
+import com.example.timer.feature_timer.TimerService
 
 @RequiresApi(Build.VERSION_CODES.S)
 class TimerNotificationReceiver : BroadcastReceiver() {

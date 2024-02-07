@@ -99,6 +99,24 @@ fun TimerScreen(
     )
 
 
+
+    // Bind to TimerService. For now only used to get the same service instance
+    // In case Service gets used more intensively it should stop using startService and start using bind
+    lateinit var mService: TimerService
+    var mBound: Boolean = false
+    val bindIntent = Intent(context, TimerService::class.java)
+    val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            val binder = service as TimerService.LocalBinder
+            mService = binder.getService()
+            mBound = true
+        }
+
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            mBound = false
+        }
+    }
+
     LaunchedEffect(true) {
         timerViewModel.eventFlow.collectLatest { event ->
             when (event) {
@@ -126,22 +144,7 @@ fun TimerScreen(
                 is TimerViewModel.UiEvent.StartTimer -> {
                     Intent(applicationContext, TimerService::class.java).also { intent ->
                         intent.action = TimerService.Action.Start.toString()
-                        applicationContext.startService(intent)
-
-                        val bindIntent = Intent(context, TimerService::class.java)
-                        val serviceConnection = object : ServiceConnection {
-                            override fun onServiceConnected(
-                                name: ComponentName?,
-                                service: IBinder?
-                            ) {
-                                val binder = service as TimerService.LocalBinder
-                                val service = binder.getService()
-                                service.startListening()
-                            }
-
-                            override fun onServiceDisconnected(name: ComponentName?) {
-                            }
-                        }
+                        applicationContext.startForegroundService(intent)
 
                         context.bindService(bindIntent, serviceConnection, Context.BIND_AUTO_CREATE)
                     }
@@ -151,6 +154,8 @@ fun TimerScreen(
             }
         }
     }
+
+
 
     LaunchedEffect(currentDistanceAnimated) {
         alarmAnimation?.setNumberState("StateMachine", "dismissSwipe", currentDistanceAnimated)

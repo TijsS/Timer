@@ -72,7 +72,7 @@
             </intent-filter>
         </service>
 
-        <receiver android:name=".feature_timer.TimerNotificationReceiver" />
+        <receiver android:name=".feature_notification.TimerNotificationReceiver" />
 
         <provider
             android:name="androidx.startup.InitializationProvider"

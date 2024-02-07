@@ -11,7 +11,6 @@ import androidx.core.app.NotificationCompat
 import com.example.timer.MainActivity
 import com.example.timer.R
 import com.example.timer.feature_timer.ClockTimer
-import com.example.timer.feature_timer.TimerNotificationReceiver
 import com.example.timer.feature_timer.TimerState
 
 
@@ -82,7 +81,6 @@ fun dismissNotification(channelId: String) {
 
 @RequiresApi(Build.VERSION_CODES.S)
 fun Context.updateNotificationContentText(newBody: String) {
-
     val playIntent = Intent(this, TimerNotificationReceiver::class.java)
     playIntent.action = TimerNotificationReceiver.Action.Play.toString()
 
@@ -94,7 +92,7 @@ fun Context.updateNotificationContentText(newBody: String) {
     )
 
     val existingNotification = notificationManager.activeNotifications.find {
-        it.id == CHANNEL_ID.toInt()
+        it.id == NOTIFICATION_ID.toInt()
     }
 
     if (existingNotification != null) {
@@ -124,7 +122,7 @@ fun Context.updateNotificationContentText(newBody: String) {
         )
 
         // Update the notification with the new content
-        notificationManager.notify(CHANNEL_ID.toInt(), builder.build())
+        notificationManager.notify(NOTIFICATION_ID.toInt(), builder.build())
     }
 }
 

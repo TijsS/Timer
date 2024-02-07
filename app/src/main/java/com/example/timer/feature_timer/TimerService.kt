@@ -53,7 +53,7 @@ class TimerService : Service(), RecognitionListener {
 
     private val dataClient by lazy { Wearable.getDataClient(this) }
 
-    private var countDownTimer: CountDownTimer? = null
+    var countDownTimer: CountDownTimer? = null
     private val serviceScope = CoroutineScope(Dispatchers.Default)
     private val recognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
 
@@ -98,12 +98,9 @@ class TimerService : Service(), RecognitionListener {
     }
 
 
-    class LocalBinder : Binder() {
-        val service: LocalService
-            get() =// Return this instance of LocalService so clients can call public methods.
-                this@LocalService
+    inner class LocalBinder : Binder() {
+        fun getService(): TimerService = this@TimerService
     }
-
 
     private fun notifiedStart() {
         startListeningSafe()
