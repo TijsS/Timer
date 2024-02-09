@@ -1,9 +1,12 @@
 package com.example.timer
 
+import android.os.CountDownTimer
 import com.example.timer.feature_timer.intTimeToString
 import com.example.timer.feature_timer.toHours
 import com.example.timer.feature_timer.toMinutes
 import com.example.timer.feature_timer.toSeconds
+import io.mockk.every
+import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 

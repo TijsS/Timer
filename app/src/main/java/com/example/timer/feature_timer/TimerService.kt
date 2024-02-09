@@ -45,7 +45,7 @@ import java.util.Locale
 class TimerService : Service(), RecognitionListener {
 
     private var startMode: Int = 0            // indicates how to behave if the service is killed
-    private var binder: IBinder? = LocalBinder()       // interface for clients that bind
+    private var binder: IBinder = LocalBinder()       // interface for clients that bind
     private var allowRebind: Boolean = true   // indicates whether onRebind should be used
 
     private lateinit var speechRecognizer: SpeechRecognizer
@@ -53,10 +53,10 @@ class TimerService : Service(), RecognitionListener {
 
     private val dataClient by lazy { Wearable.getDataClient(this) }
 
-    var countDownTimer: CountDownTimer? = null
     private val serviceScope = CoroutineScope(Dispatchers.Default)
     private val recognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
 
+    var countDownTimer: CountDownTimer? = null
 
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate() {
@@ -105,6 +105,7 @@ class TimerService : Service(), RecognitionListener {
     private fun notifiedStart() {
         startListeningSafe()
 
+        // Cancel the old CountDownTimer if it exists
         countDownTimer?.cancel()
 
         countDownTimer = createCountDownTimer().start()
@@ -150,6 +151,7 @@ class TimerService : Service(), RecognitionListener {
             secondsRemaining.intValue = 0
             timerState.value = TimerState.Stopped
         }
+
         stopForeground(STOP_FOREGROUND_REMOVE)
     }
 
@@ -248,7 +250,7 @@ class TimerService : Service(), RecognitionListener {
         )
     }
 
-    private fun startListeningSafe() {
+    fun startListeningSafe() {
         if (!::speechRecognizer.isInitialized) return
         speechRecognizer.startListening(recognizerIntent)
     }

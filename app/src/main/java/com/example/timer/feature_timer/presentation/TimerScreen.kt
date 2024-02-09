@@ -174,7 +174,7 @@ fun TimerScreen(
         )
     } else {
 
-        val pagerState = rememberPagerState(initialPage = 0)
+        val pagerState = rememberPagerState(initialPage = 0, pageCount = { 2 })
 
         if (windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact) {
             Row(
@@ -194,7 +194,6 @@ fun TimerScreen(
                     state = pagerState,
                     beyondBoundsPageCount = 1,
                     reverseLayout = true,
-                    pageCount = 2,
                     flingBehavior = flingBehavior(
                         state = pagerState,
                         pagerSnapDistance = PagerSnapDistance.atMost(4)
@@ -260,7 +259,6 @@ fun TimerScreen(
                     HorizontalPager(
                         state = pagerState,
                         beyondBoundsPageCount = 1,
-                        pageCount = 2,
                         flingBehavior = flingBehavior(
                             state = pagerState,
                             pagerSnapDistance = PagerSnapDistance.atMost(4)

@@ -75,7 +75,7 @@ fun VerticalPagerIndicator(pagerState: PagerState) {
 @Preview(showBackground = true)
 fun HorizontalPagerIndicatorPreview() {
     TimerTheme {
-        HorizontalPagerIndicator(pagerState = rememberPagerState())
+        HorizontalPagerIndicator(pagerState = rememberPagerState(pageCount = {1}))
     }
 }
 @OptIn(ExperimentalFoundationApi::class)
@@ -83,6 +83,6 @@ fun HorizontalPagerIndicatorPreview() {
 @Preview(showBackground = true, device = Devices.AUTOMOTIVE_1024p)
 fun VerticalPagerIndicatorPreview() {
     TimerTheme {
-        VerticalPagerIndicator(pagerState = rememberPagerState())
+        VerticalPagerIndicator(pagerState = rememberPagerState(pageCount = {1}))
     }
 }
