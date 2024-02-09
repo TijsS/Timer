@@ -107,26 +107,7 @@ class TimerService : Service(), RecognitionListener {
 
         countDownTimer?.cancel()
 
-        countDownTimer =
-            object : CountDownTimer(ClockTimer.secondsRemaining.intValue.toLong() * 1000, 1000) {
-                override fun onTick(millisUntilFinished: Long) {
-                    ClockTimer.secondsRemaining.intValue -= 1
-                    applicationContext.updateNotificationContentText(
-                        ClockTimer.secondsRemaining.intValue.intTimeToString()
-                    )
-                }
-
-                @RequiresApi(34)
-                override fun onFinish() {
-                    ClockTimer.timerState.value = TimerState.Finished
-                    startListeningSafe()
-
-                    vibrate()
-
-                    applicationContext.updateNotificationAlarmFinished()
-
-                }
-            }.start()
+        countDownTimer = createCountDownTimer().start()
 
         ClockTimer.timerState.value = TimerState.Running
 
@@ -234,6 +215,27 @@ class TimerService : Service(), RecognitionListener {
         }
 
         notifiedPause()
+    }
+
+    fun createCountDownTimer(): CountDownTimer {
+        return object : CountDownTimer(ClockTimer.secondsRemaining.intValue.toLong() * 1000, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                ClockTimer.secondsRemaining.intValue -= 1
+                applicationContext.updateNotificationContentText(
+                    ClockTimer.secondsRemaining.intValue.intTimeToString()
+                )
+            }
+
+            @RequiresApi(34)
+            override fun onFinish() {
+                ClockTimer.timerState.value = TimerState.Finished
+                startListeningSafe()
+
+                vibrate()
+
+                applicationContext.updateNotificationAlarmFinished()
+            }
+        }
     }
 
     private fun vibrate() {
