@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.timer.feature_timer.ClockTimer
 import com.example.timer.feature_timer.TimerService
+import com.example.timer.feature_timer.addTimeClockTimer
 import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.WearableListenerService
@@ -33,10 +34,7 @@ class DataLayerListenerService : WearableListenerService() {
                                     System.currentTimeMillis().toInt() - startTime
                             }
                             getInt(TIMER_DURATION_KEY).also { timerDuration ->
-                                ClockTimer.apply {
-                                    this.secondsRemaining.intValue =
-                                        timerDuration - (timePassedSinceStart / 1000)
-                                }
+                                addTimeClockTimer(timerDuration - timePassedSinceStart / 1000)
                             }
                         }
                         intent.action = TimerService.Action.NotifiedStart.toString()

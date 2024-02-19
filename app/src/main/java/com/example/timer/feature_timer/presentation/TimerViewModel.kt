@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import com.example.timer.feature_timer.ClockTimer
 import com.example.timer.feature_timer.Timer
 import com.example.timer.feature_timer.TimerState
+import com.example.timer.feature_timer.addTimeClockTimer
 import com.example.timer.feature_timer.data.TimerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -28,8 +29,6 @@ class TimerViewModel @Inject constructor(
 
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
-
-
 
     init {
         getPresetTimers()
@@ -73,21 +72,29 @@ class TimerViewModel @Inject constructor(
         }
     }
 
-    fun stopCountDown() {
+    fun resetCountDown() {
         externalScope.launch {
             _eventFlow.emit(
-                UiEvent.StopTimer
+                UiEvent.ResetTimer
+            )
+        }
+    }
+    fun repeatCountDown() {
+        externalScope.launch {
+            _eventFlow.emit(
+                UiEvent.RepeatTimer
             )
         }
     }
 
     fun setDismissPercentage(percentage: Float) {
         _uiState.value =
-            _uiState.value.copy(dismissPercentage = if (percentage < 0) 0f else if (percentage > 100) 100f else percentage)
+            _uiState.value.copy(dismissPercentage = if (percentage < -100) -100f else if (percentage > 100) 100f else percentage)
     }
 
     fun addSecondsToTimer(duration: Int) {
-        ClockTimer.secondsRemaining.intValue += duration
+
+        addTimeClockTimer(duration)
 
         _uiState.value =
             _uiState.value.copy(resetMainTimeInput = !_uiState.value.resetMainTimeInput)
@@ -98,7 +105,7 @@ class TimerViewModel @Inject constructor(
     }
 
     sealed class UiEvent {
-        data object StopTimer : UiEvent()
+        data object RepeatTimer : UiEvent()
         data object StartTimer : UiEvent()
         data object PauseTimer : UiEvent()
         data object ResetTimer : UiEvent()

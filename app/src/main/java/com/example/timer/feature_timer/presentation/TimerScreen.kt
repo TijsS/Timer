@@ -32,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -84,6 +85,7 @@ fun TimerScreen(
     val scope = rememberCoroutineScope()
 
     val timeRemaining by remember { ClockTimer.secondsRemaining }
+
     val timerState by remember { ClockTimer.timerState }
     val currentDistanceAnimated by animateFloatAsState(
         targetValue = timerUiState.dismissPercentage,
@@ -93,9 +95,13 @@ fun TimerScreen(
         ),
         finishedListener = { value ->
             if (value >= 100f) {
-                timerViewModel.stopCountDown()
+                timerViewModel.resetCountDown()
             }
-        }, label = ""
+            if (value <= -100f) {
+                timerViewModel.repeatCountDown()
+            }
+        },
+        label = ""
     )
 
 
@@ -120,13 +126,6 @@ fun TimerScreen(
     LaunchedEffect(true) {
         timerViewModel.eventFlow.collectLatest { event ->
             when (event) {
-                is TimerViewModel.UiEvent.StopTimer -> {
-                    Intent(applicationContext, TimerService::class.java).also { intent ->
-                        intent.action = TimerService.Action.Stop.toString()
-                        applicationContext.startService(intent)
-                    }
-                }
-
                 is TimerViewModel.UiEvent.ResetTimer -> {
                     Intent(applicationContext, TimerService::class.java).also { intent ->
                         intent.action = TimerService.Action.Reset.toString()
@@ -145,6 +144,15 @@ fun TimerScreen(
                     Intent(applicationContext, TimerService::class.java).also { intent ->
                         intent.action = TimerService.Action.Start.toString()
                         applicationContext.startForegroundService(intent)
+
+                        context.bindService(bindIntent, serviceConnection, Context.BIND_AUTO_CREATE)
+                    }
+                }
+
+                is TimerViewModel.UiEvent.RepeatTimer -> {
+                    Intent(applicationContext, TimerService::class.java).also { intent ->
+                        intent.action = TimerService.Action.Repeat.toString()
+                        applicationContext.startService(intent)
 
                         context.bindService(bindIntent, serviceConnection, Context.BIND_AUTO_CREATE)
                     }
@@ -173,7 +181,6 @@ fun TimerScreen(
             setAlarmAnimation = { alarmAnimation = it }
         )
     } else {
-
         val pagerState = rememberPagerState(initialPage = 0, pageCount = { 2 })
 
         if (windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact) {
@@ -206,7 +213,7 @@ fun TimerScreen(
                             resetInput = timerUiState.resetMainTimeInput,
                             startCountDown = { timerViewModel.startCountDown() },
                             pauseCountdown = { timerViewModel.pauseCountDown() },
-                            resetCountDown = { timerViewModel.stopCountDown() },
+                            resetCountDown = { timerViewModel.resetCountDown() },
                             startListening = startListening,
                             addSecondsToTimer = { timerViewModel.addSecondsToTimer(it) },
                             timerGreaterThenZero = { timeRemaining > 0 },
@@ -271,7 +278,7 @@ fun TimerScreen(
                                 resetInput = timerUiState.resetMainTimeInput,
                                 startCountDown = { timerViewModel.startCountDown() },
                                 pauseCountdown = { timerViewModel.pauseCountDown() },
-                                resetCountDown = { timerViewModel.stopCountDown() },
+                                resetCountDown = { timerViewModel.resetCountDown() },
                                 startListening = { startListening() },
                                 addSecondsToTimer = { timerViewModel.addSecondsToTimer(it) },
                                 timerGreaterThenZero = { timeRemaining > 0 },

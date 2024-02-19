@@ -150,6 +150,7 @@ class TimerService : Service(), RecognitionListener {
         ClockTimer.apply {
             secondsRemaining.intValue = 0
             timerState.value = TimerState.Stopped
+            timerDurationForRepeat.intValue = 0
         }
 
         stopForeground(STOP_FOREGROUND_REMOVE)
@@ -219,6 +220,18 @@ class TimerService : Service(), RecognitionListener {
         notifiedPause()
     }
 
+    private fun repeat() {
+        ClockTimer.secondsRemaining.intValue = ClockTimer.timerDurationForRepeat.intValue
+
+        start()
+    }
+
+    private fun notifiedRepeat() {
+        ClockTimer.secondsRemaining.intValue = ClockTimer.timerDurationForRepeat.intValue
+
+        notifiedStart()
+    }
+
     fun createCountDownTimer(): CountDownTimer {
         return object : CountDownTimer(ClockTimer.secondsRemaining.intValue.toLong() * 1000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
@@ -264,9 +277,8 @@ class TimerService : Service(), RecognitionListener {
             Action.NotifiedPause.toString() -> notifiedPause()
             Action.Reset.toString() -> reset()
             Action.NotifiedReset.toString() -> notifiedReset()
-            Action.Stop.toString() -> {
-                reset()
-            }
+            Action.Repeat.toString() -> repeat()
+            Action.NotifiedRepeat.toString() -> notifiedRepeat()
         }
 
         return startMode
@@ -283,8 +295,20 @@ class TimerService : Service(), RecognitionListener {
     override fun onRebind(intent: Intent) {
     }
 
+    /*
+    * Start, informs wearable of the start of the timer, then calls start
+    * NotifiedStart, starts the timer, sets the timer state to running and starts the foregroundservice
+    * pause, informs wearable of the pause of the timer, then calls pause
+    * NotifiedPause, stops the timer, sets the timer state to paused
+    * reset, informs wearable of the reset of the timer, then calls reset
+    * NotifiedReset, stops the timer and vibrator, resets the ClockTimer values and stops the foregroundservice
+    * StartListening, starts the speechRecognizer
+    * Repeat, set the ClockTimer secondsRemaining to the timerDurationForRepeat and calls start
+    * NotifiedRepeat, set the ClockTimer secondsRemaining to the timerDurationForRepeat and calls notifiedStart
+    * Stop, calls reset
+    * */
     enum class Action {
-        Start, NotifiedStart, Pause, NotifiedPause, Reset, NotifiedReset, Stop, StartListening
+        Start, NotifiedStart, Pause, NotifiedPause, Reset, NotifiedReset, StartListening, Repeat, NotifiedRepeat
     }
 
     override fun onReadyForSpeech(params: Bundle?) {
@@ -334,7 +358,7 @@ class TimerService : Service(), RecognitionListener {
             if (secondIndex - 1 < 0) return@let
 
             recognizedWords[secondIndex - 1].toIntOrNull()?.let {
-                ClockTimer.secondsRemaining.intValue += it
+                addTimeClockTimer(it)
             }
         }
 
@@ -342,7 +366,7 @@ class TimerService : Service(), RecognitionListener {
             if (minuteIndex - 1 < 0) return@let
 
             recognizedWords[minuteIndex - 1].toIntOrNull()?.let {
-                ClockTimer.secondsRemaining.intValue += it * 60
+                addTimeClockTimer(it * 60)
             }
         }
 
@@ -350,7 +374,7 @@ class TimerService : Service(), RecognitionListener {
             if (hourIndex - 1 < 0) return@let
 
             recognizedWords[hourIndex - 1].toIntOrNull()?.let {
-                ClockTimer.secondsRemaining.intValue += it * 60 * 60
+                addTimeClockTimer(it * 60 * 60)
             }
         }
 

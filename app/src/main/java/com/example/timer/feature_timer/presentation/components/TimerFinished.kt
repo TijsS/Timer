@@ -36,7 +36,7 @@ fun TimerFinished(
     ) {
         BoxWithConstraints {
             ComposableRiveAnimationView(
-                animation = R.raw.alarm,
+                animation = R.raw.alarm_v3,
                 stateMachineName = "StateMachine",
                 fit = Fit.COVER,
                 modifier = Modifier

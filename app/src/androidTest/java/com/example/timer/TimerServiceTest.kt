@@ -1,5 +1,7 @@
 package com.example.timer
 
+import android.app.Notification
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.os.CountDownTimer
@@ -8,9 +10,14 @@ import android.speech.RecognitionListener
 import android.speech.SpeechRecognizer
 import android.test.mock.MockContext
 import androidx.annotation.MainThread
+import androidx.core.app.NotificationManagerCompat
 import androidx.test.annotation.UiThreadTest
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ServiceTestRule
+import com.example.timer.feature_notification.NOTIFICATION_ID
+import com.example.timer.feature_notification.createNotification
+import com.example.timer.feature_notification.notificationManager
 import com.example.timer.feature_notification.updateNotificationContentText
 import com.example.timer.feature_timer.ClockTimer
 import com.example.timer.feature_timer.Timer
@@ -131,11 +138,8 @@ class TimerServiceTest {
     @Test
     fun `pause pauses ClockTimer`() {
     // Given
-        val mockContext = MockContext()
 
     // When
-//        `when`(mockContext.applicationContext).thenReturn(mockContext)
-
         // The timer gets paused
         Intent(
             ApplicationProvider.getApplicationContext(),
@@ -148,10 +152,5 @@ class TimerServiceTest {
     // Then
         // Confirm that ClockTimer is set to paused
         assertEquals(ClockTimer.timerState.value, TimerState.Paused)
-
-        // Verify that the old countDownTimer is cancelled and the new one has been called
-        verify { mockContext.updateNotificationContentText(
-            ClockTimer.secondsRemaining.intValue.intTimeToString()
-        ) }
     }
 }

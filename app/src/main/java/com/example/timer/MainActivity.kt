@@ -18,6 +18,8 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import app.rive.runtime.kotlin.core.RendererType
+import app.rive.runtime.kotlin.core.Rive
 import com.example.timer.feature_timer.TimerService
 import com.example.timer.feature_timer.presentation.TimerScreen
 import com.example.timer.ui.theme.TimerTheme

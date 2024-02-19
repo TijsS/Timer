@@ -52,7 +52,7 @@ android {
 
 
 dependencies {
-    implementation("app.rive:rive-android:7.0.0")
+    implementation("app.rive:rive-android:9.1.2")
     implementation("androidx.startup:startup-runtime:1.1.1")
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")

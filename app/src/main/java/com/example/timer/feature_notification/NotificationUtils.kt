@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.service.notification.StatusBarNotification
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.example.timer.MainActivity
@@ -127,8 +128,7 @@ fun Context.updateNotificationContentText(newBody: String) {
 }
 
 @RequiresApi(34)
-fun Context.updateNotificationAlarmFinished(
-) {
+fun Context.updateNotificationAlarmFinished() {
     val existingNotification = notificationManager.activeNotifications.find {
         it.id == CHANNEL_ID.toInt()
     }
