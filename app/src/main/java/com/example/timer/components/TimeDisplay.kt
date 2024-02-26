@@ -5,17 +5,22 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -23,11 +28,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.center
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import app.rive.runtime.kotlin.RiveAnimationView
+import com.example.timer.R
+import com.example.timer.feature_timer.ClockTimer
+import com.example.timer.feature_timer.presentation.components.ComposableRiveAnimationView
 import com.example.timer.feature_timer.toHours
 import com.example.timer.feature_timer.toMinutes
 import com.example.timer.feature_timer.toSeconds
@@ -61,13 +73,13 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
 //    val hourRotation by remember { mutableStateOf(Animatable(0f)) }
 
     val secondClock by remember {
-        mutableStateOf(ClockState(Animatable(largeTargetDp), Animatable(0f)))
+        mutableStateOf(ClockValues(Animatable(largeTargetDp), mutableIntStateOf(0), Animatable(0f)))
     }
     val minuteClock by remember {
-        mutableStateOf(ClockState(Animatable(reallySmallTargetDp), Animatable(0f)))
+        mutableStateOf(ClockValues(Animatable(reallySmallTargetDp), mutableIntStateOf(0), Animatable(0f)))
     }
     val hourClock by remember {
-        mutableStateOf(ClockState(Animatable(reallySmallTargetDp), Animatable(0f)))
+        mutableStateOf(ClockValues(Animatable(reallySmallTargetDp), mutableIntStateOf(0), Animatable(0f)))
     }
 
     val clocks = listOf(secondClock, minuteClock, hourClock)
@@ -196,6 +208,14 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
                         },
                         animationSpec = tween(durationMillis = 900)
                     )
+
+                    clock.time =
+                        when (clock) {
+                            secondClock -> mutableIntStateOf(timeRemaining.toSeconds())
+                            minuteClock -> mutableIntStateOf(timeRemaining.toMinutes())
+                            hourClock -> mutableIntStateOf(timeRemaining.toHours())
+                            else -> mutableIntStateOf(0)
+                        }
                 }
             }
         }
@@ -208,8 +228,7 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
     ) {
         if (hourClock.size.value > 0) {
             Clock(
-                rotate = hourClock.rotation.value,
-                clockSize = hourClock.size.value.dp,
+                clockValues = hourClock,
                 modifier = Modifier
             )
         }
@@ -221,15 +240,13 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
 
             if (minuteClock.size.value > 0) {
                 Clock(
-                    rotate = minuteClock.rotation.value,
-                    clockSize = minuteClock.size.value.dp,
+                    clockValues = minuteClock,
                     modifier = Modifier
                 )
             }
 
             Clock(
-                rotate = secondClock.rotation.value,
-                clockSize = secondClock.size.value.dp,
+                clockValues = secondClock,
                 modifier = Modifier
             )
         }
@@ -238,13 +255,45 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
 
 @Composable
 fun Clock(
-    rotate: Float, clockSize: Dp = 128.dp, modifier: Modifier = Modifier
+    clockValues: ClockValues, modifier: Modifier = Modifier
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
+    var alarmAnimation: RiveAnimationView? = null
+    var alarmAnimation2: RiveAnimationView? = null
 
-    BoxWithConstraints {
+    LaunchedEffect(clockValues.time) {
+        alarmAnimation?.setNumberState("StateMachine", "dismissSwipe", clockValues.time.value.toFloat())
+        alarmAnimation2?.setNumberState("StateMachine", "dismissSwipe", clockValues.time.value.toFloat())
+    }
+
+    BoxWithConstraints(
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            modifier = modifier
+            .size(maxWidth.times(0.2f))
+        ) {
+            ComposableRiveAnimationView(
+                animation = R.raw.timer2,
+                modifier = Modifier
+                    .weight(1f)
+            ) {
+                    view ->
+                alarmAnimation = view
+            }
+            ComposableRiveAnimationView(
+                animation = R.raw.timer2,
+                modifier = Modifier
+                    .weight(1f)
+            ) {
+                    view ->
+                alarmAnimation2 = view
+            }
+        }
+
         Canvas(
-            modifier = modifier.requiredSize(clockSize)
+            modifier = modifier.requiredSize(clockValues.size.value.dp)
         ) {
             val radius = size.width * .45f
 
@@ -281,7 +330,7 @@ fun Clock(
                     x = size.center.x - radius * .8f, y = size.center.y - radius * .8f
                 ),
                 startAngle = 270f,
-                sweepAngle = if (-(360 - rotate) == -360f) 0f else -(360 - rotate),
+                sweepAngle = if (-(360 - clockValues.rotation.value) == -360f) 0f else -(360 - clockValues.rotation.value),
                 useCenter = false,
                 style = Stroke(width = radius * .06f),
                 size = Size(
@@ -289,7 +338,8 @@ fun Clock(
                 )
             )
 
-            rotate(rotate) {
+
+            rotate(clockValues.rotation.value) {
                 drawCircle(
                     color = primaryColor.copy(alpha = 0.2f),
                     style = Stroke(width = radius * .06f),
@@ -307,24 +357,27 @@ fun Clock(
     }
 }
 
-data class ClockState(
+data class ClockValues(
     val size: Animatable<Float, AnimationVector1D>,
+    var time: MutableState<Int>,
     val rotation: Animatable<Float, AnimationVector1D>
 )
 
+@SuppressLint("UnrememberedAnimatable", "UnrememberedMutableState")
 @Preview(showBackground = true)
 @Composable
 fun ClockPreview() {
     TimerTheme {
-        Clock(rotate = 90f)
+        Clock(ClockValues(Animatable(320f), mutableIntStateOf(0), Animatable(0f)))
     }
 }
 
+@SuppressLint("UnrememberedAnimatable", "UnrememberedMutableState")
 @Preview(showBackground = true)
 @Composable
 fun Clock1minPreview() {
     TimerTheme {
-        Clock(rotate = 450f)
+        Clock(ClockValues(Animatable(320f), mutableIntStateOf(0), Animatable(450f)))
     }
 }
 
