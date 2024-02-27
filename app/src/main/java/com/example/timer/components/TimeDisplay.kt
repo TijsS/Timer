@@ -1,8 +1,12 @@
 package com.example.timer.components
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -15,7 +19,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -73,13 +79,13 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
 //    val hourRotation by remember { mutableStateOf(Animatable(0f)) }
 
     val secondClock by remember {
-        mutableStateOf(ClockValues(Animatable(largeTargetDp), mutableIntStateOf(0), Animatable(0f)))
+        mutableStateOf(ClockValues(Animatable(largeTargetDp), Animatable(0f), Animatable(0f)))
     }
     val minuteClock by remember {
-        mutableStateOf(ClockValues(Animatable(reallySmallTargetDp), mutableIntStateOf(0), Animatable(0f)))
+        mutableStateOf(ClockValues(Animatable(reallySmallTargetDp), Animatable(0f), Animatable(0f)))
     }
     val hourClock by remember {
-        mutableStateOf(ClockValues(Animatable(reallySmallTargetDp), mutableIntStateOf(0), Animatable(0f)))
+        mutableStateOf(ClockValues(Animatable(reallySmallTargetDp), Animatable(0f), Animatable(0f)))
     }
 
     val clocks = listOf(secondClock, minuteClock, hourClock)
@@ -199,6 +205,7 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
                             animationSpec = tween(durationMillis = 0)
                         )
                     }
+                    launch {
                     clock.rotation.animateTo(
                         targetValue = when (clock) {
                             secondClock -> timeRemaining.toSeconds() * 6f
@@ -208,14 +215,16 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
                         },
                         animationSpec = tween(durationMillis = 900)
                     )
-
-                    clock.time =
-                        when (clock) {
-                            secondClock -> mutableIntStateOf(timeRemaining.toSeconds())
-                            minuteClock -> mutableIntStateOf(timeRemaining.toMinutes())
-                            hourClock -> mutableIntStateOf(timeRemaining.toHours())
-                            else -> mutableIntStateOf(0)
-                        }
+}
+                    clock.time.animateTo(
+                        targetValue = when (clock) {
+                            secondClock -> timeRemaining.toSeconds().toFloat()
+                            minuteClock -> timeRemaining.toMinutes().toFloat()
+                            hourClock -> timeRemaining.toHours().toFloat()
+                            else -> 0f
+                        },
+                        animationSpec = tween(durationMillis = 700)
+                    )
                 }
             }
         }
@@ -261,10 +270,16 @@ fun Clock(
     var alarmAnimation: RiveAnimationView? = null
     var alarmAnimation2: RiveAnimationView? = null
 
-    LaunchedEffect(clockValues.time) {
-        alarmAnimation?.setNumberState("StateMachine", "dismissSwipe", clockValues.time.value.toFloat())
-        alarmAnimation2?.setNumberState("StateMachine", "dismissSwipe", clockValues.time.value.toFloat())
-    }
+    val animateRight by animateFloatAsState(
+        targetValue = ( 10 - ( clockValues.time.value.toFloat() % 10 ) ) * 50,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessHigh,
+        ),
+        label = ""
+    )
+    val animateLeft by animateFloatAsState(targetValue = ( 10 - ( clockValues.time.value / 10 ) ) * 50f)
+
 
     BoxWithConstraints(
         contentAlignment = Alignment.Center
@@ -275,7 +290,7 @@ fun Clock(
             .size(maxWidth.times(0.2f))
         ) {
             ComposableRiveAnimationView(
-                animation = R.raw.timer2,
+                animation = R.raw.timer3,
                 modifier = Modifier
                     .weight(1f)
             ) {
@@ -283,13 +298,19 @@ fun Clock(
                 alarmAnimation = view
             }
             ComposableRiveAnimationView(
-                animation = R.raw.timer2,
+                animation = R.raw.timer3,
                 modifier = Modifier
                     .weight(1f)
             ) {
                     view ->
                 alarmAnimation2 = view
             }
+        }
+
+        LaunchedEffect(clockValues.time.value) {
+
+            alarmAnimation?.setNumberState("StateMachine", "time", animateLeft)
+            alarmAnimation2?.setNumberState("StateMachine", "time", animateRight)
         }
 
         Canvas(
@@ -359,7 +380,7 @@ fun Clock(
 
 data class ClockValues(
     val size: Animatable<Float, AnimationVector1D>,
-    var time: MutableState<Int>,
+    var time: Animatable<Float, AnimationVector1D>,
     val rotation: Animatable<Float, AnimationVector1D>
 )
 
@@ -368,7 +389,7 @@ data class ClockValues(
 @Composable
 fun ClockPreview() {
     TimerTheme {
-        Clock(ClockValues(Animatable(320f), mutableIntStateOf(0), Animatable(0f)))
+        Clock(ClockValues(Animatable(320f), Animatable(0f), Animatable(0f)))
     }
 }
 
@@ -377,7 +398,7 @@ fun ClockPreview() {
 @Composable
 fun Clock1minPreview() {
     TimerTheme {
-        Clock(ClockValues(Animatable(320f), mutableIntStateOf(0), Animatable(450f)))
+        Clock(ClockValues(Animatable(320f), Animatable(450f), Animatable(450f)))
     }
 }
 
