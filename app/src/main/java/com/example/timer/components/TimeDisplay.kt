@@ -31,8 +31,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import app.rive.runtime.kotlin.RiveAnimationView
 import com.example.timer.R
+import com.example.timer.feature_timer.ClockTimer
 import com.example.timer.feature_timer.presentation.components.ComposableRiveAnimationView
 import com.example.timer.feature_timer.toHours
 import com.example.timer.feature_timer.toMinutes
@@ -195,24 +197,59 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
                     }
 
                     launch {
+                        val targetSecond = (10 - timeRemaining.toSeconds() % 10) * 50f
+                        val targetMinute = (10 - timeRemaining.toMinutes() % 10) * 50f
 
-                        clock.time.animateTo(
-                            targetValue = when (clock) {
-                                secondClock -> (10 - (timeRemaining.toSeconds() % 10)) * 50f
-                                minuteClock -> (10 - (timeRemaining.toMinutes() % 10)) * 50f
-                                hourClock -> (10 - (timeRemaining.toHours() % 10)) * 50f
-                                else -> 0f
-                            },
-                            animationSpec = tween(durationMillis = 700)
-                        )
+                        // To jump from final animation 0 to first animation 0
+                        if (targetSecond == 500f && clock == secondClock) {
+                            clock.time.animateTo(
+                                targetValue = 0f,
+                                animationSpec = tween(durationMillis = 0)
+                            )
+                        }
+                        // To jump from final animation 0 to first animation 0
+                        else if (targetMinute == 500f && clock == minuteClock) {
+                            clock.time.animateTo(
+                                targetValue = 0f,
+                                animationSpec = tween(durationMillis = 0)
+                            )
+                        }
+                        else {
+                            clock.time.animateTo(
+                                targetValue = when (clock) {
+                                    secondClock -> targetSecond
+                                    minuteClock -> targetMinute
+                                    hourClock -> (10 - (timeRemaining.toHours() % 10)) * 50f
+                                    else -> 0f
+                                },
+                                animationSpec = tween(durationMillis = 700)
+                            )
+                        }
                     }
 
-                    Log.d("xxx", "TimeDisplay: ${clock.time.targetValue}")
                     launch {
+                        val targetTenSecond = (10 - timeRemaining.toSeconds() / 10) * 50f
+                        val targetTenMinute = (10 - timeRemaining.toMinutes() / 10) * 50f
+
+                        // To jump from final animation 0 to first animation 0
+                        if (targetTenSecond == 500f && clock == secondClock) {
+                            clock.timeTen.animateTo(
+                                targetValue = 0f,
+                                animationSpec = tween(durationMillis = 0)
+                            )
+                        }
+                        // To jump from final animation 0 to first animation 0
+                        else if (targetTenMinute == 500f && clock == minuteClock) {
+                            clock.timeTen.animateTo(
+                                targetValue = 0f,
+                                animationSpec = tween(durationMillis = 0)
+                            )
+                        }
+
                         clock.timeTen.animateTo(
                             targetValue = when (clock) {
-                                secondClock -> (10 - (timeRemaining.toSeconds() / 10)) * 50f
-                                minuteClock -> (10 - (timeRemaining.toMinutes() / 10)) * 50f
+                                secondClock -> targetTenSecond
+                                minuteClock -> targetTenMinute
                                 hourClock -> (10 - (timeRemaining.toHours() / 10)) * 50f
                                 else -> 0f
                             },
