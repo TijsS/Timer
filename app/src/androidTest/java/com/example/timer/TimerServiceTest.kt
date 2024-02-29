@@ -1,29 +1,14 @@
 package com.example.timer
 
-import android.app.Notification
-import android.app.NotificationManager
-import android.content.Context
 import android.content.Intent
 import android.os.CountDownTimer
 import android.os.IBinder
-import android.speech.RecognitionListener
-import android.speech.SpeechRecognizer
-import android.test.mock.MockContext
 import androidx.annotation.MainThread
-import androidx.core.app.NotificationManagerCompat
-import androidx.test.annotation.UiThreadTest
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ServiceTestRule
-import com.example.timer.feature_notification.NOTIFICATION_ID
-import com.example.timer.feature_notification.createNotification
-import com.example.timer.feature_notification.notificationManager
-import com.example.timer.feature_notification.updateNotificationContentText
 import com.example.timer.feature_timer.ClockTimer
-import com.example.timer.feature_timer.Timer
 import com.example.timer.feature_timer.TimerService
 import com.example.timer.feature_timer.TimerState
-import com.example.timer.feature_timer.intTimeToString
 import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.justRun
@@ -36,10 +21,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
 import java.util.concurrent.TimeoutException
-import kotlin.coroutines.coroutineContext
 
 
 @ExtendWith(MockKExtension::class)
