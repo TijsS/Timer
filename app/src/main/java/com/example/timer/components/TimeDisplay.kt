@@ -8,6 +8,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -245,16 +246,17 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
                                 animationSpec = tween(durationMillis = 0)
                             )
                         }
-
-                        clock.timeTen.animateTo(
-                            targetValue = when (clock) {
-                                secondClock -> targetTenSecond
-                                minuteClock -> targetTenMinute
-                                hourClock -> (10 - (timeRemaining.toHours() / 10)) * 50f
-                                else -> 0f
-                            },
-                            animationSpec = tween(durationMillis = 700)
-                        )
+                        else {
+                            clock.timeTen.animateTo(
+                                targetValue = when (clock) {
+                                    secondClock -> targetTenSecond
+                                    minuteClock -> targetTenMinute
+                                    hourClock -> (10 - (timeRemaining.toHours() / 10)) * 50f
+                                    else -> 0f
+                                },
+                                animationSpec = tween(durationMillis = 700)
+                            )
+                        }
                     }
                 }
             }
@@ -308,15 +310,16 @@ fun Clock(
     var alarmAnimation: RiveAnimationView? = null
     var alarmAnimation2: RiveAnimationView? = null
 
-    BoxWithConstraints(
+    Box(
         contentAlignment = Alignment.Center
     ) {
 
         if (showDigitalTime && clockValues.size.targetValue > 0) {
             Row(
                 horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = modifier
-                    .size(maxWidth.times(0.2f))
+                    .size(clockValues.size.value.dp.times(0.3f))
             ) {
                 ComposableRiveAnimationView(
                     animation = R.raw.timer4,

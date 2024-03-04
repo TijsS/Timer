@@ -25,7 +25,6 @@ class TimerNotificationReceiver: BroadcastReceiver() {
     }
 
     private fun reset(context: Context) {
-        Log.d("xxxx", "reset: ")
         Intent(context, TimerService::class.java).also { intent ->
             intent.action = TimerService.Action.NotifiedReset.toString()
             context.startService(intent)

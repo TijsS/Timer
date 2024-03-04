@@ -11,6 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlin.math.ceil
 
 class DataLayerListenerService : WearableListenerService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -25,14 +26,14 @@ class DataLayerListenerService : WearableListenerService() {
 
             when (uri.path) {
                 START_TIMER_RECEIVE -> {
-
                     val timerDuration = DataMapItem.fromDataItem(dataEvent.dataItem).dataMap
                         .getInt(TIMER_DURATION_KEY)
 
                     val startTime = DataMapItem.fromDataItem(dataEvent.dataItem).dataMap
-                        .getInt(START_TIMER_TIME_KEY)
+                        .getInt(START_TIMER_TIME_KEY) -10000
 
-                    val secondsAlreadyPassed = ( System.currentTimeMillis().toInt() - startTime ) / 1000
+                    // Time on emulator devices are not synced correctly. On real devices this works
+                    val secondsAlreadyPassed = ceil(( System.currentTimeMillis().toInt() - startTime ) / 1000f).toInt()
                     val timeRemaining = timerDuration - secondsAlreadyPassed
 
                     if (timeRemaining < 0 ) return

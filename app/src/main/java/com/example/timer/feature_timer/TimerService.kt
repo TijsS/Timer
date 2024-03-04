@@ -20,6 +20,7 @@ import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.example.timer.R
 import com.example.timer.feature_notification.CHANNEL_ID
 import com.example.timer.feature_notification.CHANNEL_NAME
 import com.example.timer.feature_notification.NOTIFICATION_ID
@@ -132,7 +133,6 @@ class TimerService : Service(), RecognitionListener {
                     .setUrgent()
 
                 dataClient.putDataItem(request).await()
-
                 return@launch
 
             } catch (exception: Exception) {
@@ -350,11 +350,24 @@ class TimerService : Service(), RecognitionListener {
             return
         }
 
-        if (recognizedWords.contains("reset") || recognizedWords.contains("restart")) {
+        val resetWords: List<String> = listOf(
+            getString(R.string.reset),
+        )
+        if (resetWords.any{ it in recognizedWords }) {
             reset()
         }
 
-        recognizedWords.indexOfFirst { it.contains("second") }.let { secondIndex ->
+        val restartWords: List<String> = listOf(
+            getString(R.string.restart),
+            getString(R.string.repeat),
+        )
+        if (restartWords.any{ it in recognizedWords }) {
+            if(ClockTimer.timerState.value == TimerState.Finished) {
+                repeat()
+            }
+        }
+
+        recognizedWords.indexOfFirst { it.contains(getString(R.string.second)) }.let { secondIndex ->
             if (secondIndex - 1 < 0) return@let
 
             recognizedWords[secondIndex - 1].toIntOrNull()?.let {
@@ -362,7 +375,7 @@ class TimerService : Service(), RecognitionListener {
             }
         }
 
-        recognizedWords.indexOfFirst { it.contains("minute") }.let { minuteIndex ->
+        recognizedWords.indexOfFirst { it.contains(getString(R.string.minute)) }.let { minuteIndex ->
             if (minuteIndex - 1 < 0) return@let
 
             recognizedWords[minuteIndex - 1].toIntOrNull()?.let {
@@ -370,7 +383,8 @@ class TimerService : Service(), RecognitionListener {
             }
         }
 
-        recognizedWords.indexOfFirst { it.contains("hour") }.let { hourIndex ->
+
+        recognizedWords.indexOfFirst { it.contains(getString(R.string.hour)) }.let { hourIndex ->
             if (hourIndex - 1 < 0) return@let
 
             recognizedWords[hourIndex - 1].toIntOrNull()?.let {
@@ -382,18 +396,25 @@ class TimerService : Service(), RecognitionListener {
             start()
         }
 
-        if (recognizedWords.contains("start") || recognizedWords.contains("go") || recognizedWords.contains(
-                "begin"
-            ) || recognizedWords.contains("starts") || recognizedWords.contains("resume")
-        ) {
+        val startWords: List<String> = listOf(
+            getString(R.string.start),
+            getString(R.string.go),
+            getString(R.string.begin),
+            getString(R.string.starts),
+            getString(R.string.resume)
+        )
+        if ( startWords.any{ it in recognizedWords }
+            ) {
             start()
         }
 
-
-        if (recognizedWords.contains("pause") || recognizedWords.contains("stop") || recognizedWords.contains(
-                "end"
-            )
-        ) {
+        val pauseWords: List<String> = listOf(
+            getString(R.string.pause),
+            getString(R.string.stop),
+            getString(R.string.end)
+        )
+        if ( pauseWords.any{ it in recognizedWords }
+            ) {
             pause()
         }
 
