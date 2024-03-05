@@ -1,7 +1,6 @@
 package com.example.timer.components
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.tween
@@ -32,10 +31,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import app.rive.runtime.kotlin.RiveAnimationView
 import com.example.timer.R
-import com.example.timer.feature_timer.ClockTimer
 import com.example.timer.feature_timer.presentation.components.ComposableRiveAnimationView
 import com.example.timer.feature_timer.toHours
 import com.example.timer.feature_timer.toMinutes
@@ -73,7 +70,7 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
     BoxWithConstraints {
         LaunchedEffect(timeRemaining) {
             when {
-                timeRemaining.toHours() > 1 -> {
+                timeRemaining.toHours() >= 1 -> {
                     if (maxHeight / maxWidth < 1.1f) {
                         launch {
                             secondClock.size.animateTo(
@@ -202,16 +199,24 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
                         val targetMinute = (10 - timeRemaining.toMinutes() % 10) * 50f
 
                         // To jump from final animation 0 to first animation 0
-                        if (targetSecond == 500f && clock == secondClock) {
+                        if ( clock == secondClock && targetSecond == 500f) {
                             clock.time.animateTo(
-                                targetValue = 0f,
+                                targetValue = 500f,
+                                animationSpec = tween(durationMillis = 700)
+                            )
+                            clock.time.animateTo(
+                                targetValue = 1f,
                                 animationSpec = tween(durationMillis = 0)
                             )
                         }
                         // To jump from final animation 0 to first animation 0
-                        else if (targetMinute == 500f && clock == minuteClock) {
+                        else if ( clock == minuteClock && targetMinute == 500f) {
                             clock.time.animateTo(
-                                targetValue = 0f,
+                                targetValue = 500f,
+                                animationSpec = tween(durationMillis = 700)
+                            )
+                            clock.time.animateTo(
+                                targetValue = 1f,
                                 animationSpec = tween(durationMillis = 0)
                             )
                         }
@@ -232,31 +237,15 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
                         val targetTenSecond = (10 - timeRemaining.toSeconds() / 10) * 50f
                         val targetTenMinute = (10 - timeRemaining.toMinutes() / 10) * 50f
 
-                        // To jump from final animation 0 to first animation 0
-                        if (targetTenSecond == 500f && clock == secondClock) {
-                            clock.timeTen.animateTo(
-                                targetValue = 0f,
-                                animationSpec = tween(durationMillis = 0)
-                            )
-                        }
-                        // To jump from final animation 0 to first animation 0
-                        else if (targetTenMinute == 500f && clock == minuteClock) {
-                            clock.timeTen.animateTo(
-                                targetValue = 0f,
-                                animationSpec = tween(durationMillis = 0)
-                            )
-                        }
-                        else {
-                            clock.timeTen.animateTo(
-                                targetValue = when (clock) {
-                                    secondClock -> targetTenSecond
-                                    minuteClock -> targetTenMinute
-                                    hourClock -> (10 - (timeRemaining.toHours() / 10)) * 50f
-                                    else -> 0f
-                                },
-                                animationSpec = tween(durationMillis = 700)
-                            )
-                        }
+                        clock.timeTen.animateTo(
+                            targetValue = when (clock) {
+                                secondClock -> targetTenSecond
+                                minuteClock -> targetTenMinute
+                                hourClock -> (10 - (timeRemaining.toHours() / 10)) * 50f
+                                else -> 0f
+                            },
+                            animationSpec = tween(durationMillis = 700)
+                        )
                     }
                 }
             }
@@ -307,8 +296,8 @@ fun Clock(
     clockValues: ClockValues, modifier: Modifier = Modifier, showDigitalTime: Boolean
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
-    var alarmAnimation: RiveAnimationView? = null
-    var alarmAnimation2: RiveAnimationView? = null
+    var rightTimerAnimation: RiveAnimationView? = null
+    var leftTimerAnimation: RiveAnimationView? = null
 
     Box(
         contentAlignment = Alignment.Center
@@ -322,24 +311,24 @@ fun Clock(
                     .size(clockValues.size.value.dp.times(0.3f))
             ) {
                 ComposableRiveAnimationView(
-                    animation = R.raw.timer4,
+                    animation = R.raw.timer5,
                     modifier = modifier
                         .weight(1f)
                 ) { view ->
-                    alarmAnimation = view
+                    leftTimerAnimation = view
                 }
                 ComposableRiveAnimationView(
-                    animation = R.raw.timer4,
+                    animation = R.raw.timer5,
                     modifier = modifier
                         .weight(1f)
                 ) { view ->
-                    alarmAnimation2 = view
+                    rightTimerAnimation = view
                 }
             }
 
             LaunchedEffect(clockValues.time.value) {
-                alarmAnimation?.setNumberState("StateMachine", "time", clockValues.timeTen.value)
-                alarmAnimation2?.setNumberState("StateMachine", "time", clockValues.time.value)
+                leftTimerAnimation?.setNumberState("StateMachine", "time", clockValues.timeTen.value)
+                rightTimerAnimation?.setNumberState("StateMachine", "time", clockValues.time.value)
             }
         }
 

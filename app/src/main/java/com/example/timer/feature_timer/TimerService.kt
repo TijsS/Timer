@@ -75,10 +75,11 @@ class TimerService : Service(), RecognitionListener {
             NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH)
 
         notificationChannel.apply {
+            // make sure no sound gets played every time the notification is updated (which is every second while the timer is running)
             setSound(
                 null,
                 AudioAttributes.Builder().build()
-            ) // make sure no sound gets played every time the notification is updated (which is every second while the timer is running)
+            )
         }
 
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -93,8 +94,9 @@ class TimerService : Service(), RecognitionListener {
             RecognizerIntent.EXTRA_LANGUAGE_MODEL,
             RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
         )
+
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false)
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.packageName)
     }
 
