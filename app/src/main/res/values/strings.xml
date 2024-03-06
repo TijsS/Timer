@@ -2,7 +2,7 @@
     <string name="app_name">Timer</string>
     <string name="start_timer">Start</string>
     <string name="add_seconds">+ %1$s</string>
-    <string name="">Pause</string>
+    <string name="Pause">Pause</string>
     <string name="reset_timer">Reset</string>
     <string name="notification_content_title">Timer</string>
     <string name="channel_name">timerChannel</string>

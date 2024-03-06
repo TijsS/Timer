@@ -17,7 +17,6 @@ fun ComposableRiveAnimationView(
     onInit: (RiveAnimationView) -> Unit
 ) {
     AndroidView(
-        modifier = modifier,
         factory = { context ->
             RiveAnimationView(context).also {
                 it.setRiveResource(
