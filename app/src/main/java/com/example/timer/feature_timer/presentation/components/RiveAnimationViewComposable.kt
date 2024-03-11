@@ -28,6 +28,7 @@ fun ComposableRiveAnimationView(
                 )
             }
         },
-        update = { view -> onInit(view) }
+        update = { view -> onInit(view) },
+        modifier = modifier
     )
 }

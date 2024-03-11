@@ -6,6 +6,7 @@ import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -309,21 +310,29 @@ fun Clock(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = modifier
                     .size(clockValues.size.value.dp.times(0.3f))
+                    .fillMaxSize()
             ) {
                 ComposableRiveAnimationView(
-                    animation = R.raw.timer5,
+                    animation = R.raw.timer6,
                     modifier = modifier
                         .weight(1f)
                 ) { view ->
                     leftTimerAnimation = view
                 }
                 ComposableRiveAnimationView(
-                    animation = R.raw.timer5,
+                    animation = R.raw.timer6,
                     modifier = modifier
                         .weight(1f)
                 ) { view ->
                     rightTimerAnimation = view
                 }
+            }
+
+            val isDarkTheme = isSystemInDarkTheme()
+
+            LaunchedEffect(isSystemInDarkTheme()) {
+                leftTimerAnimation?.setBooleanState("StateMachine", "changeColor", !isDarkTheme)
+                rightTimerAnimation?.setBooleanState("StateMachine", "changeColor", !isDarkTheme)
             }
 
             LaunchedEffect(clockValues.time.value) {

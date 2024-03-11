@@ -27,12 +27,11 @@ import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -200,14 +199,15 @@ fun TimerScreen(
                 VerticalPager(
                     state = pagerState,
                     beyondBoundsPageCount = 1,
-                    reverseLayout = true,
-                    flingBehavior = flingBehavior(
-                        state = pagerState,
-                        pagerSnapDistance = PagerSnapDistance.atMost(4)
-                    ),
-                    modifier = Modifier.weight(1f)
+//                    reverseLayout = true,
+//                    flingBehavior = flingBehavior(
+//                        state = pagerState,
+//                        pagerSnapDistance = PagerSnapDistance.atMost(4)
+//                    ),
+                    modifier = Modifier
+                        .weight(1f)
                 ) { page ->
-                    if (page % 2 == 0) {
+                    if (page == 0) {
                         TimeControlArea(
                             timerState = { timerState },
                             resetInput = timerUiState.resetMainTimeInput,
@@ -218,13 +218,18 @@ fun TimerScreen(
                             addSecondsToTimer = { timerViewModel.addSecondsToTimer(it) },
                             timerGreaterThenZero = { timeRemaining > 0 },
                             modifier = Modifier
-                                .weight(1f)
                         )
                     } else {
                         PresetTimers(
                             presetTimers = timerUiState.timers,
                             addEmptyPresetTimer = { scope.launch { timerViewModel.addEmptyPresetTimer() } },
-                            removePresetTimer = { scope.launch { timerViewModel.removePresetTimer(it) } },
+                            removePresetTimer = {
+                                scope.launch {
+                                    timerViewModel.removePresetTimer(
+                                        it
+                                    )
+                                }
+                            },
                             updatePresetTimer = { timer ->
                                 scope.launch {
                                     timerViewModel.updatePresetTimer(timer)
@@ -240,6 +245,7 @@ fun TimerScreen(
                     }
                 }
                 VerticalPagerIndicator(pagerState = pagerState)
+
             }
         } else {
             Column(
@@ -247,7 +253,6 @@ fun TimerScreen(
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier
                     .fillMaxSize()
-
             ) {
                 TimeDisplay(
                     timeRemaining = timeRemaining,
@@ -255,9 +260,9 @@ fun TimerScreen(
                         .weight(2f)
                 )
 
-                Divider(
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
-                    modifier = Modifier.padding(26.dp)
+                HorizontalDivider(
+                    modifier = Modifier.padding(26.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
                 )
 
                 Box(
@@ -270,9 +275,10 @@ fun TimerScreen(
                             state = pagerState,
                             pagerSnapDistance = PagerSnapDistance.atMost(4)
                         ),
+                        modifier = Modifier.fillMaxSize()
                     ) { page ->
 
-                        if (page % 2 == 0) {
+                        if (page == 0) {
                             TimeControlArea(
                                 timerState = { timerState },
                                 resetInput = timerUiState.resetMainTimeInput,
