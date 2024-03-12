@@ -2,6 +2,7 @@ package com.example.timer.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,9 @@ import com.example.timer.ui.theme.Values.SMALL_PADDING
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HorizontalPagerIndicator(pagerState: PagerState) {
+    val currentPageColor = if(isSystemInDarkTheme()) Color.LightGray else Color.DarkGray
+    val otherPageColor = if(isSystemInDarkTheme()) Color.DarkGray else Color.LightGray
+
     Row(
         Modifier
             .fillMaxSize()
@@ -35,7 +39,7 @@ fun HorizontalPagerIndicator(pagerState: PagerState) {
         verticalAlignment = Alignment.Bottom
     ) {
         repeat(2) { iteration ->
-            val color = if (pagerState.currentPage == iteration) Color.LightGray else Color.DarkGray
+            val color = if (pagerState.currentPage == iteration) currentPageColor else otherPageColor
             Box(
                 modifier = Modifier
                     .padding(horizontal = SMALL_PADDING)
@@ -49,6 +53,9 @@ fun HorizontalPagerIndicator(pagerState: PagerState) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun VerticalPagerIndicator(pagerState: PagerState) {
+    val currentPageColor = if(isSystemInDarkTheme()) Color.LightGray else Color.DarkGray
+    val otherPageColor = if(isSystemInDarkTheme()) Color.DarkGray else Color.LightGray
+
     Column(
         Modifier
             .width(50.dp)
@@ -57,7 +64,7 @@ fun VerticalPagerIndicator(pagerState: PagerState) {
         verticalArrangement = Arrangement.Center
     ) {
         (1 downTo 0).forEach { iteration ->
-            val color = if (pagerState.currentPage == iteration) Color.LightGray else Color.DarkGray
+            val color = if (pagerState.currentPage == iteration) currentPageColor else otherPageColor
             Box(
                 modifier = Modifier
                     .padding(vertical = SMALL_PADDING)
@@ -67,8 +74,6 @@ fun VerticalPagerIndicator(pagerState: PagerState) {
         }
     }
 }
-
-
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
