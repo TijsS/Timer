@@ -1,4 +1,4 @@
-# Timer
+# Timer (WIP)
 
 Timer is a simple timer app with wearos compatibility.
 
@@ -12,17 +12,19 @@ Timer is a simple timer app with wearos compatibility.
 - Support for voice input
 - support for dynamic color
 - support for light/dark mode
-- support for dutch/english
+- support for dutch/english language
 
 ### Control on smartwatch
+
 Interact with the timer from your smartwatch.
-<img src="images/smartwatch.gif?raw=true" alt="" width="300"/>
+
+<img src="images/smartwatch.gif?raw=true" alt="" width="250"/>
 
 ### Add time to a running timer
-<img src="images/add_time.gif?raw=true" alt="" width="480"/>
+<img src="images/add_time.gif?raw=true" alt="" width="300"/>
 
 ### Interact with the timer form the notification
-<img src="images/notification.gif?raw=true" alt="" width="480"/>
+<img src="images/notification.gif?raw=true" alt="" width="300"/>
 
 ### Support for light/dark mode and differen screen sizes
-<img src="images/foldable.png?raw=true" alt="" width="850"/>
+<img src="images/foldable.png?raw=true" alt="" width="450"/>
