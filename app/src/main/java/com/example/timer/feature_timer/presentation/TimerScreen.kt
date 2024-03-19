@@ -27,11 +27,14 @@ import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -68,7 +71,7 @@ import com.example.timer.ui.theme.TimerTheme
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.S)
 @SuppressLint("RememberReturnType", "SuspiciousIndentation")
 @Composable
@@ -198,12 +201,11 @@ fun TimerScreen(
 
                 VerticalPager(
                     state = pagerState,
-                    beyondBoundsPageCount = 1,
-//                    reverseLayout = true,
-//                    flingBehavior = flingBehavior(
-//                        state = pagerState,
-//                        pagerSnapDistance = PagerSnapDistance.atMost(4)
-//                    ),
+                    beyondBoundsPageCount = 3,
+                    flingBehavior = flingBehavior(
+                        state = pagerState,
+                        pagerSnapDistance = PagerSnapDistance.atMost(4)
+                    ),
                     modifier = Modifier
                         .weight(1f)
                 ) { page ->
@@ -270,7 +272,7 @@ fun TimerScreen(
                 ) {
                     HorizontalPager(
                         state = pagerState,
-                        beyondBoundsPageCount = 1,
+                        beyondBoundsPageCount = 3,
                         flingBehavior = flingBehavior(
                             state = pagerState,
                             pagerSnapDistance = PagerSnapDistance.atMost(4)

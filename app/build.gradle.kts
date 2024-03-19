@@ -40,9 +40,6 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.8"
     }
-    packagingOptions {
-        resources.excludes.add("META-INF/*")
-    }
 
     testOptions {
         unitTests.isReturnDefaultValues = true
@@ -50,6 +47,11 @@ android {
     }
 }
 
+androidComponents {
+    onVariants(selector().withBuildType("release")) {
+        it.packaging.resources.excludes.add("META-INF/**")
+    }
+}
 
 dependencies {
     implementation("app.rive:rive-android:9.1.2")
@@ -83,9 +85,8 @@ dependencies {
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation(platform("androidx.compose:compose-bom:2024.02.00"))
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.runtime:runtime:1.6.1")
+    implementation("androidx.compose.ui:ui:1.6.3")
+    implementation("androidx.compose.runtime:runtime:1.6.3")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.appcompat:appcompat:1.6.1")
