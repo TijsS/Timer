@@ -92,7 +92,6 @@ class MainActivity : ComponentActivity() {
 
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onDestroy() {
-
         turnScreenOffAndKeyguardOn()
         stopService(Intent(this, TimerService::class.java))
         super.onDestroy()

@@ -64,7 +64,7 @@ fun VerticalPagerIndicator(pagerState: PagerState) {
         verticalArrangement = Arrangement.Center
     ) {
         (1 downTo 0).forEach { iteration ->
-            val color = if (pagerState.currentPage == iteration) currentPageColor else otherPageColor
+            val color = if (pagerState.currentPage == iteration) otherPageColor else currentPageColor
             Box(
                 modifier = Modifier
                     .padding(vertical = SMALL_PADDING)

@@ -12,6 +12,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,6 +47,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Devices
@@ -209,45 +211,47 @@ fun TimerScreen(
                     modifier = Modifier
                         .weight(1f)
                 ) { page ->
-                    if (page == 0) {
-                        TimeControlArea(
-                            timerState = { timerState },
-                            resetInput = timerUiState.resetMainTimeInput,
-                            startCountDown = { timerViewModel.startCountDown() },
-                            pauseCountdown = { timerViewModel.pauseCountDown() },
-                            resetCountDown = { timerViewModel.resetCountDown() },
-                            startListening = startListening,
-                            addSecondsToTimer = { timerViewModel.addSecondsToTimer(it) },
-                            timerGreaterThenZero = { timeRemaining > 0 },
-                            modifier = Modifier
-                        )
-                    } else {
-                        PresetTimers(
-                            presetTimers = timerUiState.timers,
-                            addEmptyPresetTimer = { scope.launch { timerViewModel.addEmptyPresetTimer() } },
-                            removePresetTimer = {
-                                scope.launch {
-                                    timerViewModel.removePresetTimer(
-                                        it
-                                    )
+                    when (page) {
+                        0 -> {
+                            TimeControlArea(
+                                timerState = { timerState },
+                                resetInput = timerUiState.resetMainTimeInput,
+                                startCountDown = { timerViewModel.startCountDown() },
+                                pauseCountdown = { timerViewModel.pauseCountDown() },
+                                resetCountDown = { timerViewModel.resetCountDown() },
+                                startListening = startListening,
+                                addSecondsToTimer = { timerViewModel.addSecondsToTimer(it) },
+                                timerGreaterThenZero = { timeRemaining > 0 },
+                                modifier = Modifier
+                            )
+                        }
+                        1 -> {
+                            PresetTimers(
+                                presetTimers = timerUiState.timers,
+                                addEmptyPresetTimer = { scope.launch { timerViewModel.addEmptyPresetTimer() } },
+                                removePresetTimer = {
+                                    scope.launch {
+                                        timerViewModel.removePresetTimer(
+                                            it
+                                        )
+                                    }
+                                },
+                                updatePresetTimer = { timer ->
+                                    scope.launch {
+                                        timerViewModel.updatePresetTimer(timer)
+                                    }
+                                },
+                                addSecondsToTimer = {
+                                    timerViewModel.addSecondsToTimer(it)
+                                    scope.launch {
+                                        pagerState.animateScrollToPage(0)
+                                    }
                                 }
-                            },
-                            updatePresetTimer = { timer ->
-                                scope.launch {
-                                    timerViewModel.updatePresetTimer(timer)
-                                }
-                            },
-                            addSecondsToTimer = {
-                                timerViewModel.addSecondsToTimer(it)
-                                scope.launch {
-                                    pagerState.animateScrollToPage(0)
-                                }
-                            }
-                        )
+                            )
+                        }
                     }
                 }
                 VerticalPagerIndicator(pagerState = pagerState)
-
             }
         } else {
             Column(
@@ -272,43 +276,44 @@ fun TimerScreen(
                 ) {
                     HorizontalPager(
                         state = pagerState,
-                        beyondBoundsPageCount = 3,
                         flingBehavior = flingBehavior(
                             state = pagerState,
                             pagerSnapDistance = PagerSnapDistance.atMost(4)
                         ),
                         modifier = Modifier.fillMaxSize()
                     ) { page ->
-
-                        if (page == 0) {
-                            TimeControlArea(
-                                timerState = { timerState },
-                                resetInput = timerUiState.resetMainTimeInput,
-                                startCountDown = { timerViewModel.startCountDown() },
-                                pauseCountdown = { timerViewModel.pauseCountDown() },
-                                resetCountDown = { timerViewModel.resetCountDown() },
-                                startListening = { startListening() },
-                                addSecondsToTimer = { timerViewModel.addSecondsToTimer(it) },
-                                timerGreaterThenZero = { timeRemaining > 0 },
-                                modifier = Modifier
-                            )
-                        } else {
-                            PresetTimers(
-                                presetTimers = timerUiState.timers,
-                                addEmptyPresetTimer = { scope.launch { timerViewModel.addEmptyPresetTimer() } },
-                                removePresetTimer = { scope.launch { timerViewModel.removePresetTimer(it) } },
-                                updatePresetTimer = { timer ->
-                                    scope.launch {
-                                        timerViewModel.updatePresetTimer(timer)
+                        when (page) {
+                            0 -> {
+                                TimeControlArea(
+                                    timerState = { timerState },
+                                    resetInput = timerUiState.resetMainTimeInput,
+                                    startCountDown = { timerViewModel.startCountDown() },
+                                    pauseCountdown = { timerViewModel.pauseCountDown() },
+                                    resetCountDown = { timerViewModel.resetCountDown() },
+                                    startListening = { startListening() },
+                                    addSecondsToTimer = { timerViewModel.addSecondsToTimer(it) },
+                                    timerGreaterThenZero = { timeRemaining > 0 },
+                                    modifier = Modifier
+                                )
+                            }
+                            1-> {
+                                PresetTimers(
+                                    presetTimers = timerUiState.timers,
+                                    addEmptyPresetTimer = { scope.launch { timerViewModel.addEmptyPresetTimer() } },
+                                    removePresetTimer = { scope.launch { timerViewModel.removePresetTimer(it) } },
+                                    updatePresetTimer = { timer ->
+                                        scope.launch {
+                                            timerViewModel.updatePresetTimer(timer)
+                                        }
+                                    },
+                                    addSecondsToTimer = {
+                                        timerViewModel.addSecondsToTimer(it)
+                                        scope.launch {
+                                            pagerState.animateScrollToPage(0)
+                                        }
                                     }
-                                },
-                                addSecondsToTimer = {
-                                    timerViewModel.addSecondsToTimer(it)
-                                    scope.launch {
-                                        pagerState.animateScrollToPage(0)
-                                    }
-                                }
-                            )
+                                )
+                            }
                         }
                     }
                     HorizontalPagerIndicator(pagerState = pagerState)

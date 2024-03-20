@@ -1,6 +1,7 @@
 package com.example.timer.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
@@ -62,9 +64,6 @@ fun PresetTimers(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally,
         state = scrollState,
-        flingBehavior = rememberSnapFlingBehavior(
-            lazyListState = scrollState
-        ),
         modifier = Modifier
             .fillMaxSize()
             .padding(bottom = LARGE_PADDING)
@@ -85,7 +84,6 @@ fun PresetTimers(
                         onLongClickLabel = "delete ${timer.name}"
                     )
                     .fillMaxWidth()
-
             ) {
                 HiddenInput(
                     timer = timer,

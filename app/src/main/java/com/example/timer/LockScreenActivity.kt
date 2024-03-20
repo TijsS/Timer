@@ -1,5 +1,8 @@
 package com.example.timer
 
+import android.app.Activity
+import android.app.KeyguardManager
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -46,4 +49,18 @@ class LockScreenActivity : ComponentActivity() {
         super.onDestroy()
         turnScreenOffAndKeyguardOn()
     }
+}
+
+fun Activity.turnScreenOnAndKeyguardOff() {
+    setShowWhenLocked(true)
+    setTurnScreenOn(true)
+
+    with(getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager) {
+        requestDismissKeyguard(this@turnScreenOnAndKeyguardOff, null)
+    }
+}
+
+fun Activity.turnScreenOffAndKeyguardOn() {
+    setShowWhenLocked(false)
+    setTurnScreenOn(false)
 }
