@@ -1,4 +1,4 @@
-package com.example.timer.feature_timer.presentation.components
+package com.example.timer.components
 
 import androidx.annotation.RawRes
 import androidx.compose.runtime.Composable

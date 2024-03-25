@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import app.rive.runtime.kotlin.RiveAnimationView
 import app.rive.runtime.kotlin.core.Fit
 import com.example.timer.R
+import com.example.timer.components.ComposableRiveAnimationView
 
 @Composable
 fun TimerFinished(

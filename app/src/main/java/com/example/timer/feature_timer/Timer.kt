@@ -54,8 +54,8 @@ fun Int.toSeconds(): Int {
 }
 
 sealed class TimerState {
-    object Running : TimerState()
-    object Paused : TimerState()
-    object Stopped : TimerState()
-    object Finished : TimerState()
+    object Running : TimerState() // Timer is running
+    object Paused : TimerState() // Timer is paused
+    object Stopped : TimerState() // Timer is stopped by the user
+    object Finished : TimerState() // Timer has finished and is ringing
 }

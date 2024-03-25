@@ -8,18 +8,34 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.speech.SpeechRecognizer
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import app.rive.runtime.kotlin.RiveAnimationView
 import app.rive.runtime.kotlin.core.RendererType
 import app.rive.runtime.kotlin.core.Rive
+import com.example.timer.components.ComposableRiveAnimationView
 import com.example.timer.feature_timer.TimerService
 import com.example.timer.feature_timer.presentation.TimerScreen
 import com.example.timer.ui.theme.TimerTheme
@@ -72,10 +88,52 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    TimerScreen(
-                        startListening = { startListening() },
-                        windowSizeClass = windowSizeClass
-                    )
+                    Column(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+
+                        var muteAnimation: RiveAnimationView? = null
+                        val muteEnabled = remember { mutableStateOf(false) }
+                        val muteProgress = remember {
+                            Animatable(0f)
+                        }
+
+                        LaunchedEffect(muteProgress.value) {
+                            Log.d("xxxx", "TimeDisplay: xxxx")
+                            muteAnimation?.setNumberState("StateMachine", "dismissSwipe", muteProgress.value)
+                        }
+
+                        LaunchedEffect(muteEnabled) {
+                            Log.d("xxxx", "TimeDisplay: yyyyyyyyyyyyyyy")
+
+                            muteProgress.animateTo(
+                                targetValue = if (muteEnabled.value) 200f else 0f,
+                                animationSpec = tween(durationMillis = 500)
+                            )
+                        }
+                        Box(modifier = Modifier
+                            .fillMaxSize()) {
+
+                            ComposableRiveAnimationView(
+                                animation = R.raw.mute,
+                                modifier = Modifier
+                                    .background(MaterialTheme.colorScheme.primary),
+                            ) { view ->
+                                muteAnimation = view
+                            }
+                            Box(modifier = Modifier.fillMaxSize()
+                                .clickable {
+                                    Log.d("xxxxxxxxxxxxxxx", "TimeDisplay: 222222")
+                                    muteEnabled.value = !muteEnabled.value
+                                }) {
+                            }
+
+                        }
+//                        TimerScreen(
+//                            startListening = { startListening() },
+//                            windowSizeClass = windowSizeClass
+//                        )
+                    }
                 }
             }
         }

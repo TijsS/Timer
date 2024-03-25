@@ -1,10 +1,12 @@
 package com.example.timer.components
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +18,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,7 +38,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.rive.runtime.kotlin.RiveAnimationView
 import com.example.timer.R
-import com.example.timer.feature_timer.presentation.components.ComposableRiveAnimationView
 import com.example.timer.feature_timer.toHours
 import com.example.timer.feature_timer.toMinutes
 import com.example.timer.feature_timer.toSeconds
@@ -42,6 +45,7 @@ import com.example.timer.ui.theme.TimerTheme
 import kotlinx.coroutines.launch
 import java.lang.Math.PI
 import kotlin.math.cos
+import kotlin.math.log
 import kotlin.math.sin
 
 @Composable
@@ -70,6 +74,7 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
 
     BoxWithConstraints {
         LaunchedEffect(timeRemaining) {
+            // when there is more then one hour left, depending on the aspect ratio of the screen, show the clocks in their sizes
             when {
                 timeRemaining.toHours() >= 1 -> {
                     if (maxHeight / maxWidth < 1.1f) {
@@ -253,6 +258,7 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
         }
     }
 
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -262,6 +268,7 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
                 showDigitalTime = !showDigitalTime
             }
     ) {
+
         if (hourClock.size.value > 0) {
             Clock(
                 clockValues = hourClock,
