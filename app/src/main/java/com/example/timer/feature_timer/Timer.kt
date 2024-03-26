@@ -1,6 +1,5 @@
 package com.example.timer.feature_timer
 
-import android.annotation.SuppressLint
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -16,9 +15,10 @@ data class Timer(
 )
 
 object ClockTimer {
-    var timerState: MutableState<TimerState> = mutableStateOf(TimerState.Stopped)
-    var secondsRemaining = mutableIntStateOf(0)
-    var timerDurationForRepeat = mutableIntStateOf(0)
+    val timerState: MutableState<TimerState> = mutableStateOf(TimerState.Stopped)
+    val secondsRemaining = mutableIntStateOf(0)
+    val timerDurationForRepeat = mutableIntStateOf(0)
+    val muted = mutableStateOf(false)
 }
 
 fun addTimeClockTimer(time: Int) {

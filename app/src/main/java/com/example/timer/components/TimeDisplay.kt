@@ -1,12 +1,10 @@
 package com.example.timer.components
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -18,8 +16,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,7 +41,6 @@ import com.example.timer.ui.theme.TimerTheme
 import kotlinx.coroutines.launch
 import java.lang.Math.PI
 import kotlin.math.cos
-import kotlin.math.log
 import kotlin.math.sin
 
 @Composable
@@ -257,45 +252,45 @@ fun TimeDisplay(timeRemaining: Int, modifier: Modifier = Modifier) {
             }
         }
     }
-
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = modifier
-            .fillMaxSize()
-            .clickable {
-                showDigitalTime = !showDigitalTime
-            }
-    ) {
-
-        if (hourClock.size.value > 0) {
-            Clock(
-                clockValues = hourClock,
-                showDigitalTime = showDigitalTime,
-                modifier = modifier
-            )
-        }
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = modifier.fillMaxWidth()
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = modifier
+                .fillMaxSize()
+                .clickable {
+                    showDigitalTime = !showDigitalTime
+                }
         ) {
-
-            if (minuteClock.size.value > 0) {
+            if (hourClock.size.value > 0) {
                 Clock(
-                    clockValues = minuteClock,
+                    clockValues = hourClock,
                     showDigitalTime = showDigitalTime,
                     modifier = modifier
                 )
             }
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = modifier.fillMaxWidth()
+            ) {
 
-            Clock(
-                clockValues = secondClock,
-                showDigitalTime = showDigitalTime,
-                modifier = modifier
-            )
+                if (minuteClock.size.value > 0) {
+                    Clock(
+                        clockValues = minuteClock,
+                        showDigitalTime = showDigitalTime,
+                        modifier = modifier
+                    )
+                }
+
+                Clock(
+                    clockValues = secondClock,
+                    showDigitalTime = showDigitalTime,
+                    modifier = modifier
+                )
+            }
         }
+        MuteButton()
     }
 }
 

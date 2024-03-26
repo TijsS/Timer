@@ -7,6 +7,8 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
+import android.media.Ringtone
+import android.media.RingtoneManager
 import android.os.Binder
 import android.os.Build
 import android.os.Bundle
@@ -51,6 +53,7 @@ class TimerService : Service(), RecognitionListener {
 
     private lateinit var speechRecognizer: SpeechRecognizer
     private lateinit var vibrator: Vibrator
+    private lateinit var ringtone: Ringtone
 
     private val dataClient by lazy { Wearable.getDataClient(this) }
 
@@ -70,6 +73,8 @@ class TimerService : Service(), RecognitionListener {
         } else {
             getSystemService(VIBRATOR_SERVICE) as Vibrator
         }
+
+        ringtone = RingtoneManager.getRingtone(applicationContext, android.provider.Settings.System.DEFAULT_ALARM_ALERT_URI)
 
         notificationChannel =
             NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH)
@@ -148,6 +153,8 @@ class TimerService : Service(), RecognitionListener {
         countDownTimer?.cancel()
 
         vibrator.cancel()
+
+        ringtone.stop()
 
         ClockTimer.apply {
             secondsRemaining.intValue = 0
@@ -250,6 +257,8 @@ class TimerService : Service(), RecognitionListener {
 
                 vibrate()
 
+                if( !ClockTimer.muted.value ) ring()
+
                 applicationContext.updateNotificationAlarmFinished()
             }
         }
@@ -263,6 +272,10 @@ class TimerService : Service(), RecognitionListener {
                 1
             )
         )
+    }
+
+    private fun ring() {
+        ringtone.play()
     }
 
     fun startListeningSafe() {

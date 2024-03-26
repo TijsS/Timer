@@ -22,18 +22,18 @@ fun TimerFinished(
     setAlarmAnimation: (RiveAnimationView) -> Unit
 ) {
     Box(
-    contentAlignment = Alignment.Center,
-    modifier = Modifier
-    .fillMaxSize()
-    .draggable(
-    orientation = Orientation.Vertical,
-    state = rememberDraggableState { delta ->
-        setDismissPercentage(delta)
-    },
-    onDragStopped = {
-        resetDismissPercentage()
-    }
-    ),
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .fillMaxSize()
+            .draggable(
+                orientation = Orientation.Vertical,
+                state = rememberDraggableState { delta ->
+                    setDismissPercentage(delta)
+                },
+                onDragStopped = {
+                    resetDismissPercentage()
+                }
+            ),
     ) {
         BoxWithConstraints {
             ComposableRiveAnimationView(
